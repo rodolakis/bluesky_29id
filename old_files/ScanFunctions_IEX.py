@@ -2166,15 +2166,15 @@ def Enable_Mono():
     caput("29idmonoMIR:X_ENA_CMD.PROC",1)
     caput("29idmonoMIR:P_ENA_CMD.PROC",1)
 
-def Reset_Mono_Limits():
-#    caput("29idmono_GRT_TYPE_SP.ONST", 'MEG_PA')
-#    caput("29idmono_GRT_TYPE_SP.TWST", 'HEG_JY')
-#    caput("29idmono_GRT_TYPE_SP.THST", 'MEG_JY')
-    caput("29idmono:ENERGY_SP.DRVL",200)
-    caput("29idmono:ENERGY_SP.LOW",200)
-    caput("29idmono:ENERGY_SP.LOLO",200)
-    caput("29idmono:ENERGY_SP.LOPR",200)
-    print("Mono limits have been reset.")
+# def Reset_Mono_Limits():
+# #    caput("29idmono_GRT_TYPE_SP.ONST", 'MEG_PA')
+# #    caput("29idmono_GRT_TYPE_SP.TWST", 'HEG_JY')
+# #    caput("29idmono_GRT_TYPE_SP.THST", 'MEG_JY')
+#     caput("29idmono:ENERGY_SP.DRVL",200)
+#     caput("29idmono:ENERGY_SP.LOW",200)
+#     caput("29idmono:ENERGY_SP.LOLO",200)
+#     caput("29idmono:ENERGY_SP.LOPR",200)
+#     print("Mono limits have been reset.")
 
 
 ##############################################################################################################
@@ -2635,18 +2635,18 @@ def Scan_MakeTable(StartStopStepLists):
     table_array=np.sort(table_array) #sort into ascending order    
     return table_array
 
-### Current Amplifier:
+# ### Current Amplifier:
 
-def Reset_CA(ca_ioc,ca_num,rate="Slow"):
-    pv="29id"+ca_ioc+":ca"+str(ca_num)
-    caput(pv+":reset.PROC",1)
-    caput(pv+":digitalFilterSet","Off")
-    caput(pv+":medianFilterSet","Off")
-    caput(pv+":zeroCheckSet",0)
-    caput(pv+":rangeAuto",1)
-    caput(pv+":rateSet",rate)
-    caput(pv+":rangeAutoUlimit","20mA")
-    caput(pv+":read.SCAN",".5 second")
+# def Reset_CA(ca_ioc,ca_num,rate="Slow"):
+#     pv="29id"+ca_ioc+":ca"+str(ca_num)
+#     caput(pv+":reset.PROC",1)
+#     caput(pv+":digitalFilterSet","Off")
+#     caput(pv+":medianFilterSet","Off")
+#     caput(pv+":zeroCheckSet",0)
+#     caput(pv+":rangeAuto",1)
+#     caput(pv+":rateSet",rate)
+#     caput(pv+":rangeAutoUlimit","20mA")
+#     caput(pv+":read.SCAN",".5 second")
 
 
 def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
@@ -4233,37 +4233,37 @@ def SetSlit_BL(c2B=1,c1A=1,q=None):
     SetSlit1A(Size1A[0],Size1A[1],H1center,V1center,q)    # standard operating
     SetSlit2B(Size2B[0],Size2B[1],H2center,V2center,q)
 
-def Sync_SmarAct_Motor():
-    '''Home the piezo (x,y,z). Home position is middle of travel.'''
-    for i in [2,3,4]:
-        VAL='29idKappa:m'+str(i)+'.HOMF'
-        caput(VAL,1)
-        sleep(10)
-    print('SamrAct motors VAL homed')
+# def Sync_SmarAct_Motor():
+#     '''Home the piezo (x,y,z). Home position is middle of travel.'''
+#     for i in [2,3,4]:
+#         VAL='29idKappa:m'+str(i)+'.HOMF'
+#         caput(VAL,1)
+#         sleep(10)
+#     print('SamrAct motors VAL homed')
 
 
-def Sync_PI_Motor():
-    for i in [7,8,9]:
-        VAL='29idKappa:m'+str(i)+'.VAL'
-        RBV='29idKappa:m'+str(i)+'.RBV'
-        current_RBV=caget(RBV)
-        caput(VAL,current_RBV)
-    print('PI motors VAL synced to RBV')
+# def Sync_PI_Motor():
+#     for i in [7,8,9]:
+#         VAL='29idKappa:m'+str(i)+'.VAL'
+#         RBV='29idKappa:m'+str(i)+'.RBV'
+#         current_RBV=caget(RBV)
+#         caput(VAL,current_RBV)
+#     print('PI motors VAL synced to RBV')
 
-def Sync_Euler_Motor():
-    caput('29idKappa:Kappa_sync.PROC',1)
-    sleep(1)
-    caput('29idKappa:Kappa_sync.PROC',1)
-    print('Euler motors VAL/RBV synced to physical motors')
+# def Sync_Euler_Motor():
+#     caput('29idKappa:Kappa_sync.PROC',1)
+#     sleep(1)
+#     caput('29idKappa:Kappa_sync.PROC',1)
+#     print('Euler motors VAL/RBV synced to physical motors')
     
-def Sync_Encoder_RBV(ioc):
-    D={}
-    D["c"]=[1,2,3,4]
-    D["b"]=[13,14,15,16,26,27]
-    for i in D[ioc]:
-        pv="29id"+ioc+":m"+str(i)+".SYNC"
-        caput(pv,1)
-        print(pv)
+# def Sync_Encoder_RBV(ioc):
+#     D={}
+#     D["c"]=[1,2,3,4]
+#     D["b"]=[13,14,15,16,26,27]
+#     for i in D[ioc]:
+#         pv="29id"+ioc+":m"+str(i)+".SYNC"
+#         caput(pv,1)
+#         print(pv)
 
 
 ##############################################################################################################
@@ -4431,39 +4431,39 @@ def Get_mKappa(mode='User'):
     return mode,Kappa
 
 
-def Get_All():
-    print("\n")
-    print("===========================================================")
-    Get_energy(q=None)
-    print("-----------------------------------------------------------")
-    Get_Mono()
-    print("-----------------------------------------------------------")
-    Get_Slits()
-    print("-----------------------------------------------------------")
-    Get_Mirror(1)
-    Get_Mirror(2)
-    Get_Mirror(3)
-    print("-----------------------------------------------------------")
-    ARPES=Get_mARPES()[1]
-    Kappa=Get_mKappa()[1]
-    print("ARPES = ",ARPES)
-    print("Kappa = ",Kappa)
-    print("===========================================================")
+# def Get_All():
+#     print("\n")
+#     print("===========================================================")
+#     Get_energy(q=None)
+#     print("-----------------------------------------------------------")
+#     Get_Mono()
+#     print("-----------------------------------------------------------")
+#     Get_Slits()
+#     print("-----------------------------------------------------------")
+#     Get_Mirror(1)
+#     Get_Mirror(2)
+#     Get_Mirror(3)
+#     print("-----------------------------------------------------------")
+#     ARPES=Get_mARPES()[1]
+#     Kappa=Get_mKappa()[1]
+#     print("ARPES = ",ARPES)
+#     print("Kappa = ",Kappa)
+#     print("===========================================================")
 
-def Get_ARPES():
-    print("\n")
-    print("===========================================================")
-    Get_energy(q=None)
-    print("-----------------------------------------------------------")
-    Get_Mono()
-    print("-----------------------------------------------------------")
-    Get_Slits()
-    print("-----------------------------------------------------------")
-    Get_Mirror(3)
-    print("-----------------------------------------------------------")
-    ARPES=Get_mARPES()[1]
-    print("APRES = ",ARPES)
-    print("===========================================================")
+# def Get_ARPES():
+#     print("\n")
+#     print("===========================================================")
+#     Get_energy(q=None)
+#     print("-----------------------------------------------------------")
+#     Get_Mono()
+#     print("-----------------------------------------------------------")
+#     Get_Slits()
+#     print("-----------------------------------------------------------")
+#     Get_Mirror(3)
+#     print("-----------------------------------------------------------")
+#     ARPES=Get_mARPES()[1]
+#     print("APRES = ",ARPES)
+#     print("===========================================================")
 
 def Get_Kappa():
     print("\n")
@@ -9076,11 +9076,11 @@ def scanXAS_BL(StartStopStepLists,settling_time=1,**kwargs):
             if kwargs["mcp"]: MPA_HV_OFF()
             print("WARNING: Mesh"+Branch+" is still in")     
             
-def mprint():
-    """
-    Print motor position in current branch as defined by Check_Branch()
-    """
-    return Print_Motor()
+# def mprint():
+#     """
+#     Print motor position in current branch as defined by Check_Branch()
+#     """
+#     return Print_Motor()
 
 def sample(ListPosition):
     """
@@ -9130,37 +9130,37 @@ def mvxyz(ListPosition):
 ##############################################################################################################
 
 
-def Print_Motor():
-    mybranch=CheckBranch()
-    if mybranch == "c":
-        x=round(caget(ARPES_PVmotor('x')[0]),2)
-        y=round(caget(ARPES_PVmotor('y')[0]),2)
-        z=round(caget(ARPES_PVmotor('z')[0]),2)
-        th=round(caget(ARPES_PVmotor('th')[0]),2)
-        chi=round(caget(ARPES_PVmotor('chi')[0]),2)
-        phi=round(caget(ARPES_PVmotor('phi')[0]),2)
-        return [x,y,z,th,chi,phi]
-    #    print "x="+str(x), " y="+str(y)," z="+str(z), " theta="+str(th)
-        print("\nx,y,z,th = ["+str(x)+","+str(y)+","+str(z)+","+str(th)+","+str(chi)+","+str(phi)+"]")
-    elif mybranch == "d":
-        x=round(caget("29idKappa:m2.RBV"),0)
-        y=round(caget("29idKappa:m3.RBV"),0)
-        z=round(caget("29idKappa:m4.RBV"),0)
-        tth= round(caget("29idKappa:m9.RBV"),2)
-        kth= round(caget("29idKappa:m8.RBV"),2)
-        kap= round(caget("29idKappa:m7.RBV"),2)
-        kphi=round(caget("29idKappa:m1.RBV"),2)
-        th= round(caget("29idKappa:Euler_ThetaRBV"),3)
-        chi= round(caget("29idKappa:Euler_ChiRBV"),3)
-        phi=round(caget("29idKappa:Euler_PhiRBV"),3)
-        #(th,chi,phi)=KtoE(kth,kap,kphi)
-        print("\nx,y,z,tth,th,chi,phi   = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(th)+","+str(chi)+","+str(phi)+"]")
-        print("x,y,z,tth,kth,kap,kphi = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(kth)+","+str(kap)+","+str(kphi)+"]")
-        #print "\ntth,th,chi,phi = ["+str(round(tth,1))+","+str(round(th,1))+","+str((round(chi,1)))+","+str((round(phi,1)))+"]"
-        pos=[x,y,z,tth,kth,kap,kphi]
-        return pos
-    #elif mybranch == "e":
-    #    print(Get_mRSoXS()[1])
+# def Print_Motor():
+#     mybranch=CheckBranch()
+#     if mybranch == "c":
+#         x=round(caget(ARPES_PVmotor('x')[0]),2)
+#         y=round(caget(ARPES_PVmotor('y')[0]),2)
+#         z=round(caget(ARPES_PVmotor('z')[0]),2)
+#         th=round(caget(ARPES_PVmotor('th')[0]),2)
+#         chi=round(caget(ARPES_PVmotor('chi')[0]),2)
+#         phi=round(caget(ARPES_PVmotor('phi')[0]),2)
+#         return [x,y,z,th,chi,phi]
+#     #    print "x="+str(x), " y="+str(y)," z="+str(z), " theta="+str(th)
+#         print("\nx,y,z,th = ["+str(x)+","+str(y)+","+str(z)+","+str(th)+","+str(chi)+","+str(phi)+"]")
+#     elif mybranch == "d":
+#         x=round(caget("29idKappa:m2.RBV"),0)
+#         y=round(caget("29idKappa:m3.RBV"),0)
+#         z=round(caget("29idKappa:m4.RBV"),0)
+#         tth= round(caget("29idKappa:m9.RBV"),2)
+#         kth= round(caget("29idKappa:m8.RBV"),2)
+#         kap= round(caget("29idKappa:m7.RBV"),2)
+#         kphi=round(caget("29idKappa:m1.RBV"),2)
+#         th= round(caget("29idKappa:Euler_ThetaRBV"),3)
+#         chi= round(caget("29idKappa:Euler_ChiRBV"),3)
+#         phi=round(caget("29idKappa:Euler_PhiRBV"),3)
+#         #(th,chi,phi)=KtoE(kth,kap,kphi)
+#         print("\nx,y,z,tth,th,chi,phi   = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(th)+","+str(chi)+","+str(phi)+"]")
+#         print("x,y,z,tth,kth,kap,kphi = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(kth)+","+str(kap)+","+str(kphi)+"]")
+#         #print "\ntth,th,chi,phi = ["+str(round(tth,1))+","+str(round(th,1))+","+str((round(chi,1)))+","+str((round(phi,1)))+"]"
+#         pos=[x,y,z,tth,kth,kap,kphi]
+#         return pos
+#     #elif mybranch == "e":
+#     #    print(Get_mRSoXS()[1])
 
 
 def Move_ARPES_Sample(ListPosition):
