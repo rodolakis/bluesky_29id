@@ -1,6 +1,6 @@
 from epics import caput, caget 
-from .exp import BL_ioc, BL_Mode_Read, BL_Mode_Set
-from datetime import today 
+from .exp import BL_ioc, CheckBranch
+from .misc import today 
 import time
 import os
 
