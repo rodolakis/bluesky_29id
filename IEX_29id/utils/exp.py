@@ -27,6 +27,38 @@ def Check_run():
 
 
 
+
+def CheckBranch():
+    BL_mode=BL_Mode_Read()[0]
+    BranchPV=caget("29id:CurrentBranch.VAL")
+    if BL_mode==2:
+        branch="c"
+    elif BL_mode==3:
+        branch="e"
+    else:
+        if (BranchPV == 0):
+            branch = "c"        # PV = 0 => ARPES
+        else:
+            branch = "d"        # PV = 1 => RSXS
+    return branch
+
+def CheckBranch_Name():
+    BL_mode=BL_Mode_Read()[0]
+    BranchPV=caget("29id:CurrentBranch.VAL")
+    if BL_mode==2:
+        branchname= "He Lamp"
+    else:
+        if (BranchPV == 0):
+            branchname = "ARPES"
+        else:
+            branchname = "RSXS"
+    return branchname
+
+
+
+
+
+
 ## BeamLine mode functions
 def BL_Mode_Set(which):
     """
@@ -77,37 +109,4 @@ def BL_ioc():
     elif  BL_mode ==3:                    # RSoXS chamber
         scanIOC='RSoXS'
     return scanIOC
-
-
-
-
-def Check_Staff_Directory(**kwargs):
-    """
-    Switchs to the staff directory
-        Uses Fold
-    """
-    kwargs.setdefault("scanIOC",BL_ioc())
-    kwargs.setdefault("run",Check_run())
-    
-    scanIOC=kwargs["scanIOC"]
-    run= kwargs["run"]
-    
-    directory = MDA_CurrentDirectory(scanIOC)
-    current_run = MDA_CurrentRun(scanIOC)
-    
-    if directory.find('data_29idb') < 1 or current_run != run:
-        print('You are not currently saving in the Staff directory and/or the desired run - REPLY "yes" to switch folder.\nThis will only work if the run directory already exists.\nOtherwise, you must open ipython as 29id to create a new run directory using:\n\tFolder_'+scanIOC+'(run,\'Staff\')')
-        foo=input('\nAre you ready to switch to the '+run+' Staff directory? >')
-        if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
-            print('Switching directory...')
-            if scanIOC=='ARPES':
-                Folder_ARPES('Staff',mdaOnly=True,**kwargs)
-            elif scanIOC=='Kappa':
-                Folder_Kappa('Staff',create_only=False)
-        else:
-            print('\nFolder not set.')
-    else:
-        print('Staff directory OK.')
-    directory = MDA_CurrentDirectory(scanIOC)
-    print('\nCurrent directory: '+directory)
 
