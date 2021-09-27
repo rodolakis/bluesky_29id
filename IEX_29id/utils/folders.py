@@ -172,3 +172,35 @@ def getNextFileNumber(data_dir, file_prefix,**kwargs):
     if kwargs["q"] == False:
         print("Next File Number: ",nextFileNumber)
     return nextFileNumber
+
+
+def Check_Staff_Directory(**kwargs):
+    """
+    Switchs to the staff directory
+        Uses Fold
+    """
+    kwargs.setdefault("scanIOC",BL_ioc())
+    kwargs.setdefault("run",Check_run())
+    
+    scanIOC=kwargs["scanIOC"]
+    run= kwargs["run"]
+    
+    directory = MDA_CurrentDirectory(scanIOC)
+    current_run = MDA_CurrentRun(scanIOC)
+    
+    if directory.find('data_29idb') < 1 or current_run != run:
+        print('You are not currently saving in the Staff directory and/or the desired run - REPLY "yes" to switch folder.\nThis will only work if the run directory already exists.\nOtherwise, you must open ipython as 29id to create a new run directory using:\n\tFolder_'+scanIOC+'(run,\'Staff\')')
+        foo=input('\nAre you ready to switch to the '+run+' Staff directory? >')
+        if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
+            print('Switching directory...')
+            if scanIOC=='ARPES':
+                Folder_ARPES('Staff',mdaOnly=True,**kwargs)
+            elif scanIOC=='Kappa':
+                Folder_Kappa('Staff',create_only=False)
+        else:
+            print('\nFolder not set.')
+    else:
+        print('Staff directory OK.')
+    directory = MDA_CurrentDirectory(scanIOC)
+    print('\nCurrent directory: '+directory)
+
