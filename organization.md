@@ -4,6 +4,7 @@
 ## devices
 - <span style="color:lightgrey">arpes</span>
 - ca  (current amplifiers)
+- detector
 - diagnostic
 - kappa
 - mono
@@ -36,6 +37,13 @@
 ## ca
  - Reset_CA
 
+## detector
+- Kappa_DetectorDict
+- setdet
+- detset
+- MPA_Interlock
+
+
 ## diagnostic
 - 
 
@@ -67,9 +75,19 @@
 ## exp: 
 
 - Check_run
+- CheckBranch
+- CheckBranch_Name
 - BL_Mode_Set
 - BL_Mode_Read
 - BL_ioc
+
+
+## folders
+- Make_DataFolder
+- _userDataFolder
+- _filename_key
+- Folder_mda
+- getNextFileNumber 
 - Check_Staff_Directory
 
 <span style="color:orange">
@@ -80,13 +98,6 @@
  </span>
  <br/> 
 
-
-
-## folders
-- Make_DataFolder
-- _userDataFolder
-- Folder_mda
-- logname_set
 
 ## log
 - logname_PV
@@ -101,10 +112,10 @@
 <span style="color:orange">
 MDA_CurrentUser <br/> 
 SaveFile_Header <br/> 
-SaveFile</br>
-CheckBranch <br/> 
+SaveFile</br> 
 ID_State2Mode  <br/>  
 ARPES_PVmotor</br>
+Kappa_PVmotor</br>
 </span>
 <br/> 
 
@@ -115,6 +126,7 @@ ARPES_PVmotor</br>
 - TakeClosest
 - dateandtime
 - WaitForIt
+- today
 
 
 ## plot
@@ -145,12 +157,12 @@ ARPES_PVmotor</br>
 - Get_Gain
 - Get_SnapShot
 
-<span style="color:orange">
-CheckBranch <br/> 
+<span style="color:orange"> 
 ID_State2Mode  <br/>  
 ARPES_PVmotor</br>
 Mono_Optics</br>
 SyncAllSlits</br>
+Kappa_PVmotor</br>
 </span>
 <br/> 
 
@@ -166,6 +178,12 @@ SyncAllSlits</br>
 # scans
 - Reset_Scan
 - Scan_Check
+- scantth
+- Scan_Kappa_Motor_Go
+- Scan_Kappa_Motor
+- Scan_Go
+- Scan_Fillin
+
 
 <span style="color:orange">
 Reset_Scan_Settings <br/> 
@@ -175,16 +193,12 @@ Detector_Triggers_StrSeq</br>
 Detector_List</br>
 BeforeScan_StrSeq</br>
 AfterScan_StrSeq</br>
+Check_MainShutter</br>
+Kappa_PVmotor</br>
 </span>
 <br/> 
 
 
 ---
 ---
-
-# Missing:
-- CheckBranch
-- ARPES_PVmotor
-- Mono_Optics
-- SyncAllSlits
 
