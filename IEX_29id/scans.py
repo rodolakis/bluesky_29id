@@ -1,3 +1,7 @@
+from epics import caput,caget,PV
+from time import sleep
+
+
 def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
     """
     Reset scan record; the current IOC is defined by BL_ioc() (i.e. mirror position).
@@ -72,7 +76,7 @@ def Scan_Check(scanIOC,scanDIM=1):
         num=(str(i).zfill(2))
         pvd=caget(pv+".D"+num+"PV")
         if pvd !='': 
-            det=PV(pvd); sleep(0.1)#smallest sleep to allow for PV traffic
+            det=PV(pvd); sleep(0.1) #smallest sleep to allow for PV traffic
             if not det.connected:
                 print("Detector "+num+" has a bad PV:  "+det.pvname+" not connected")
     #Positioners

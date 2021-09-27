@@ -1,6 +1,8 @@
 from epics import caput, caget 
 from IEX_29id.utils.exp import BL_ioc, BL_Mode_Read, BL_Mode_Set
 from datetime import today 
+import time
+import os
 
 def logname_PV(scanIOC=None):
     """

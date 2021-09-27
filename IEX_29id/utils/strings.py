@@ -1,4 +1,5 @@
-from pyepics import caput, caget
+from epics import caput
+from .exp import RangeUp
 
 ##############################################################################################################
 ###########################            String Sequences & User Average         ######################
