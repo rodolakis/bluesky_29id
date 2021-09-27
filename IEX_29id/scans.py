@@ -1,5 +1,8 @@
 from epics import caput,caget,PV
 from time import sleep
+from .utils.exp import BL_ioc, CheckBranch, BL_Mode_Read
+from .utils.log import scanlog
+from .utils.misc import dateandtime
 
 
 def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
@@ -88,4 +91,105 @@ def Scan_Check(scanIOC,scanDIM=1):
             if not pos.connected:
                 print("Positioner "+num+" has a BAD PV:  "+pos.pvname+" not connected")
 
-            
+
+        
+def scantth(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
+    mybranch=CheckBranch()
+    if scanIOC is None:
+        scanIOC=BL_ioc()
+    if mybranch == "c":
+        print("tth motor does not exit")
+    elif mybranch == "d":
+        Scan_Kappa_Motor_Go("tth",start,stop,step,mode=mode,scanIOC=scanIOC,scanDIM=scanDIM,**kwargs)        
+    #elif mybranch =="e":
+    #    Scan_RSoXS_Motor_Go("tth",start,stop,step,mode=mode,scanIOC=scanIOC,scanDIM=scanDIM,**kwargs)     
+
+
+def Scan_Kappa_Motor_Go(name,start,stop,step,mode="absolute",settling_time=0.1,scanIOC=None,scanDIM=1,**kwargs):
+    """
+    Fills in the Scan Record and presses the go button
+    if scanIOC=None then uses BL_ioc()
+    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details      
+    default: scanDIM=1  
+
+    """
+    if scanIOC is None:
+        scanIOC="Kappa"
+    Scan_Kappa_Motor(name,start,stop,step,mode,settling_time)
+    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)
+
+def Scan_Kappa_Motor(name,start,stop,step,mode="absolute",settling_time=0.1,scanIOC=None,scanDIM=1):
+    """
+    Fills in the Scan Record does NOT press Go
+    if scanIOC=None then uses BL_ioc()
+    """
+    if scanIOC is None:
+        scanIOC=BL_ioc()
+    m_RBV=Kappa_PVmotor(name)[0]
+    m_VAL=Kappa_PVmotor(name)[1]
+    if mode == "relative":
+        current_value=caget(m_RBV)
+        abs_start=round(current_value+start,3)
+        abs_stop =round(current_value+stop,3)
+    else:
+        abs_start=start
+        abs_stop =stop
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
+    Scan_FillIn(m_VAL,m_RBV,scanIOC,scanDIM,abs_start,abs_stop,step)
+
+
+### Start Scan:
+def Scan_Go(scanIOC,scanDIM=1,**kwargs):
+    """Starts a scan for a given IOC scanIOC=("ARPES","Kappa","RSoXS") and diension scanDIM
+    by default: scanDIM=1  
+    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
+    """
+#    try:
+    Scan_Progress(scanIOC,scanDIM)
+    BL_mode=BL_Mode_Read()[0]
+    if not(BL_mode==2 or BL_mode==4):
+        Check_MainShutter()
+    Before_After_Scan(scanIOC,scanDIM)
+    for i in range(1,scanDIM+1):
+        drive = caget("29id"+scanIOC+":scan"+str(i)+".P1PV")
+        start = caget("29id"+scanIOC+":scan"+str(i)+".P1SP")
+        stop  = caget("29id"+scanIOC+":scan"+str(i)+".P1EP")
+        step  = caget("29id"+scanIOC+":scan"+str(i)+".P1SI")
+        print('Scan'+str(i)+': '+drive+'= '+str(start)+' / '+str(stop)+' / '+str(step))
+    FileName = caget("29id"+scanIOC+":saveData_baseName",as_string=True)
+    FileNum  = caget("29id"+scanIOC+":saveData_scanNumber")
+    print(FileName+str(FileNum)+" started at ", dateandtime())
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".EXSC",1,wait=True,timeout=900000)  #pushes scan button
+    print(FileName+str(FileNum)+" finished at ", dateandtime())
+    print('\n')
+    scanlog(**kwargs)
+
+### Fill Scan Record - 1st positionner:
+def Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step,point=None):
+    Scan_Progress(scanIOC,scanDIM)
+    #print "Scan {:d} - {:s} : {:0.3f} / {:0.3f} / {:0.3f}".format(scanDIM,VAL,start,stop,step)
+    #print "Scan "+str(scanDIM),VAL+" : "+str(start)+"/"+str(stop)+"/"+str(step)+"\n"
+    start=start*1.0
+    stop=stop*1.0
+    step=step*1.0
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(pv+".P1SM","LINEAR") 
+    caput(pv+".P1PV",VAL)
+    caput(pv+".R1PV",RBV)
+    caput(pv+".P1SP",start)
+    caput(pv+".P1EP",stop)
+    if point is None:
+        caput(pv+".P1SI",step)
+    else:
+        caput(pv+".NPTS",step)
+
+### Check & Wait while scan is in progress:
+def Scan_Progress(scanIOC,scanDIM=1,q=None):
+    """Checks if a scan is in progress, and sleeps until it is done"""
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    check=caget(pv+".FAZE")
+    while (check!=0):
+        if q == None:
+            print(pv+" in progress - please wait...")
+        sleep(30)
+        check=caget(pv+".FAZE")
