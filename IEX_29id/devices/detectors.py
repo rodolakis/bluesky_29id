@@ -1,32 +1,25 @@
 from epics import caput,caget
 from time import sleep
-from ..utils.strings import ClearCalcOut
+from IEX_29id.utils.strings import ClearCalcOut
 
            
-def Kappa_DetectorDict(which):
-    """
-    which = d3, d4, mcp, apd, yag
-    """
-    #det={'d4': 0.0,'d3': 7.684, 'mcp': 18.275, 'apd': 29.753, 'yag': 33.269, }   # up to 2020_3
-    det={'d4': 0.0,'d3': -29.123, 'mcp': -18.6416-0.2+0.11, 'apd': 0.0, 'yag': 4.036 }    # 2021_1
-    angle=det[which]
-    return angle
+# def Kappa_Detector_Offset(detector):
+#     """
+#     detector = d3, d4, mcp, apd, yag
+#     """
+#     #det={'d4': 0.0,'d3': 7.684, 'mcp': 18.275, 'apd': 29.753, 'yag': 33.269, }   # up to 2020_3
+#     det={'d4': 0.0,'d3': -29.123, 'mcp': -18.6416-0.2+0.11, 'apd': 0.0, 'yag': 4.036 }    # 2021_1
+#     angle=det[detector]
+#     return angle
 
 
-def setdet(which):
+def set_detector(detector):
     """
-    which = d3, d4, mcp, apd, yag
+    detector = d3, d4, mcp, apd, yag
     Reset tth for a given detector.
     """
-    detset(which)
-
-def detset(which):
-    """
-    which = d3, d4, mcp, apd, yag
-    Reset tth for a given detector.
-    """
-    caput('29idKappa:det:set',which)
-
+    caput('29idKappa:det:set',detector)
+    return
     
 def MPA_Interlock():
     ioc="Kappa"
