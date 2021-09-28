@@ -140,6 +140,7 @@ ___
 - _userDataFolder
 - _filename_key
 - Folder_mda
+- Folder_ARPES
 - getNextFileNumber 
 - Check_Staff_Directory
 
