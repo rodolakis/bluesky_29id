@@ -19,7 +19,7 @@ def set_detector(detector):
     Reset tth for a given detector.
     """
     caput('29idKappa:det:set',detector)
-    return
+    return detector
     
 def MPA_Interlock():
     ioc="Kappa"

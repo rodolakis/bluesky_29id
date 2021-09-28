@@ -1,4 +1,4 @@
-from epics import caput, caget
+from epics import caput
 from IEX_29id.utils.exp import Check_run, BL_Mode_Set, BL_ioc
 from IEX_29id.mda.file import MDA_CurrentDirectory
 from IEX_29id.mda.file import MDA_CurrentRun
