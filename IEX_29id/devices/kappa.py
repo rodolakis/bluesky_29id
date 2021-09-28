@@ -1,6 +1,20 @@
 from epics import caget, caput
 from time import sleep
+from IEX_29id.utils.exp import CheckBranch
 
+
+
+def mvtth(val):
+    """ Moves tth motor in the in the Kappa chamber
+    """
+    name="tth"
+    mybranch=CheckBranch()
+    #if branch == "c":
+    if mybranch == "c":
+        print("   tth motor does not exit")
+    #elif branch == "d":
+    elif mybranch == "d":
+        Move_Motor_vs_Branch(name,val)
 
 
 
