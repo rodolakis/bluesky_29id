@@ -1,7 +1,7 @@
 
 from epics import caput, caget
-from .folders import *
-from .strings import ClearCalcOut
+from IEX_29id.utils.folders import *
+from IEX_29id.utils.strings import ClearCalcOut
 from os import system
 import datetime
 import time
@@ -53,10 +53,6 @@ def CheckBranch_Name():
         else:
             branchname = "RSXS"
     return branchname
-
-
-
-
 
 
 ## BeamLine mode functions

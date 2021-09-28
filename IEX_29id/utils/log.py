@@ -1,6 +1,8 @@
 from epics import caput, caget 
 from .exp import BL_ioc, CheckBranch
 from .misc import today 
+from ..mda.file import MDA_CurrentUser
+from ..mda.file import MDA_CurrentRun
 import time
 import os
 
