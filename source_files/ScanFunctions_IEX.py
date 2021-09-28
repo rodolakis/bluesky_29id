@@ -190,15 +190,8 @@ def TestShell():
     subprocess.call("start_cryocon")
 
 
-def ID_State2Mode(which,mode):
-    ID_State2Mode={}
-    ID_State2Mode["Mode"]  = {"RCP":0, "LCP":1, "V":2, "H":3, "HN":4}
-    ID_State2Mode["State"] = {0:"RCP", 1:"LCP", 2:"V", 3:"H", 4:"HN"}
-    try:
-        ID=ID_State2Mode[which][mode]
-    except KeyError:
-        print("WARNING: Not a valid ID mode!")
-    return ID
+
+
 
 
 def Mono_Optics():
@@ -6898,17 +6891,7 @@ def mvkphi(val):
     name="kphi"
     Move_Motor_vs_Branch(name,val)
 
-def mvtth(val):
-    """ Moves tth motor in the in the Kappa chamber
-    """
-    name="tth"
-    mybranch=CheckBranch()
-    #if branch == "c":
-    if mybranch == "c":
-        print("   tth motor does not exit")
-    #elif branch == "d":
-    elif mybranch == "d":
-        Move_Motor_vs_Branch(name,val)
+
         
         
 def uan(tth,th):
