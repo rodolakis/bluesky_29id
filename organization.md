@@ -3,19 +3,23 @@
 
 ## devices
 - <span style="color:lightgrey">arpes</span>
-- ca  (current amplifiers)
-- detector
-- diagnostic
+- detectors
+- diagnostics
 - kappa
+- keithleys
 - mono
-- motor
+- motors
 - <span style="color:lightgrey">slit</span>
 - undulator
 
 ## hklpy 
 
 ## mda
+- file
 - mda
+
+## scans
+- setup
 
 ## utils
 - exp
@@ -26,7 +30,6 @@
 - status
 - strings
 
-## scans
 
 ---
 ---
@@ -34,55 +37,105 @@
 # devices
 
 
-## ca
- - Reset_CA
 
-## detector
-- Kappa_DetectorDict
-- setdet
-- detset
+## detectors
+- <span style="color:green">Kappa_DetectorDict</span>
+- set_detector <span style="color:green">(setdet,detset)</span>
 - MPA_Interlock
 
 
-## diagnostic
+## diagnostics
 - 
 
 ## kappa
+ - mvtth
  - Sync_PI_Motor
  - Sync_Euler_Motor
- - Home_SmarAct_Motor
+ - Home_SmarAct_Motor   <span style="color:green">(Sync_SmarAct_Motor)</span>
  
+
+## keithleys
+ - reset_keithley  <span style="color:green">(Reset_CA)</span>
+
 
 ## mono
 - Reset_Mono_Limits
 
-## motor
+## motors
 - Sync_Encoder_RBV
-- 
+- Move_Motor_vs_Branch
+- UMove_Motor_vs_Branch
 
 ## undulator
 - 
 
+
 ---
 ---
 
+# mda
 
 
+## file
+- MDA_GetLastFileNum
+- MDA_CurrentDirectory
+- MDA_CurrentPrefix
+- MDA_CurrentRun
+- MDA_CurrentUser
 
-# Utils
+## mda 
+- mda.py
 
 
-## exp: 
+---
+---
 
+# scans
+
+
+## setup
+- Reset_Scan
+- Scan_Checksetup
+- scantth
+- Scan_Kappa_Motor_Go
+- Scan_Kappa_Motor
+- Scan_Go
+- Scan_Fillin
+
+
+<span style="color:orange">
+Reset_Scan_Settings <br/> 
+Detector_Default  <br/>  
+Clear_Scan_Triggers</br>
+Detector_Triggers_StrSeq</br>
+Detector_List</br>
+BeforeScan_StrSeq</br>
+AfterScan_StrSeq</br>
+Check_MainShutter</br>
+Kappa_PVmotor</br>
+</span>
+<br/> 
+
+
+___
+___
+
+
+# utils
+
+
+## exp 
+<span style="color:red">TO BE CLEANED</span>
 - Check_run
 - CheckBranch
 - CheckBranch_Name
 - BL_Mode_Set
 - BL_Mode_Read
 - BL_ioc
+___
 
-
-## folders
+## folders  
+<span style="color:red">TO BE CLEANED</span>
 - Make_DataFolder
 - _userDataFolder
 - _filename_key
@@ -96,6 +149,7 @@
  </span>
  <br/> 
 
+___
 
 ## log
 - logname_PV
@@ -107,11 +161,9 @@
 - log_headerMDA
 - scanlog
 
-<span style="color:orange">
-MDA_CurrentUser <br/> 
+<span style="color:orange"> 
 SaveFile_Header <br/> 
-SaveFile</br> 
-ID_State2Mode  <br/>  
+SaveFile  <br/>  
 ARPES_PVmotor</br>
 Kappa_PVmotor</br>
 </span>
@@ -155,8 +207,7 @@ Kappa_PVmotor</br>
 - Get_Gain
 - Get_SnapShot
 
-<span style="color:orange"> 
-ID_State2Mode  <br/>  
+<span style="color:orange">   
 ARPES_PVmotor</br>
 Mono_Optics</br>
 SyncAllSlits</br>
@@ -173,28 +224,6 @@ Kappa_PVmotor</br>
 ---
 
 
-# scans
-- Reset_Scan
-- Scan_Check
-- scantth
-- Scan_Kappa_Motor_Go
-- Scan_Kappa_Motor
-- Scan_Go
-- Scan_Fillin
-
-
-<span style="color:orange">
-Reset_Scan_Settings <br/> 
-Detector_Default  <br/>  
-Clear_Scan_Triggers</br>
-Detector_Triggers_StrSeq</br>
-Detector_List</br>
-BeforeScan_StrSeq</br>
-AfterScan_StrSeq</br>
-Check_MainShutter</br>
-Kappa_PVmotor</br>
-</span>
-<br/> 
 
 
 ---
