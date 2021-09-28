@@ -2500,14 +2500,6 @@ def ARPES_scanDIM():
     scanDIM=1
     return scanDIM
 
-def Move_ARPES_Motor(name,val):
-    """
-    Moves a motor in the ARPES chamber based on common name, not PV name
-    name = x,y,z,th,chi,phi
-    """
-    m_RBV=ARPES_PVmotor(name)[0]
-    m_VAL=ARPES_PVmotor(name)[1]
-    caput(m_VAL,val,wait=True,timeout=18000)
 
 
 def Reset_Motor_ARPES(name):
