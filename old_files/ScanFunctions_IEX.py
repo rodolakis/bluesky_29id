@@ -15,270 +15,6 @@ from os import listdir,mkdir,chown,system,chmod
 from os.path import join, isfile, exists, dirname
 
 
-# required for optimize functions
-# from Macros_29id.mda.mda import readMDA
-
-# from ScanFunctions_EA import *  # comment out debugging max/min FR 6/17/21
-
-
-#from ScanFunctions_plot import fit_mda, mda_1D,fit_gauss
-
-#import matplotlib.pyplot as plt
-
-#from matplotlib.pyplot import plot, show, legend, xlabel, ylabel
-
-#if __name__=='__main__':
-#    print(__file__)
-
-# if __name__ == "__main__":
-#     print(__file__)
-#    main()
-
-# =============================================================================
-# user_branch=''
-# xray=''
-# user=''
-# 
-# def main():
-#     global user_branch
-#     global xray
-#     global user
-# 
-#     # User or Staff:
-#     u=input("Are you a user? y or n? > ")
-#     if u in ['y','n']:
-#         print("OK")
-#         user=user+u
-#     else: 
-#         print("Invalid answer. Please %run ScanFunctions_IEX.py again.")    
-#     # ARPES or RSXS:
-#     b = input("Which branch are you using? c (ARPES) or d (RSXS)? > ")
-#     if b in ['c','d']:
-#         print("OK")
-#         user_branch=user_branch+b
-#     else: 
-#         print("Invalid answer. Please %run ScanFunctions_IEX.py again.")
-#     # xray or not:
-#     x = input("Are you using xrays? y or n? > ")
-#     if x in ['y','n']:
-#         print("OK")
-#         xray=xray+x
-#     else: 
-#         print("Invalid answer. Please %run ScanFunctions_IEX.py again.")
-# 
-# 
-# def BL_ioc():
-#     global user_branch
-#     scanIOC=None
-#     if user_branch == 'c':
-#         scanIOC='ARPES'
-#     if user_branch == 'd':
-#         scanIOC='Kappa'
-#     return scanIOC
-# 
-# 
-# def BL_Status():
-#     global user_branch
-#     global xray
-#     global user
-#     if user == 'n':
-#         BL_mode = 1
-#         which="Staff"
-#     elif xray == 'n':
-#         BL_mode = 2
-#         which="He Lamp"
-#     elif user == 'y':
-#         BL_mode = 0
-#         which="User"
-#     elif user_branch == 'e':   #to add in the input options in main()
-#         BL_mode = 3
-#         which="RSoXS"
-#     else:
-#         BL_mode = 4
-#         which="Other"
-#     return BL_mode,which
-# =============================================================================
-
-
-###### 
-###### ScanFunctions_29id.py:
-#    - Endstation Scripts
-#    - Tables
-#    - Date, Time, Loops
-#    - Folders & Files
-#    - ID scripts:    status / start / restart / modes / quasiperiodicity / ID energy
-#    - BL scripts:    shutters / branches / diagnostics / gratings / mono & BL energy
-#    - Scan Set-Up:    progress / start / clear / reset / FillIn / CA
-#    - StrSeq/Avg:    String seq (Before/after scan...) & User Average
-#    - Basic Scans:    energy & motors (B,C,D)
-#    - Motors Scans:    ARPES & Kappa
-#    - Commissionning: FMB scans & control / Pinholes & Slits scans
-#    - Camera Scans:    camera & scan record set-up / beam motion
-#    - Kappa Scans
-#    - Resolution
-#    - Slit Set-Up
-######     
-
-##############################################################################################################
-################################     Date, Time, Loops & Files         ##############################
-##############################################################################################################
-
-
-
-
-# def sleep(t):
-#     time.sleep(t)
-
-# def dateandtime():
-#     return time.strftime("%a %d %b %Y %H:%M:%S",time.localtime())
- 
-# def today(which='default'):
-#     dt = datetime.datetime.today()
-#     today_year = dt.year
-#     today_month = dt.month
-#     today_day = dt.day
-#     if which == 'slash':
-#         today_str=("{:02d}/{:02d}/{:04d}".format(today_month,today_day,today_year))
-#     elif which == 'int':
-#         today_str=int(("{:04d}{:02d}{:02d}".format(today_year,today_month,today_day)))
-#     else: # 'default':
-#         today_str=("{:04d}{:02d}{:02d}".format(today_year,today_month,today_day))
-#     return today_str 
- 
-
-# def WaitForIt(D,H,M):
-#     """
-#     D = how many days from now
-#     H,M = what time that day in 24h clock
-
-#     e.g.: if today is           Wed Nov 21 at 14:00
-#         WaitForIt(2,9,0) => Fri Nov 23 at  9:00
-#     """
-#     t = datetime.datetime.today()
-#     day = datetime.timedelta(days=D)
-#     future = t + day
-#     returnTime = datetime.datetime(future.year, future.month, future.day, H, M)
-#     timeToWait = returnTime - t
-#     s=round(timeToWait.total_seconds(),1)
-#     m=round(timeToWait.total_seconds()/60.0,1)
-#     h=round(timeToWait.total_seconds()/3600.0,1)
-#     print("Now is:      "+str(t))
-#     print("Target date: "+str(returnTime))
-#     print("Sleeping for "+str(s)+" s = "+str(m)+" m = "+str(h)+" h")
-#     print("Waaaaaaaait for it...")
-#     time.sleep(timeToWait.total_seconds())
-#     print(dateandtime())
-
-
-# def playsound(sound='FF'):
-#     """
-#     plays a sound when run
-#     'FF' Final Fantasy victory sound
-#     'ding' a subtle ding noise
-#     'hallelujah' hallelujah chorus
-#     """
-#     if sound == 'FF':
-#         sounds = '/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/Sound_Files/VictoryFF.wav'
-#     elif sound == 'ding':
-#         sounds = '/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/Sound_Files/ding.wav'
-#     elif sound == 'hallelujah':
-#         sounds = '/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/Sound_Files/hallelujah.wav'
-#     system('aplay ' + sounds)
-
-# def RangeUp(start,end,step):
-#     while start <= end:
-#         yield start
-#         start += abs(step)
-
-# def RangeDown(start,end,step):
-#     while start >= end:
-#         yield start
-#         start -= abs(step)
-
-# def EgForLoop():
-#     for hv in RangeDown(2000,500,-500):
-#         print(hv)
-#     for hv in RangeUp(500,2000,500):
-#         print(hv)
-
-# def TakeClosest(myList,myNumber):
-#     """Given a list of integers, I want to find which number is the closest to a number x."""
-#     return min(myList, key=lambda x:abs(x-myNumber))
-
-
-##############################################################################################################
-##############################             Folders & Files          ##############################
-##############################################################################################################
-
-
-# to caget path:  caget("29idc:saveData_fileSystem",as_string=True)
-
-# Data folder structure:
-#
-#   STAFF:    data_29idb  / 2017_2 / csv
-#                                   LabBook
-#                                   mda
-#                                   mpa
-#                                   netCDF
-#                                   SES
-#                                   tif
-#                                   mpa
-#
-#   USERS (C):   data_29idc / 2017_2 / UserName / mda
-#                                                 netCDF
-#                                                 SES
-#
-#   USERS (D):   data_29idd / 2017_2 / UserName / mda
-#                                                 mpa
-
-# def Check_run():
-#     todays_date = date.today()
-    
-#     date1 = ( 1, 1)   # start date run_1
-#     date2 = ( 5, 1)   # start date run_2
-#     date3 = (10, 1)   # start date run_3
-    
-#     datex = (todays_date.month,todays_date.day)
-    
-#     if date1 <= datex < date2:
-#         run=str(todays_date.year)+'_1'
-#     elif date2 <= datex < date3:
-#         run=str(todays_date.year)+'_2'
-#     else:
-#         run=str(todays_date.year)+'_3'
-#     print('Current run:', run)
-#     return(run)
-
-
-# def Check_Staff_Directory(**kwargs):
-#     """
-#     Switchs to the staff directory
-#         Uses Fold
-#     """
-#     kwargs.setdefault("scanIOC",BL_ioc())
-#     kwargs.setdefault("run",Check_run())
-    
-#     scanIOC=kwargs["scanIOC"]
-#     run= kwargs["run"]
-    
-#     directory = MDA_CurrentDirectory(scanIOC)
-#     current_run = MDA_CurrentRun(scanIOC)
-    
-#     if directory.find('data_29idb') < 1 or current_run != run:
-#         print('You are not currently saving in the Staff directory and/or the desired run - REPLY "yes" to switch folder.\nThis will only work if the run directory already exists.\nOtherwise, you must open ipython as 29id to create a new run directory using:\n\tFolder_'+scanIOC+'(run,\'Staff\')')
-#         foo=input('\nAre you ready to switch to the '+run+' Staff directory? >')
-#         if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
-#             print('Switching directory...')
-#             if scanIOC=='ARPES':
-#                 Folder_ARPES('Staff',mdaOnly=True,**kwargs)
-#             elif scanIOC=='Kappa':
-#                 Folder_Kappa('Staff',create_only=False)
-#         else:
-#             print('\nFolder not set.')
-#     else:
-#         print('Staff directory OK.')
-#     directory = MDA_CurrentDirectory(scanIOC)
-#    print('\nCurrent directory: '+directory)
 
 def Folder_ARPES(UserName,**kwargs):
     """
@@ -371,151 +107,6 @@ def mdaPath(userName,scanIOC,**kwargs):
             folder = d (User and Kappa)
     """
     return join(_userDataFolder(userName,scanIOC,**kwargs),"mda")
-    
-# def _userDataFolder(userName,scanIOC,**kwargs):
-#     """
-#     Returns the path to a user folder
-#             dataFolder='/net/s29data/export/data_29id'+folder+'/'+run+'/'+userName
-#     kwargs:
-#         run: Check_run(); unless specified
-#         BLmode:  Staff / User; based on userName unless specified
-            
-#         folder: determined by UserName and scanIOC
-#             folder = b (Staff)
-#             folder = c (User and ARPES)
-#             folder = d (User and Kappa)
-#     """
-#     kwargs.setdefault('run',Check_run())
-#     folder=""
-#     run=kwargs['run']
-    
-#     if userName == 'Staff':
-#         folder="b"
-#         if "BLmode" in kwargs:
-#             BL_Mode_Set(kwargs["BLmode"])
-#         else:
-#             BL_Mode_Set("Staff")
-#     else:
-#         BL_Mode_Set("User")
-#         if scanIOC=="ARPES":
-#             folder="c"
-#         if scanIOC=="Kappa":
-#             folder="d"   
-                  
-#     dataFolder='/net/s29data/export/data_29id'+folder+'/'+run+'/'+userName
-#     return dataFolder
-        
-    
-# def Make_DataFolder(run,folder,UserName,scanIOC,ftp): #JM was here ->print full crontab command and change permissions on kip -still needs work!
-#     """
-#     Creates the User Folder on the dserv
-#     if ftp = True: creates the folders on kip (ftp server) and modifies the cronjob
-#     """
-    
-#     crontime={
-#         'mda2ascii':'0,30 * * * * ',
-#         'chmod':'1,31 * * * * ',
-#         'data_other':'2,32 * * * * ',
-#         'notebook':'*/3 * * * * ',
-#     }
-#     if (folder == 'c'or folder == 'd'):
-#         if ftp:
-#             print('-------------------------------------------------------------')
-#             #mda2ascii
-#             MyPath_kip_run='/net/kip/sftp/pub/29id'+folder+'ftp/files/'+run+'/'
-#             MyPath_kip='/net/kip/sftp/pub/29id'+folder+'ftp/files/'+run+'/'+UserName+'/'
-#             cmd_mda2ascii=crontime['mda2ascii']+' /net/s29dserv/APSshare/bin/mda2ascii -d '+MyPath_kip+'ascii '+MyPath_kip+'mda/*.mda'
-#             print(cmd_mda2ascii)
-#             #chmode
-#             cmd_chmod=crontime['chmod']+' chmod 664  '+MyPath_kip+'ascii/*.asc'
-#             print(cmd_chmod)
-#             #notebooks
-#             cmd_notebook=crontime['notebook']+' /usr/bin/rsync -av --exclude=core /home/beams22/29IDUSER/Documents/User_Folders/'+UserName+'/* kip:'+MyPath_kip+'notebook >  /home/beams22/29ID/cronfiles/cptoftp-currrun-d-User.log 2>&1'
-#             print(cmd_notebook)
-#             print('-------------------------------------------------------------\n\n')
-#             #making folders 
-#             print("\n\n")
-#             print(MyPath_kip)
-#             print(MyPath_kip+"ascii")
-#             if not (exists(MyPath_kip_run)):
-#                 mkdir(MyPath_kip_run)
-#                 chmod(MyPath_kip_run, 0o775)
-#             if not (exists(MyPath_kip)):
-#                 mkdir(MyPath_kip)
-#                 chmod(MyPath_kip, 0o775)
-#             if not (exists(MyPath_kip+"ascii")):
-#                 mkdir(MyPath_kip+'ascii')
-#                 chmod(MyPath_kip+'ascii', 0o775)
-#             if not (exists(MyPath_kip+"notebook")):
-#                 mkdir(MyPath_kip+"notebook")
-#                 chmod(MyPath_kip+"notebook", 0o775)
-#         else:
-#             print("To create ftp folders & update contrab, you need to run the following as 29id:")
-            
-#             print("\tFolder_"+str(scanIOC)+"('"+str(run)+"','"+str(UserName)+"',ftp=True)")
-
-#         MyPath_File='/home/beams/29IDUSER/Documents/User_Folders/'+UserName
-#         UserName = "/"+UserName
-#         if not (exists(MyPath_File)):
-#             mkdir(MyPath_File)
-#         #if folder == 'd':
-#             #MyPath_File_hkl='/home/beams/29IDUSER/Documents/User_Folders/'+UserName+'/hkl'
-#             #if not (exists(MyPath_File_hkl)):
-#             #    mkdir(MyPath_File_hkl)
-#     if folder == 'b':
-#         UserName = ''
-#     #MyPath_run='/net/s29data/export/data_29id'+folder+'/'+run
-#     MyPath_run=os.path.dirname(_userDataFolder(UserName,scanIOC))
-#     if not (exists(MyPath_run)):
-#         mkdir(MyPath_run)
-#     #MyPath_Data=MyPath_run+UserName
-#     MyPath_Data=_userDataFolder(UserName,scanIOC)
-#     if not (exists(MyPath_Data)):
-#         mkdir(MyPath_Data)
-    
-
-# def Folder_mda(run,folder,UserName,scanIOC):
-#     """
-#     For Staff: folder='b', UserName='Staff'
-#     For ARPES: folder ='c'
-#     For Kappa or RSoXS: folder = 'd'
-#     """
-#     FilePrefix=scanIOC
-#     if UserName == 'Staff':
-#         UserName=""
-#     else:
-#         UserName=UserName+"/"
-#     MyPath="/net/s29data/export/data_29id"+folder+"/"+run+"/"+UserName+"mda"
-#     print("\nMDA folder: " + MyPath)
-#     if not (exists(MyPath)):
-#         mkdir(MyPath)
-#         FileNumber=1
-#     else:
-#         FileNumber=getNextFileNumber(MyPath,FilePrefix)
-#     if scanIOC=="Test" or scanIOC=="Kappa" or scanIOC=="ARPES" or scanIOC=="RSoXS":
-#         caput("29id"+scanIOC+":saveData_fileSystem","/net/s29data/export/data_29id"+folder+"/"+run)
-#         sleep(0.25) #needed so that it has time to write        
-#         caput("29id"+scanIOC+":saveData_subDir","/"+UserName+"mda")
-#     else:
-#         caput("29id"+scanIOC+":saveData_fileSystem","//s29data/export/data_29id"+folder+"/"+run)
-#         sleep(0.25)
-#         caput("29id"+scanIOC+":saveData_subDir",UserName+"mda")
-#     caput("29id"+scanIOC+":saveData_baseName",FilePrefix+"_")
-#     caput("29id"+scanIOC+":saveData_scanNumber",FileNumber)
-
-# def Folder_SPEC(run,folder,UserName):
-#     if folder == "b":
-#         UserName = "Staff"
-#     else:
-#         UserName = UserName+"/"
-#     MyPath="/home/beams22/29IDUSER/spec/data/"+run+"/"+UserName
-#     print("\nSPEC folder: " + MyPath)
-#     print("You will need to create folder and set up the path manually in SPEC:")
-#     print("    cd "+MyPath)
-#     print("    newfile FileName")
-#     print("To start SPEC fresh: ./bin/kappa29ID -f")
-#     #if not (exists(MyPath)):
-#     #    mkdir(MyPath)
 
 
 def Folder_MPA(run,folder,UserName,FilePrefix="mpa"):
@@ -540,47 +131,6 @@ def Folder_MPA(run,folder,UserName,FilePrefix="mpa"):
     print("\nMPA folder on Crabby: "+windowsPath)
     caput("29iddMPA:TIFF1:FileName",FilePrefix)
     caput("29iddMPA:TIFF1:FileNumber",FileNumber)
-
-# def _filename_key(filename):
-#     return (len(filename), filename)
-
-# def getNextFileNumber(data_dir, file_prefix,**kwargs):
-#     """
-#     gets the next file number for the pattern 
-#     data_dir/file_prefix_filenum
-    
-#     kwargs:
-#         debug = False (default); if True then print lo
-#         q = True (default); if False then prints next file number
-#     """
-#     kwargs.setdefault("debug",False)
-#     kwargs.setdefault("q",True)
-    
-#     onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f)) and f[:len(file_prefix)] == file_prefix]
-#     sortedfiles = sorted(onlyfiles, key=_filename_key)
-#     pattern = re.compile('(.*)_(.*)\.(.*)')
-#     try:
-#         lastFile = sortedfiles[-1]
-#     except IndexError as errObj:
-#         nextFileNumber = 1
-#         if kwargs["debug"]:
-#             print("Data directory = ", data_dir)
-#             print("File prefix =", file_prefix)
-#             print("File number =", None)
-#             print("File extension =", "TBD")
-#             print("Next File number =", nextFileNumber)
-#     else:
-#         matchObj = pattern.match(lastFile)
-#         nextFileNumber = int(matchObj.group(2)) + 1
-#         if kwargs["debug"]:
-#             print("Data directory = ", data_dir)
-#             print("File prefix =", matchObj.group(1))
-#             print("File number =", matchObj.group(2))
-#             print("File extension =", matchObj.group(3))
-#             print("Next File number =", nextFileNumber)
-#     if kwargs["q"] == False:
-#         print("Next File Number: ",nextFileNumber)
-#     return nextFileNumber
 
 
 def SaveFile_Header(FilePath,FileName,ListOfEntry=None):   
@@ -820,81 +370,7 @@ def align_m3r(p=118,debug=False):
         print('Done')
         print(centroid())
         print('\n')
-            
-# def align_m3r(p=109): # ROI X=220/250; Y = 350/55 after  c=hanging cam mount 2/4/2021; pxl=100 for C edge; was 113.8 before
-#     if caget('PA:29ID:SDS_BLOCKING_BEAM.VAL') == 1:
-#         Open_DShutter()
-#         sleep(10)
-#     if caget('29id_ps6:cam1:Acquire') == 0:# cam off
-#         caput('29id_ps6:cam1:Acquire',1)   # cam on
-#     Move_M3R('RY',-16.47)
-    
-#     #alignPV='29idKappa'
-#     alignPV='29id_dohn'
-#     caput(alignPV+':m3rs:desired_pixel_location',p)
-#     caput(alignPV+':m3rs:enable',1)
-#     while True:
-#         status=caget(alignPV+':m3rs:enable')
-#         if (status==1):
-#             sleep(0.5)
-#         else:
-#             print(caget(alignPV+":m3rs:status",as_string=True))
-#             print('centroid ='+str(round(caget('29id_ps6:Stats1:CentroidX_RBV'),1)))
-#             break
 
-# def align_m3r_v1(p=109): # ROI X=220/250; Y = 350/55 after  c=hanging cam mount 2/4/2021; pxl=100 for C edge; was 113.8 before
-#     if caget('PA:29ID:SDS_BLOCKING_BEAM.VAL') == 1:
-#         Open_DShutter()
-#         sleep(10)
-#     if caget('29id_ps6:cam1:Acquire') == 0:# cam off
-#         caput('29id_ps6:cam1:Acquire',1)   # cam on
-#     Move_M3R('RY',-16.47)
-    
-#     alignPV='29idKappa'
-#     #alignPV='29id_dohn'
-#     caput(alignPV+':m3rs:desired_pixel_location',p)
-#     caput(alignPV+':m3rs:enable',1)
-#     while True:
-#         status=caget(alignPV+':m3rs:enable')
-#         if (status==1):
-#             sleep(0.5)
-#         else:
-#             print(caget(alignPV+":m3rs:status",as_string=True))
-#             print('centroid ='+str(round(caget('29id_ps6:Stats1:CentroidX_RBV'),1)))
-#             break           
-
-def CheckBranch():
-    BL_mode=BL_Mode_Read()[0]
-    BranchPV=caget("29id:CurrentBranch.VAL")
-    if BL_mode==2:
-        branch="c"
-    elif BL_mode==3:
-        branch="e"
-    else:
-        if (BranchPV == 0):
-            branch = "c"        # PV = 0 => ARPES
-        else:
-            branch = "d"        # PV = 1 => RSXS
-    return branch
-
-def CheckBranch_Name():
-    BL_mode=BL_Mode_Read()[0]
-    BranchPV=caget("29id:CurrentBranch.VAL")
-    if BL_mode==2:
-        branchname= "He Lamp"
-    else:
-        if (BranchPV == 0):
-            branchname = "ARPES"
-        else:
-            branchname = "RSXS"
-    return branchname
-
-
-
-#def Reference_RSXS_Dial0():  # value from 02/21/2017 - still valid as of 6/6/2017
-#    """Print micro-scale value for (x,y) dial = (0,0)"""
-#    print "X = 0.437\""
-#    print "Y = 0.095\""
     
 def GoToSlit1AScribe():
     """Moves to Scribe Marks
@@ -1810,22 +1286,6 @@ def Switch_Branch(which, forced=False, noshutter=False,noreset=False,nocam=False
                         else: print(cam_list[i].pvname+' not connected')
                     except:
                         pass
-#             if not nocam:
-#                 #cam_dict={'C':[1,2,3],'D':[4,6,7]}
-#                 cam_dict={'C':[2],'D':[4,6,7]}
-#                     #for n in [1,2,3,4,6,7]:                   # turn OFF all cam
-#                 for n in [2,4,6,7]:                   # turn OFF all cam
-#                     pv="29id_ps"+str(n)+":"
-#                     try:
-#                         caput(pv+"cam1:Acquire",0)
-#                     except:
-#                         print('Failed to turn OFF cam'+str(n))
-#                 for n in cam_dict[which]:                 # turn ON relevant cam
-#                     pv="29id_ps"+str(n)+":"
-#                     try:
-#                         caput(pv+"cam1:Acquire",1)
-#                     except:
-#                         print('Failed to turn ON cam'+str(n))
     else:
         print("\nWARNING: Not a valid branch name, please select one of the following:")
         print(" \"c\" for ARPES, \"d\" for Kappa ")
@@ -2028,17 +1488,6 @@ def SetMono(eV):
             sleep(2.5)
             caput("29idmono:ENERGY_SP",eV,wait=True,timeout=18000)
     print("Mono set to",str(eV),"eV")
-#    while True:
-#        STS=Mono_Status()
-#        if STS == 0:            # 0 = positioned
-#            sleep(0.5)        # 1 = moving
-#        elif STS >1:            # >1 = error
-#            caput("29idmonoMIR:P.STOP",1)
-#            caput("29idmonoGRT:P.STOP",1)
-#            sleep(1)
-#            caput("29idmono:ENERGY_SP",eV,wait=True,timeout=18000)
-#        elif STS == 1:
-#            break
 
 
 
@@ -2166,15 +1615,7 @@ def Enable_Mono():
     caput("29idmonoMIR:X_ENA_CMD.PROC",1)
     caput("29idmonoMIR:P_ENA_CMD.PROC",1)
 
-# def Reset_Mono_Limits():
-# #    caput("29idmono_GRT_TYPE_SP.ONST", 'MEG_PA')
-# #    caput("29idmono_GRT_TYPE_SP.TWST", 'HEG_JY')
-# #    caput("29idmono_GRT_TYPE_SP.THST", 'MEG_JY')
-#     caput("29idmono:ENERGY_SP.DRVL",200)
-#     caput("29idmono:ENERGY_SP.LOW",200)
-#     caput("29idmono:ENERGY_SP.LOLO",200)
-#     caput("29idmono:ENERGY_SP.LOPR",200)
-#     print("Mono limits have been reset.")
+
 
 
 ##############################################################################################################
@@ -2192,49 +1633,12 @@ def Print_Beeper(scanDIM=1):
     print("ID29:BusyRecord")
 
 
-### Check & Wait while scan is in progress:
-def Scan_Progress(scanIOC,scanDIM=1,q=None):
-    """Checks if a scan is in progress, and sleeps until it is done"""
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    check=caget(pv+".FAZE")
-    while (check!=0):
-        if q == None:
-            print(pv+" in progress - please wait...")
-        sleep(30)
-        check=caget(pv+".FAZE")
-
-#    print "Scan done", dateandtime()
 
 ### Abort Scan
 def Scan_Abort(scanIOC,scanDIM):
     pv="29id"+scanIOC+":"
     caput("29id"+scanIOC+":AbortScans.PROC",0)
     
-### Start Scan:
-def Scan_Go(scanIOC,scanDIM=1,**kwargs):
-    """Starts a scan for a given IOC scanIOC=("ARPES","Kappa","RSoXS") and diension scanDIM
-    by default: scanDIM=1  
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
-    """
-#    try:
-    Scan_Progress(scanIOC,scanDIM)
-    BL_mode=BL_Mode_Read()[0]
-    if not(BL_mode==2 or BL_mode==4):
-        Check_MainShutter()
-    Before_After_Scan(scanIOC,scanDIM)
-    for i in range(1,scanDIM+1):
-        drive = caget("29id"+scanIOC+":scan"+str(i)+".P1PV")
-        start = caget("29id"+scanIOC+":scan"+str(i)+".P1SP")
-        stop  = caget("29id"+scanIOC+":scan"+str(i)+".P1EP")
-        step  = caget("29id"+scanIOC+":scan"+str(i)+".P1SI")
-        print('Scan'+str(i)+': '+drive+'= '+str(start)+' / '+str(stop)+' / '+str(step))
-    FileName = caget("29id"+scanIOC+":saveData_baseName",as_string=True)
-    FileNum  = caget("29id"+scanIOC+":saveData_scanNumber")
-    print(FileName+str(FileNum)+" started at ", dateandtime())
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".EXSC",1,wait=True,timeout=900000)  #pushes scan button
-    print(FileName+str(FileNum)+" finished at ", dateandtime())
-    print('\n')
-    scanlog(**kwargs)
 
 
 
@@ -2305,64 +1709,6 @@ def CA15():
     #diode=format(diode,'1.3e')
     return diode
 
-def MDA_GetLastFileNum(scanIOC=None):
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    FileNum  = caget("29id"+scanIOC+":saveData_scanNumber")-1
-    return FileNum
-
-def MDA_CurrentDirectory(scanIOC=None):
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    Dir=caget("29id"+scanIOC+":saveData_fileSystem",as_string=True)
-    subDir=caget("29id"+scanIOC+":saveData_subDir",as_string=True)
-    FilePath = Dir +'/'+subDir+"/"
-    if FilePath[1]=='/':
-        FilePath="/net"+FilePath[1:]
-    FilePath=FilePath.replace('//','/') 
-    return FilePath   
-
-def MDA_CurrentPrefix(scanIOC=None):
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    Prefix=caget("29id"+scanIOC+":saveData_baseName",as_string=True)
-    return Prefix
-   
-def MDA_CurrentRun(scanIOC=None):
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    directory = MDA_CurrentDirectory(scanIOC)
-    m=directory.find('data_29id')+len('data_29id')+2
-    current_run=directory[m:m+6]
-    return current_run
-   
-def MDA_CurrentUser(scanIOC=None):
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    subdir=caget("29id"+scanIOC+":saveData_subDir",as_string=True)
-    m=subdir.find('/mda')
-    if m == 0 : current_user='Staff'
-    elif m > 0: current_user=subdir[1:m]
-    else: current_user="";print("WARNING: MDA_CurrentUser is empty string")
-    return current_user   
-
-
-### Clear Scan:
-# def Reset_Scan_Settings(scanIOC,scanDIM=1):
-#     """
-#     Reset scan settings to default: ABSOLUTE, STAY, 0.05/0.1 positioner/detector settling time
-#     """
-#     Cam_ScanClear(scanIOC,scanDIM)
-#     pv="29id"+scanIOC+":scan"+str(scanDIM)
-#     innerScan="29id"+scanIOC+":scan"+str(scanDIM-1)+".EXSC"
-#     caput(pv+".CMND",3)        # Clear all Positionners
-#     caput(pv+".P1AR",0)        # Absolute position
-#     caput(pv+".PASM","PRIOR POS")    # After scan: prior position
-#     caput(pv+".PDLY",0.05)     # Positioner Settling time
-#     caput(pv+".DDLY",0.1)         # Detector Settling time
-#     if scanDIM > 1:    #Resets the higher dimensional scans to trigger the inner scan
-#         caput(pv+".T1PV",innerScan)
-#     print("Scan record reset to default.")
 
 def Clear_Scan_Positioners(scanIOC,scanDIM=1):
     """Clear all extra scan positioners"""
@@ -2494,50 +1840,7 @@ def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
     sleep(10)
     Scan_Check(scanIOC,scanDIM)
 
-### Reset detectors in scan record:
-# def Scan_Check(scanIOC,scanDIM=1):
-#     """
-#     Check if any of the detectors or positions are not connected
-#     """
-#     print('Checking if all detectors & positioners are connected...')
-#     pv="29id"+scanIOC+":scan"+str(scanDIM)
-#     #Detectors
-#     for i in range(1,71):
-#         num=(str(i).zfill(2))
-#         pvd=caget(pv+".D"+num+"PV")
-#         if pvd !='': 
-#             det=PV(pvd); sleep(0.1)#smallest sleep to allow for PV traffic
-#             if not det.connected:
-#                 print("Detector "+num+" has a bad PV:  "+det.pvname+" not connected")
-#     #Positioners
-#     for i in range(1,5):
-#         num=str(i)
-#         pvp=caget(pv+".P"+num+"PV")
-#         if pvp != '': 
-#             pos=PV(pvp)
-#             if not pos.connected:
-#                 print("Positioner "+num+" has a BAD PV:  "+pos.pvname+" not connected")
 
-            
-            
-### Fill Scan Record - 1st positionner:
-def Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step,point=None):
-    Scan_Progress(scanIOC,scanDIM)
-    #print "Scan {:d} - {:s} : {:0.3f} / {:0.3f} / {:0.3f}".format(scanDIM,VAL,start,stop,step)
-    #print "Scan "+str(scanDIM),VAL+" : "+str(start)+"/"+str(stop)+"/"+str(step)+"\n"
-    start=start*1.0
-    stop=stop*1.0
-    step=step*1.0
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(pv+".P1SM","LINEAR") 
-    caput(pv+".P1PV",VAL)
-    caput(pv+".R1PV",RBV)
-    caput(pv+".P1SP",start)
-    caput(pv+".P1EP",stop)
-    if point is None:
-        caput(pv+".P1SI",step)
-    else:
-        caput(pv+".NPTS",step)
 
 ### Fill Scan Record - 2nd positionner:
 def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
@@ -2635,18 +1938,6 @@ def Scan_MakeTable(StartStopStepLists):
     table_array=np.sort(table_array) #sort into ascending order    
     return table_array
 
-# ### Current Amplifier:
-
-# def Reset_CA(ca_ioc,ca_num,rate="Slow"):
-#     pv="29id"+ca_ioc+":ca"+str(ca_num)
-#     caput(pv+":reset.PROC",1)
-#     caput(pv+":digitalFilterSet","Off")
-#     caput(pv+":medianFilterSet","Off")
-#     caput(pv+":zeroCheckSet",0)
-#     caput(pv+":rangeAuto",1)
-#     caput(pv+":rateSet",rate)
-#     caput(pv+":rangeAutoUlimit","20mA")
-#     caput(pv+":read.SCAN",".5 second")
 
 
 def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
@@ -3398,38 +2689,7 @@ def scanth2th_table(start,stop,step,th0,settling_time=0.2,ct=1,scanIOC='Kappa',s
 
 
 
-def Scan_Kappa_Motor(name,start,stop,step,mode="absolute",settling_time=0.1,scanIOC=None,scanDIM=1):
-    """
-    Fills in the Scan Record does NOT press Go
-    if scanIOC=None then uses BL_ioc()
-    """
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    m_RBV=Kappa_PVmotor(name)[0]
-    m_VAL=Kappa_PVmotor(name)[1]
-    if mode == "relative":
-        current_value=caget(m_RBV)
-        abs_start=round(current_value+start,3)
-        abs_stop =round(current_value+stop,3)
-    else:
-        abs_start=start
-        abs_stop =stop
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
-    Scan_FillIn(m_VAL,m_RBV,scanIOC,scanDIM,abs_start,abs_stop,step)
 
-
-def Scan_Kappa_Motor_Go(name,start,stop,step,mode="absolute",settling_time=0.1,scanIOC=None,scanDIM=1,**kwargs):
-    """
-    Fills in the Scan Record and presses the go button
-    if scanIOC=None then uses BL_ioc()
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details      
-    default: scanDIM=1  
-
-    """
-    if scanIOC is None:
-        scanIOC="Kappa"
-    Scan_Kappa_Motor(name,start,stop,step,mode,settling_time)
-    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)
 
 def Scan_Kappa_2D_Go(InnerMotorList,OuterMotorList,**kwargs):
     """
@@ -4048,31 +3308,7 @@ def SyncAllSlits():
     caput("29idd:Slit5Vsync.PROC",1)
 
 
-# Slit1A calibration:
-#def Reference_Slit1A_scribes():
-#    ScribePositions=[0,0, 0.0, 0.0] #took slits apart, starting over 2/4/2020
-#
-#    caput("29idb:m9.DVAL",ScribePositions[0])
-#    caput("29idb:m10.DVAL",ScribePositions[0])
-#    caput("29idb:m11.DVAL",ScribePositions[0])
-#    caput("29idb:m12.DVAL",ScribePositions[0])
-#    caput("29idb:Slit1Hsync.PROC",1)
-#    caput("29idb:Slit1Vsync.PROC",1)
-#
-#def Reference_Slit1A_scribes_GetList():
-#    m9=caget("29idb:m9.DVAL")
-#    m10=caget("29idb:m10.DVAL")
-#    m11=caget("29idb:m11.DVAL")
-#    m12=caget("29idb:m12.DVAL")
-#    DialPositions=[m9,m10,m11,m12]
-#    print("Dial positions: "+str(DialPositions))
-#    return DialPositions
 
-#def Slit1A_center():
-#    SyncAllSlits()
-#    caput("29idb:Slit1Hsize.VAL",.5)
-#    caput("29idb:Slit1Vsize.VAL",.5)
-#    caput("29idb:Slit1Hcenter.VAL",0)
 
 # SetSlits:
     
@@ -4233,310 +3469,7 @@ def SetSlit_BL(c2B=1,c1A=1,q=None):
     SetSlit1A(Size1A[0],Size1A[1],H1center,V1center,q)    # standard operating
     SetSlit2B(Size2B[0],Size2B[1],H2center,V2center,q)
 
-# def Sync_SmarAct_Motor():
-#     '''Home the piezo (x,y,z). Home position is middle of travel.'''
-#     for i in [2,3,4]:
-#         VAL='29idKappa:m'+str(i)+'.HOMF'
-#         caput(VAL,1)
-#         sleep(10)
-#     print('SamrAct motors VAL homed')
 
-
-# def Sync_PI_Motor():
-#     for i in [7,8,9]:
-#         VAL='29idKappa:m'+str(i)+'.VAL'
-#         RBV='29idKappa:m'+str(i)+'.RBV'
-#         current_RBV=caget(RBV)
-#         caput(VAL,current_RBV)
-#     print('PI motors VAL synced to RBV')
-
-# def Sync_Euler_Motor():
-#     caput('29idKappa:Kappa_sync.PROC',1)
-#     sleep(1)
-#     caput('29idKappa:Kappa_sync.PROC',1)
-#     print('Euler motors VAL/RBV synced to physical motors')
-    
-# def Sync_Encoder_RBV(ioc):
-#     D={}
-#     D["c"]=[1,2,3,4]
-#     D["b"]=[13,14,15,16,26,27]
-#     for i in D[ioc]:
-#         pv="29id"+ioc+":m"+str(i)+".SYNC"
-#         caput(pv,1)
-#         print(pv)
-
-
-##############################################################################################################
-################################             Get  All             ##############################
-##############################################################################################################
-
-# def Get_energy(q=1):
-#     """ returns: ID_Mode, ID_QP, ID_SP, ID_RBV, hv, grt """
-#     ID_Mode=ID_State2Mode("State",caget("ID29:ActualMode"))
-#     ID_QP=caget("ID29:QuasiRatio.RVAL")
-#     ID_SP=caget("ID29:EnergySet.VAL")*1000
-#     ID_RBV=caget("ID29:Energy.VAL")*1000
-#     hv=caget("29idmono:ENERGY_MON")
-#     density=caget("29idmono:GRT_DENSITY")
-#     grt={1200:'MEG',2400:'HEG'}[density]
-#     if q != 1:
-#         print(" ID SP  : "+"%.2f" % ID_SP , "eV    ID mode : "+ID_Mode)
-#         print(" ID RBV : "+"%.2f" % ID_RBV, "eV    QP mode : "+str(ID_QP) +" %")
-#         print(" Mono   : "+"%.2f" % hv,"eV    GRT : "+grt)
-# #     return (ID_Mode,ID_QP,ID_SP,ID_RBV,hv,grt)
-
-# def Get_Mono(q=0):
-#     """
-#     prints mono variables for current setting using Mono_Optics()
-#     for quiet Mono_Optics()
-#     returns [[MirrorInfo],[GratingInfo],[MotorPositions]]
-#     """
-#     Mono=Mono_Optics()
-#     MIR_Type  =Mono[0][0]
-#     MIR_Offset=Mono[0][1]
-#     MIR_Tx=    Mono[0][2]
-#     GRT_Type  =Mono[1][0]
-#     GRT_Offset=Mono[1][1]
-#     GRT_Tx=    Mono[1][2]
-#     GRT_DL=    Mono[1][3]
-#     GRT_B2=    Mono[1][4]
-#     CFF=  Mono[2][0]
-#     TUN0= Mono[2][1]
-#     TUN1= Mono[2][2]
-#     TUN2= Mono[2][3]
-#     TUN3= Mono[2][4]
-#     ARM=  Mono[2][5]
-#     print(" Mono Optics: "+MIR_Type+" -  "+GRT_Type)
-#     print(" MIR Offset : "+"%.4f" % MIR_Offset , "    MIR Tx : "+"%.3f" % MIR_Tx)
-#     print(" GRT Offset : "+"%.4f" % GRT_Offset , "    GRT Tx : "+"%.3f" % GRT_Tx)
-#     print(" GRT b2 : "+"%.4e" % GRT_B2 , "    GRT Density: "+"%.1f" % GRT_DL,"l/mm")
-#     print(" cff : "+"%.4f" % CFF , "         exit arm: "+"%.1f" % ARM,"mm")
-#     print(" tun0 : "+"%.4e" % TUN0 , "    tun1: "+"%.4e" % TUN1)
-#     print(" tun2 : "+"%.4e" % TUN2 , "    tun3: "+"%.4e" % TUN3)
-#     return Mono_Optics()
-
-# def Get_CFF():
-#     Mono=Mono_Optics()
-#     CFF=  Mono[2][0]
-#     TUN0= Mono[2][1]
-#     TUN1= Mono[2][2]
-#     TUN2= Mono[2][3]
-#     TUN3= Mono[2][4]
-#     ARM=  Mono[2][5]
-#     print(" cff : "+"%.4f" % CFF , "          exit arm: "+"%.1f" % ARM,"mm")
-#     print(" tun0 : "+"%.4e" % TUN0 , "    tun1: "+"%.4e" % TUN1)
-#     print(" tun2 : "+"%.4e" % TUN2 , "    tun3: "+"%.4e" % TUN3)
-#     return Mono_Optics()
-
-
-# def Get_Mirror(n):
-#     branch=CheckBranch()
-#     if n == 0 or n == 1:
-#         Tx=caget("29id_m"+str(n)+":TX_MON")
-#         Ty=caget("29id_m"+str(n)+":TY_MON")
-#         Tz=caget("29id_m"+str(n)+":TZ_MON")
-#         Rx=caget("29id_m"+str(n)+":RX_MON")
-#         Ry=caget("29id_m"+str(n)+":RY_MON")
-#         Rz=caget("29id_m"+str(n)+":RZ_MON")
-#         print(" M"+str(n)+" @ "+"%.3f" % Tx, "/","%.3f" % Ty, "/","%.3f" % Tz, "/","%.3f" % Rx, "/","%.3f" % Ry, "/","%.3f" % Rz)
-#     if n == 3:
-#         Tx=caget("29id_m"+str(n)+"r:TX_MON")
-#         Ty=caget("29id_m"+str(n)+"r:TY_MON")
-#         Tz=caget("29id_m"+str(n)+"r:TZ_MON")
-#         Rx=caget("29id_m"+str(n)+"r:RX_MON")
-#         Ry=caget("29id_m"+str(n)+"r:RY_MON")
-#         Rz=caget("29id_m"+str(n)+"r:RZ_MON")
-#     #     Get_HXP()
-#         print(" M"+str(n)+"R @ "+"%.3f" % Tx, "/","%.3f" % Ty, "/","%.3f" % Tz, "/","%.3f" % Rx, "/","%.5f" % Ry, "/","%.3f" % Rz)
-#         if branch == "d":
-#             print(" => In D branch")
-#         elif branch == "c":
-#             print(" => In C branch")
-
-# def Get_HXP():
-#     branch=CheckBranch()
-#     if branch == "d":
-#         Tx=caget("29idHXP:hxp2:m1.RBV")
-#         Ty=caget("29idHXP:hxp2:m2.RBV")
-#         Tz=caget("29idHXP:hxp2:m3.RBV")
-#         Rx=caget("29idHXP:hxp2:m4.RBV")
-#         Ry=caget("29idHXP:hxp2:m5.RBV")
-#         Rz=caget("29idHXP:hxp2:m6.RBV")
-#         print(" M4R @ "+"%.3f" % Tx, "/","%.3f" % Ty, "/","%.3f" % Tz, "/","%.3f" % Rx, "/","%.3f" % Ry, "/","%.3f" % Rz)
-#     elif branch == "c":
-#         Tx=caget("29idHXP:hxp1:m1.RBV")
-#         Ty=caget("29idHXP:hxp1:m2.RBV")
-#         Tz=caget("29idHXP:hxp1:m3.RBV")
-#         Rx=caget("29idHXP:hxp1:m4.RBV")
-#         Ry=caget("29idHXP:hxp1:m5.RBV")
-#         Rz=caget("29idHXP:hxp1:m6.RBV")
-#         print(" M3A @ "+"%.3f" % Tx, "/","%.3f" % Ty, "/","%.3f" % Tz, "/","%.3f" % Rx, "/","%.3f" % Ry, "/","%.3f" % Rz)
-#         Tx=caget("29idHXP:hxp3:m1.RBV")
-#         Ty=caget("29idHXP:hxp3:m2.RBV")
-#         Tz=caget("29idHXP:hxp3:m3.RBV")
-#         Rx=caget("29idHXP:hxp3:m4.RBV")
-#         Ry=caget("29idHXP:hxp3:m5.RBV")
-#         Rz=caget("29idHXP:hxp3:m6.RBV")
-#         print(" M4A @ "+"%.3f" % Tx, "/","%.3f" % Ty, "/","%.3f" % Tz, "/","%.3f" % Rx, "/","%.3f" % Ry, "/","%.3f" % Rz)
-
-
-
-# def Get_Slits():
-#     SyncAllSlits()
-#     Hsize=round(caget("29idb:Slit1Hsize.VAL"),2)
-#     Vsize=round(caget("29idb:Slit1Vsize.VAL"),2)
-#     Hcenter=round(caget("29idb:Slit1Hcenter.VAL"),2)
-#     Vcenter=round(caget("29idb:Slit1Vcenter.VAL"),2)
-#     print(" Slit-1A = ("+str(Hsize)+"x"+str(Vsize)+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
-#     Hsize=round(caget("29idb:Slit2Hsize.VAL"),2)
-#     Vsize=round(caget("29idb:Slit2Vsize.VAL"),2)
-#     Hcenter=round(caget("29idb:Slit2Hcenter.VAL"),2)
-#     Vcenter=round(caget("29idb:Slit2Vcenter.VAL"),2)
-#     print(" Slit-2B = ("+str(Hsize)+"x"+str(Vsize)+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
-#     Csize=round(caget("29idb:Slit3CRBV"),0)
-#     print(" Slit-3C = "+str(Csize)+" um")
-#     Dsize=caget("29idb:Slit4Vsize.VAL")
-#     Dcenter=round(caget("29idb:Slit4Vcenter.VAL"),0)
-#     print(" Slit-3D = "+str(Dsize)+" um @ "+str(Dcenter)+" um")
-
-
-
-# def Get_mARPES(mode='User'):
-#     if mode == 'Dial':
-#         suffix='.DRBV'
-#     else:
-#         suffix='.RBV'
-#     x  =round(caget(ARPES_PVmotor('x')[3]+suffix),3)
-#     y  =round(caget(ARPES_PVmotor('y')[3]+suffix),3)
-#     z  =round(caget(ARPES_PVmotor('z')[3]+suffix),3)
-#     th =round(caget(ARPES_PVmotor('th')[3]+suffix),3)
-#     phi=round(caget(ARPES_PVmotor('phi')[3]+suffix),3)
-#     chi=round(caget(ARPES_PVmotor('chi')[3]+suffix),3)
-#     ARPES=[x,y,z,th,phi,chi]
-#     return mode,ARPES
-
-# def Get_mKappa(mode='User'):
-#     if mode == 'Dial':
-#         suffix='DRBV'
-#     else:
-#         suffix='RBV'
-#     x  =round(caget("29idKappa:m2."+suffix),1)
-#     y  =round(caget("29idKappa:m3."+suffix),1)
-#     z  =round(caget("29idKappa:m4."+suffix),1)
-#     tth =round(caget("29idKappa:m9."+suffix),3)
-#     kth =round(caget("29idKappa:m8."+suffix),3)
-#     kap =round(caget("29idKappa:m7."+suffix),3)
-#     kphi=round(caget("29idKappa:m1."+suffix),3)
-#     Kappa=[x,y,z,tth,kth,kap,kphi]
-#     return mode,Kappa
-
-
-# def Get_All():
-#     print("\n")
-#     print("===========================================================")
-#     Get_energy(q=None)
-#     print("-----------------------------------------------------------")
-#     Get_Mono()
-#     print("-----------------------------------------------------------")
-#     Get_Slits()
-#     print("-----------------------------------------------------------")
-#     Get_Mirror(1)
-#     Get_Mirror(2)
-#     Get_Mirror(3)
-#     print("-----------------------------------------------------------")
-#     ARPES=Get_mARPES()[1]
-#     Kappa=Get_mKappa()[1]
-#     print("ARPES = ",ARPES)
-#     print("Kappa = ",Kappa)
-#     print("===========================================================")
-
-# def Get_ARPES():
-#     print("\n")
-#     print("===========================================================")
-#     Get_energy(q=None)
-#     print("-----------------------------------------------------------")
-#     Get_Mono()
-#     print("-----------------------------------------------------------")
-#     Get_Slits()
-#     print("-----------------------------------------------------------")
-#     Get_Mirror(3)
-#     print("-----------------------------------------------------------")
-#     ARPES=Get_mARPES()[1]
-#     print("APRES = ",ARPES)
-#     print("===========================================================")
-
-# def Get_Kappa():
-#     print("\n")
-#     print("===========================================================")
-#     Get_energy(q=None)
-#     print("-----------------------------------------------------------")
-#     Get_Mono()
-#     print("-----------------------------------------------------------")
-#     Get_Slits()
-#     print("-----------------------------------------------------------")
-#     Get_Mirror(3)
-#     print("-----------------------------------------------------------")
-#     Kappa=Get_mKappa()[1]
-#     print("Kappa = ",Kappa)
-#     print("===========================================================")
-
-
-# def Get_Gain():
-#     d3=caget("29idMZ0:scaler1.S3")
-#     d4=caget("29idMZ0:scaler1.S4")
-#     m=caget("29idMZ0:scaler1.S14")
-#     A2_gain=caget('29idd:A2sens_num.VAL',as_string=True)
-#     A2_unit=caget('29idd:A2sens_unit.VAL',as_string=True)
-#     A3_gain=caget('29idd:A3sens_num.VAL',as_string=True)
-#     A3_unit=caget('29idd:A3sens_unit.VAL',as_string=True)
-#     A1_gain=caget('29idd:A1sens_num.VAL',as_string=True)
-#     A1_unit=caget('29idd:A1sens_unit.VAL',as_string=True)
-#     print("D3 = "+str(d3)+"\t @ "+A2_gain+" "+A2_unit)
-#     print("D4 = "+str(d4)+"\t @ "+A3_gain+" "+A3_unit)
-#     print("mesh = "+str(m)+"\t @ "+A1_gain+" "+A1_unit)
-
-
-# def Get_SnapShot(which=None):
-#     """
-#     prints current settings in D-branch (Kappa) 
-#     """
-#     if which == None:
-#         which = BL_ioc()
-#     if which == 'Kappa':
-#         print("Snapshot: "+str(dateandtime()))
-#         Get_All()
-
-#         print("\n---Motors---")
-#         for m in [2,3,4,9,8,7,1]:
-#             pv="29idKappa:m"+str(m)
-#             val=round(caget(pv+".VAL"),3)
-#             rbv=round(caget(pv+".RBV"),)
-#             stat=caget(pv+".STAT",as_string=True)
-#             stup=caget(pv+".STUP",as_string=True)
-#             print(pv +"\t VAL = "+str(val)+"     \tRBV = "+str(rbv)+"\t"+stat+"\t"+stup)
-#         print("\n---Temperature---")
-#         for sp in [1,2]:
-#             pv="29idc:LS340:TC1"
-#             val=caget(pv+":wr_SP"+str(sp))
-#             rbv=caget(pv+":SP"+str(sp))
-#             print(pv+"_"+str(sp)+"\t SP = "+str(val)+"\t\t RBV = "+str(rbv))
-#         print("\t\t\t   Range = "+str(caget(pv+":Rg_rdbk",as_string=True))+"\t Power = "+str(caget(pv+":Heater")))
-
-#         print("\n---Mesh---")
-#         #pv='29idd:A2sens_num.VAL
-#         pv="29idb:m28"
-#         print("Position: "+pv+"\t VAL = "+str(caget(pv+".VAL"))+"\t RBV = "+str(caget(pv+".RBV")))
-
-#         print("\n---Scalers---")
-#         Get_Gain()
-
-#         print("\n---MPA---")
-#         HV_SP="29idKappa:userCalcOut9.A"
-#         HV_RBV="29idKappa:userCalcOut10.OVAL"
-#         HV_Status="29iddMPA:C0O"
-#         HV_AcqTime="29iddMPA:det1:AcquireTime"
-#         print("HV_SP = "+str(caget(HV_SP))+"\t\tHV_RBV = "+str(caget(HV_RBV)))
-#         print("status = "+str(caget(HV_Status))+"\t\t Acq time = "+str(caget(HV_AcqTime)))
 
 
 ##############################################################################################################
@@ -4581,17 +3514,6 @@ def getUserInput_b(which):
     finally:
         signal.alarm(0)              # if times out: reply_c == None    => True
     return s
-
-#def Test_Prompt_b():
-#    signal.signal(signal.SIGALRM, interrupted_jlm)
-#    print("\nDo something")
-    #reply_b=getUserInput_b('test')
-    #if reply_b in ["YES","Yes","yes","y","Y"]:
-    #    print "\nStop that thing"
-    #else:
-    #    print "\nfINISHING  that thing"
-    #sleep(1)
-    #print "\nDo something else"
 
 
 
@@ -6252,128 +5174,7 @@ def Kappa_ScanTempPres(scanIOC,scanDIM):
 
 
 
-#def Mono_Parameters_History_Backup(date):
-#    offset_MIR1="29idmonoMIR:P_OFFSETS.C"        # MIR 1 = Au
-#    offset_GRT1="29idmonoGRT:P_OFFSETS.C"        # GRT 1 = MEG
-#    b2_GRT1=    "29idmonoGRT:B2_CALC.C"        # GRT 1 = MEG
-#    offset_GRT2="29idmonoGRT:P_OFFSETS.D"         # GRT 2 = HEG
-#    b2_GRT2=    "29idmonoGRT:B2_CALC.D"        # GRT 2 = HEG
-#    if date == "20160822":
-#        caput(offset_MIR1,0.3237)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7290)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.34e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7302)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.58e-5)     # GRT 2 = HEG
-#    if date == "20170203":
-#        caput(offset_MIR1,0.3217)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7270)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.34e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7282)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.565e-5)     # GRT 2 = HEG
-#    if date == "20170311":
-#        caput(offset_MIR1,0.3213)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7266)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.2e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.550e-5)     # GRT 2 = HEG
-#    if date == "20170326":
-#        caput(offset_MIR1,0.3213)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7266)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.2e-5)    # GRT 1 = MEG    MEG b2 needs to be adjusted (does it?)
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.525e-5)     # GRT 2 = HEG
-#    if date == "20180207":
-#        caput(offset_MIR1,0.3213)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7252)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.2e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7268)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.525e-5)     # GRT 2 = HEG
-#    if date == "20180215":
-#        caput(offset_MIR1,0.3237)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7276)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7292)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date == "20190315":
-#        caput(offset_MIR1,0.3254)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7276)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7292)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date == "20190316":
-#        caput(offset_MIR1,0.3223)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7276)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7292)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date == "20190317":
-#        caput(offset_MIR1,0.3221)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7243)     # GRT 1 = MEG     # TO BE OPTIMIZED - just based on HEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7276)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date =="20190531":
-#        caput(offset_MIR1,0.3266)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7243)     # GRT 1 = MEG     # TO BE OPTIMIZED - just based on HEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date =="20190719":
-#        caput(offset_MIR1,0.3266)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7306)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date =="20190719_2":
-#        caput(offset_MIR1,0.3266)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7306-.006)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date =="20190719_3":
-#        caput(offset_MIR1,0.3266)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7306-.001)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    if date =="20190719_4":
-#        caput(offset_MIR1,0.3266)    # MIR 1 = Au
-#        caput(offset_GRT1,0.7306-.0005)     # GRT 1 = MEG
-#        caput(b2_GRT1,   -7.15e-5)    # GRT 1 = MEG
-#        caput(offset_GRT2,0.7278)     # GRT 2 = HEG
-#        caput(b2_GRT2,   -5.535e-5)     # GRT 2 = HEG
-#    else:
-#        print "WARNING: date invalid - no parameters"
-#    print "MIR #1 (Au)  Offset:",caget(offset_MIR1)
-#    print "GRT #1 (MEG) Offset:",caget(offset_GRT1)
-#    print "GRT #1 (MEG) b2:    ",caget(b2_GRT1)
-#    print "GRT #2 (HEG) Offset:",caget(offset_GRT2)
-#    print "GRT #2 (HEG) b2:    ",caget(b2_GRT2)
 
-
-#def BeamProfile_backup(GRT):
-#    """
-#        2D Beam profile
-#    """
-#    AllDiagOut()
-#    DiodeCIn()
-#    Switch_Grating(GRT)
-#    GRT=caget("29idmono:GRT_DENSITY")
-#    c=GRT/1200
-#    ID=500
-#
-##    eVstart,eVstop,eVstep=460,540,1
-##    Hsize,Vsize,Vstart,Vstop,Vstep = 1.9,0.50,-1.5,1.5,0.1   => 5h total!!!!  increase step size
-#
-#    eVstart,eVstop,eVstep=460,540,2
-#    Hsize,Vsize,Hstart,Hstop,Hstep = 0.50,2,-2,2,0.25      # => 35 min
-#    MonoVsSlit1AH_Go(ID,eVstart,eVstop,eVstep,Hstart,Hstop,Hstep,Hsize,Vsize,"Test")
-#    Hsize,Vsize,Vstart,Vstop,Vstep = 2,0.50,-2,2,0.25
-#    MonoVsSlit1AV_Go(ID,eVstart,eVstop,eVstep,Vstart,Vstop,Vstep,Hsize,Vsize,"Test")
-#    #Hsize,Vsize,Hstart,Hstop,Hstep = 0.50,8,-3,3,0.5
-#    #MonoVsSlit2BH_Go(ID,eVstart,eVstop,eVstep,Hstart,Hstop,Hstep,Hsize,Vsize,"Tests")
-#    #Hsize,Vsize,Vstart,Vstop,Vstep = 6,0.25*c,-4*c,4*c,0.5*c
-#    #MonoVsSlit2BV_Go(ID,eVstart,eVstop,eVstep,Vstart,Vstop,Vstep,Hsize,Vsize,"Test")
 
 def MIR_GRT_Offset(GRT,Slit_list):    
     """ "Find MIR-GRT offset by scanning 0 order through exit slit"""
@@ -6485,60 +5286,6 @@ def BE2KE(BE):
 
 
 
-
-##############################################################################################################
-######################################             TimeOut                  #######################################
-##############################################################################################################
-
-# example of timeout: https://stackoverflow.com/questions/1335507/keyboard-input-with-timeout-in-python
-#
-#import signal
-#TIMEOUT = 30
-#
-#
-######### Prompt when aborting acquisition:
-#
-#def interrupted_c(signum, frame):
-#    "called when read times out"
-#    print '\nIs anybody out there???? (c)'
-#    raise ValueError
-#signal.signal(signal.SIGALRM, interrupted_c)
-#
-#def input_c():
-#    try:
-#        print '\n\nWARNING: Scan stopped by operator OR interlock triggered, reduce count rate...'
-#        print 'Press ENTER (CTRL+C) within the next 30s to CONTINUE (ABORT) >'
-#        foo = raw_input()
-#        return foo
-#    except KeyboardInterrupt as e:
-#        raise e
-#    except:
-#        # timeout
-#        return
-#
-#def getUserInput_c():
-#    signal.alarm(TIMEOUT)                # reply_c = getUserInput_c()
-#    try:
-#        s = input_c()                # if asnwer prompt: isinstance(reply_c, basestring) => True
-#    except ValueError:                # i.e. reply_c is a string ('' if press Return key)
-#        print "\nInput has timed out!!!!!"
-#    except KeyboardInterrupt as e:
-#        print "\nUser wants to abort (c)!"
-#        s = False                # if CTRL+C   : reply_c == False    => True
-#        raise e
-#    finally:
-#        signal.alarm(0)              # if times out: reply_c == None    => True
-#    return s
-#
-#def Test_Prompt_c():
-#    print "\nDo something"
-#    reply_c=getUserInput_c()
-#    if reply_c == None:
-#        print "\nRepeat that thing"
-#    sleep(1)
-#    print "\nDo something else"
-#
-#
 
 
 ##############################################################################################################
@@ -7307,72 +6054,6 @@ def Get_SRS(n,short=True):
         print('Blank: '+blank)
         
            
-def Kappa_DetectorDict(which):
-    """
-    which = d3, d4, mcp, apd, yag
-    """
-    #det={'d4': 0.0,'d3': 7.684, 'mcp': 18.275, 'apd': 29.753, 'yag': 33.269, }   # up to 2020_3
-    det={'d4': 0.0,'d3': -29.123, 'mcp': -18.6416-0.2+0.11, 'apd': 0.0, 'yag': 4.036 }    # 2021_1
-    angle=det[which]
-    return angle
-
-
-class testgain:
-    def __init__(self):
-        self._srs = None
-        self.value = None
-        self.unit = None
-
-class testname:
-    def __init__(self):
-        self.d3 = None
-        self.d4 = None
-        self.mcp = None
-
-
-
-class testdet:
-
-    def __init__(self):
-        self.d3 = None
-        self.d4 = None
-        self.mcp = None
-        self.tey = None
-        self.mesh = None
-
-
-
-
-
-def setdet(which):
-    """
-    which = d3, d4, mcp, apd, yag
-    Reset tth and Kappa_Crash for a given detector.
-    """
-    detset(which)
-
-def detset(which):
-    """
-    which = d3, d4, mcp, apd, yag
-    Reset tth and Kappa_Crash for a given detector.
-    """
-    if which not in ["d3", "d4", "mcp", "apd","yag"]:
-        print("Not a valid detector; please select one of the following:")
-        print("        'd3', 'd4', 'mcp', 'apd', 'yag'")
-    else:
-        current_det=caget('29idKappa:userStringSeq6.STR1')
-        current_tth=caget('29idKappa:m9.VAL')
-        angle1=Kappa_DetectorDict(current_det)
-        angle2=Kappa_DetectorDict(which)
-        det_offset=current_tth+(angle1-angle2)
-        caput("29idKappa:userStringSeq5.DO2",det_offset)
-        sleep(0.5)
-        caput("29idKappa:userStringSeq5.PROC",1)
-        sleep(0.5)
-        caput("29idKappa:userStringSeq6.STR1",which)
-        #caput("29idKappa:userCalcOut1.B",angle2)
-        print("Detector now set to:",which)
-        MPA_Interlock()
 
 
 def tth0_set():
@@ -7440,14 +6121,6 @@ def SetTempSetting(T,P,I,D):
 ##############################################################################################################
 ##############################             MCP scan Setting          ##############################
 ##############################################################################################################
-
-
-#def Scan_MPA_Go(VAL,RBV,start,stop,step,acq_time):
-#    Scan_FillIn(VAL,RBV,"d",1,start,stop,step)
-#    caput("29iddMPA:det1:AcquireTime",acq_time)
-#    caput("29idd:scan1.DDLY",1)
-#    caput("29idd:scan1.T2PV","29IDMCP1:det1:Acquire")
-#    Scan_RSXS_Go(1)
 
 
 def eV2Lambda(eV):
@@ -7911,102 +6584,6 @@ def MPA_Trigger(BeforeAfter, saveImg, **kwargs):
         caput(scanPV+".T"+str(kwargs["detTrigNum"])+"PV", "")
         
         
-# def MPA_ROI_Trigger():
-#     caput('29idKappa:scan1.T2PV','29iddMPA:Proc1:ResetFilter')
-#     print("\nMPA ROIs are triggered. Minimum rate is 1Hz.")
-#     print("There is no callback - ie scan won't wait for detector to finish.")
-#     print("Set scaler to 0.2 longer to make sure the MCP ROIs are done accumulating.")
-#     #print("\nTo remove, use: caput('29idKappa:scan1.T2PV','')")
-
-
-# def MPA_Acquire(sec):
-#     pvMPA="29iddMPA:det1:"
-#     caput(pvMPA+"Acquire","Done")
-#     caput(pvMPA+"RunTimeEnable",1)        # Image mode: single
-#     caput(pvMPA+"AcquireTime",sec)
-#     caput(pvMPA+"Acquire","Acquire")
-#     print("Acquiring MPA File for", sec,"s")
-
-# def MPA_SetTime(sec):
-#     pvMPA="29iddMPA:det1:"
-#     caput(pvMPA+"Acquire","Done")
-#     caput(pvMPA+"AcquireTime",sec)
-#     print("Setting acquisition time to",sec,"s")
-
-# def MPA_Done():
-#     pvMPA="29iddMPA:det1:"
-#     caput(pvMPA+"Acquire","Done")
-
-# def MPA_FreeScan():
-#     pvMPA="29iddMPA:det1:"
-#     pvTIF="29iddMPA:TIFF1:"
-#     caput(pvMPA+"Acquire","Acquire")
-#     caput(pvTIF+"EnableCallbacks",0)    # Disable saving
-#     caput(pvTIF+"ArrayCallbacks",0)    # Disable saving
-#     caput(pvMPA+"RunTimeEnable",0)        # Image mode: continuous    
-
-# def MPA_SaveMode(sec):
-#     pvMPA="29iddMPA:det1:"
-#     pvTIF="29iddMPA:TIFF1:"
-#     caput(pvMPA+"Acquire","Done")
-#     caput(pvMPA+"RunTimeEnable",1)        # Image mode: single
-#     caput(pvTIF+"ArrayCallbacks",1)    # Enable saving
-#     caput(pvTIF+"EnableCallbacks",1)    # Enable saving
-#     caput(pvTIF+"AutoSave",1)
-#     caput(pvTIF+"AutoIncrement",1)
-#     caput(pvMPA+"AcquireTime",sec)
-
-
-# def MPA_ScanSetup(sec):            #individual files saving
-#     MPA_ScanClear()
-#     scanIOC="Kappa"
-#     pvDet="29iddMPA:det1:"
-#     pvTIF="29iddMPA:TIFF1:"
-#     pvioc="29id"+scanIOC+":"
-#     FilePrefix='scan'
-#     MPA_SaveMode(sec)
-#     mda_num=caget(pvioc+"saveData_scanNumber")
-#     if mda_num<10:
-#         scanNum='000'+str(mda_num)
-#     elif 9<mda_num<100:
-#         scanNum='00'+str(mda_num)
-#     elif 99<mda_num<1000:
-#         scanNum='0'+str(mda_num)
-#     else:
-#         print("WARNING: file number too big!")
-#     MyPath=caget(pvTIF+"FilePath_RBV",as_string=True)+'mda_'+scanNum
-#     caput(pvTIF+"FilePath",MyPath)
-#     caput(pvTIF+"FileName",FilePrefix)
-#     if not (exists(MyPath)):
-#         mkdir(MyPath)
-#         FileNumber=1
-#     else:
-#         FileNumber=getNextFileNumber(MyPath,FilePrefix,q=False)
-#     caput(pvTIF+"FileNumber",FileNumber)
-#     caput(pvioc+"scan1.T3PV",pvDet+"Acquire")
-
-# def MPA_ScanClear():
-#     scanIOC="Kappa"
-#     pvDet="29iddMPA:det1:"
-#     pvTIF="29iddMPA:TIFF1:"
-#     pvioc="29id"+scanIOC+":"
-#     prefix='mpa'
-#     caput(pvioc+"scan1.T3PV","")
-#     MyPath=caget(pvTIF+"FilePath_RBV",as_string=True)
-#     #print 'mda path:',MyPath
-#     n=MyPath.find("\\mda")
-#     MyPath=MyPath[:n]
-#     #print MyPath
-#     if MyPath[0] == "Z":
-#         LinuxPath="/net/s29data/export/data_29idd/"+MyPath.replace("\\","/")[3:]
-#     elif MyPath[0] == "X":
-#         LinuxPath="/net/s29data/export/data_29idb/"+MyPath.replace("\\","/")[3:]
-#     #print LinuxPath
-
-#     FileNumber=getNextFileNumber(LinuxPath,prefix)
-#     caput(pvTIF+"FilePath",MyPath)
-#     caput(pvTIF+"FileName",prefix)
-#     caput(pvTIF+"FileNumber",FileNumber)
 
 
 
@@ -8567,46 +7144,6 @@ def plot_opt(opt_scan_list,energy_list,det,mytitle=''):
     ax1.legend(bbox_to_anchor=[1.2, 1],ncol=2,shadow=True, title=mytitle, fancybox=True)    
 
 
-#def mvd3(val):
-#    """
-#    Move the tth arm with respect to D-3
-#    val=0 for direct beam
-#    """
-#    name="tth"
-#    detector_tth0=caget("29idKappa:userCalcOut1.VAL")
-#    mybranch=CheckBranch()
-#    if mybranch == "d":
-#        Move_Motor_vs_Branch(name,val+detector_tth0)
-#    else:
-#        print "   d3 does not exit"
-#
-#def mvd4(val):
-#    """
-#    Move the tth arm with respect to Diode4, uses D-4 offset for the calculation
-#    val=0 for direct beam
-#    """
-#    name="tth"
-#    detector_tth0=caget("29idKappa:userCalcOut2.VAL")
-#    print "D-4 offset:", detector_tth0
-#    mybranch=CheckBranch()
-#    if mybranch == "d":
-#        Move_Motor_vs_Branch(name,val+detector_tth0)
-#    else:
-#        print "   d4 does not exit"
-
-
-#def mvth2th(th_val,kth_offset):
-#    """ Moves to th2th condition with:
-#            tth=th*2
-#            kth=th+kth_offset
-#    """
-#    mybranch=CheckBranch()
-#    #if branch == "c":
-#    if mybranch == "c":
-#        print "   tth motor does not exit"
-#    #elif branch == "d":
-#    elif mybranch == "d":
-#        Move_th2th(th_val,kth_offset)
 
 
 
@@ -9130,37 +7667,6 @@ def mvxyz(ListPosition):
 ##############################################################################################################
 
 
-# def Print_Motor():
-#     mybranch=CheckBranch()
-#     if mybranch == "c":
-#         x=round(caget(ARPES_PVmotor('x')[0]),2)
-#         y=round(caget(ARPES_PVmotor('y')[0]),2)
-#         z=round(caget(ARPES_PVmotor('z')[0]),2)
-#         th=round(caget(ARPES_PVmotor('th')[0]),2)
-#         chi=round(caget(ARPES_PVmotor('chi')[0]),2)
-#         phi=round(caget(ARPES_PVmotor('phi')[0]),2)
-#         return [x,y,z,th,chi,phi]
-#     #    print "x="+str(x), " y="+str(y)," z="+str(z), " theta="+str(th)
-#         print("\nx,y,z,th = ["+str(x)+","+str(y)+","+str(z)+","+str(th)+","+str(chi)+","+str(phi)+"]")
-#     elif mybranch == "d":
-#         x=round(caget("29idKappa:m2.RBV"),0)
-#         y=round(caget("29idKappa:m3.RBV"),0)
-#         z=round(caget("29idKappa:m4.RBV"),0)
-#         tth= round(caget("29idKappa:m9.RBV"),2)
-#         kth= round(caget("29idKappa:m8.RBV"),2)
-#         kap= round(caget("29idKappa:m7.RBV"),2)
-#         kphi=round(caget("29idKappa:m1.RBV"),2)
-#         th= round(caget("29idKappa:Euler_ThetaRBV"),3)
-#         chi= round(caget("29idKappa:Euler_ChiRBV"),3)
-#         phi=round(caget("29idKappa:Euler_PhiRBV"),3)
-#         #(th,chi,phi)=KtoE(kth,kap,kphi)
-#         print("\nx,y,z,tth,th,chi,phi   = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(th)+","+str(chi)+","+str(phi)+"]")
-#         print("x,y,z,tth,kth,kap,kphi = ["+str(x)+","+str(y)+","+str(z)+","+str(tth)+","+str(kth)+","+str(kap)+","+str(kphi)+"]")
-#         #print "\ntth,th,chi,phi = ["+str(round(tth,1))+","+str(round(th,1))+","+str((round(chi,1)))+","+str((round(phi,1)))+"]"
-#         pos=[x,y,z,tth,kth,kap,kphi]
-#         return pos
-#     #elif mybranch == "e":
-#     #    print(Get_mRSoXS()[1])
 
 
 def Move_ARPES_Sample(ListPosition):
@@ -9302,41 +7808,7 @@ def UMove_Motor_vs_Branch(name,val):
 
 
 
-# def BL_Mode_Set(which):
-#     """
-#     which = "Staff", "User", "He" (Helium Lamp), "RSoXS"; if which is not specified then i=4
-#     """
-#     n=5
-#     ClearCalcOut("b",n)
-#     pvstr="29idb:userCalcOut"+str(n)
-#     caput(pvstr+".DESC","BL_Mode")
-#     if which == "Staff":
-#         i=1        # Staff
-#     elif which == "He":
-#         i=2        # Helium
-#     elif which == "User":
-#         i=0        # User
-#     elif which == "RSoXS":
-#         i=3
-#     else:
-#         i=4
-#     caput(pvstr+".A",i)
 
-
-# def BL_Mode_Read():
-#     caput("29idb:userCalcOut5.PROC",1)            # After reboot value return to 0 even if A=1
-#     BL_mode=caget("29idb:userCalcOut5.VAL")        # User = 0, Staff = 1, He = 2, Other = 3
-#     if BL_mode == 1:
-#         which="Staff"
-#     elif BL_mode == 2:
-#         which="He Lamp"
-#     elif BL_mode == 0:
-#         which="User"
-#     elif BL_mode == 3:
-#         which="RSoXS"
-#     elif BL_mode == 4:
-#         which="Other"
-#     return BL_mode,which
 
 
 def BranchPV_StrSeq():
@@ -9605,22 +8077,6 @@ def Kappa_DetectorName_StrSeq():
     caput(pvstr+".STR1","d3")
 
 
-# To be implemented?
-#
-# def Kappa_DefaultPosition(destination):
-#     """
-#     Default Kappa positions in User units
-#     """
-#     DefaultPosition={
-#     'grazing':(0, 0, 3000, 0, 57.045, 134.76,57.045),
-#     'transfer':(0, 0, -650, 0, 57, 0, -88),
-#     }
-#     if destination in DefaultPosition:
-#         pos=DefaultPosition[destination]
-#     else:
-#         pos=(None,None,None,None,None,None,None)
-#     return pos
-
 
 
 def KappaPreset_StrSeq(n,User):
@@ -9740,22 +8196,6 @@ def MPA_HV_RBV_CalcOut():
 
 
 
-def MPA_Interlock():
-    ioc="Kappa"
-    n=7
-    pvioc="29id"+ioc+":userCalcOut"+str(n)
-    ClearCalcOut(ioc,n)
-    LLM=-16
-    HLM=-6
-    caput(pvioc+".DESC","MPA Interlock")
-    caput(pvioc+".INPA","29idKappa:m9.DRBV CP NMS")
-    caput(pvioc+".B",1)
-    caput(pvioc+".CALC$","ABS((("+str(LLM)+"<A && A<"+str(HLM)+") && (B>0))-1)")
-    caput(pvioc+".OCAL$",'A')
-    caput(pvioc+".OOPT",2)    # When zero
-    caput(pvioc+".DOPT",0)    # Use CALC
-    caput(pvioc+".IVOA",0)    # Continue Normally
-    caput(pvioc+".OUT","29iddMPA:C0O PP NMS")
 
 def Bragg_Angle_CalcOut(d,eV,l):
     n=7
@@ -9915,23 +8355,7 @@ def SnakeScanSetup(scanIOC,scanDIM=1,Snake=None):
         else:
             caput(SnakePV+".B",0)
     
-    #re-inventing the wheel
-    #kwargs.setdefault("scanIOC",BL_ioc())
-    #kwargs.setdefault("scanDIM",1)
-    #kwargs.setdefault("CalcNum",1)
-
-    #userCalcOut="29id"+kwargs["scanIOC"]+":userCalcOut"+str(kwarg["CalcNum"])
-    #scanPV="29id"+kwargs["scanIOC"]+":scan"+str(kwargs["scanDIM"])
-    #caput(userCalcOut+".DESC","Snake Calc")
-    #caput(userCalcOut+".INPA",+scanPV+".P1S1 NPP NMS")
-    #caput(userCalcOut+".CALC$","-1*A")
-    #caput(userCalcOut+".OUT",".INPA",+scanPV+".P1S1 PP NMS")
-
-    #BeforeScan_pv="ARPES:userStringSeq9"
-    #caput(BeforeScan_pv+".DOA",1)
-    #caput(BeforeScan_pv+".LNKA",userCalcOut+".PROC")
-
-
+   
 
 
 def ID_Table():
