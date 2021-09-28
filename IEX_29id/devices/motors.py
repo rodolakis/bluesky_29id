@@ -1,5 +1,4 @@
 from epics import caget, caput
-from time import sleep
 from IEX_29id.utils.exp import CheckBranch
 
 
