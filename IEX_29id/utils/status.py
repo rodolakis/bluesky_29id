@@ -79,7 +79,7 @@ def Print_Motor():
 
 def Get_energy(q=1):
     """ returns: ID_Mode, ID_QP, ID_SP, ID_RBV, hv, grt """
-    ID_Mode_list=['RCP','LCP','V','H','NH']
+    ID_Mode_list=['RCP','LCP','V','H','HN']
     ID_Mode=ID_Mode_list[caget("ID29:ActualMode")]
     ID_QP=caget("ID29:QuasiRatio.RVAL")
     ID_SP=caget("ID29:EnergySet.VAL")*1000
