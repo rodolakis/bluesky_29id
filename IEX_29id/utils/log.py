@@ -2,7 +2,6 @@ from epics import caput, caget
 from IEX_29id.utils.exp import BL_ioc, CheckBranch
 from IEX_29id.utils.misc import today 
 from IEX_29id.mda.file import MDA_CurrentUser
-from IEX_29id.mda.file import MDA_CurrentRun
 from IEX_29id.devices.undulator import ID_State2Mode
 
 import time
