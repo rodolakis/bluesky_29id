@@ -91,8 +91,6 @@
 - Check_Staff_Directory
 
 <span style="color:orange">
- MDA_CurrentDirectory <br/> 
- MDA_CurrentRun <br/> 
  Folder_ARPES <br/> 
  Folder_Kappa  <br/>  
  </span>
