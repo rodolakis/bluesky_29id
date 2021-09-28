@@ -4,8 +4,8 @@ from time import sleep
 
 ### Current Amplifier:
 
-def Reset_CA(ca_ioc,ca_num,rate="Slow"):
-    pv="29id"+ca_ioc+":ca"+str(ca_num)
+def reset_keithley(keithley_ioc,keithley_num,rate="Slow"):
+    pv="29id"+keithley_ioc+":ca"+str(keithley_num)
     caput(pv+":reset.PROC",1)
     caput(pv+":digitalFilterSet","Off")
     caput(pv+":medianFilterSet","Off")
