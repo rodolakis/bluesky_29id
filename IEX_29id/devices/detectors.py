@@ -1,5 +1,3 @@
-from epics import caput,caget
-from time import sleep
 from IEX_29id.utils.strings import ClearCalcOut
 
            
