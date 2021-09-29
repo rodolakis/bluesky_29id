@@ -1,5 +1,5 @@
 from IEX_29id.utils.strings import ClearCalcOut
-
+from epics import caput
            
 # def Kappa_Detector_Offset(detector):
 #     """
