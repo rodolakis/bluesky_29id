@@ -4,6 +4,10 @@ from IEX_29id.utils.exp import CheckBranch
 from IEX_29id.devices.motors import Move_Motor_vs_Branch
 
 
+### all the function that move/scan the diffractometer:
+### tth, th, phi, chi, x, y, z
+
+
 
 def mvtth(val):
     """ Moves tth motor in the in the Kappa chamber
@@ -48,3 +52,20 @@ def Home_SmarAct_Motor():
     print('SamrAct motors VAL homed')
 
  
+
+
+def tth0_set():
+    current_det=caget('29idKappa:userStringSeq6.STR1',as_string=True)
+    if current_det != 'd4':
+        print('tth0 can only be redefined with d4')
+    else:
+        foo=input_d('Are you sure you want to reset tth0 (Y or N)? >')
+        if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
+            caput('29idKappa:m9.SET','Set')
+            sleep(0.5)
+            caput('29idKappa:m9.VAL',0)
+            sleep(0.5)
+            caput('29idKappa:m9.SET','Use')
+            print("tth position reset to 0")
+        else:
+            print("That's ok, everybody can get cold feet in tough situation...")
