@@ -6085,13 +6085,6 @@ def slit(val):
     SetExitSlit(val)
 
 
-def grating(which):
-    """
-    Change mono grating: which = \"HEG\", \"MEG\"
-        HEG = high resolution, low flux
-        MEG = medium resolution, high flux
-    """
-    Switch_Grating(which)
 
 
 def polarization(which):
