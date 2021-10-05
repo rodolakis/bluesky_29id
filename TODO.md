@@ -77,13 +77,13 @@
 
 
 # undulator:
--polarization('H')
--Switch_QP
+- polarization('H')
+- Switch_QP
 
 
 # mono:
--grating()
+- grating()
 
 # slits
--slit(100)
--SetSlit_BL
+- slit(100)
+- SetSlit_BL
