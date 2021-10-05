@@ -6,8 +6,8 @@ import numpy.polynomial.polynomial as poly
 from IEX_29id.utils.exp import CheckBranch
 from math import *
 from IEX_29id.devices.undulator import ID_State2Mode
-
-
+from os.path import join
+import ast
 def ID_Range():      # mode = state (0=RCP,1=LCP,2=V,3=H)
     Mode=caget("ID29:ActualMode")
     GRT=caget("29idmono:GRT_DENSITY")
@@ -404,17 +404,19 @@ def Open_DShutter():
     branch="D"
     caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
     print("Opening "+branch+"-Shutter...")   
-def mvm3r_pitch_FR(x):
-        if -16.53<x<-16.38:
-            motor_pv="29id_m3r:RY_POS_SP"
-            #print('... moving to '+str(x))
-            caput(motor_pv,x)
-            sleep(0.5)
-            caput("29id_m3r:MOVE_CMD.PROC",1)
-            sleep(1)
-            #print('Positioned')
-        else:
-            print('Out of range')
+def align_m3r(p=118,debug=False):
+
+    def mvm3r_pitch_FR(x):
+            if -16.53<x<-16.38:
+                motor_pv="29id_m3r:RY_POS_SP"
+                #print('... moving to '+str(x))
+                caput(motor_pv,x)
+                sleep(0.5)
+                caput("29id_m3r:MOVE_CMD.PROC",1)
+                sleep(1)
+                #print('Positioned')
+            else:
+                print('Out of range')
 
     shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL')
     camera=caget('29id_ps6:cam1:Acquire',as_string=True)
@@ -462,6 +464,23 @@ def mvm3r_pitch_FR(x):
         print('Done')
         print(centroid())
         print('\n')
+def energy(val,c=1,m3r=True):
+    """
+    Sets the beamline energy: insertion device + mono + apertures.
+    Use c < 1 to kill flux density.
+    """
+    SetBL(val,c)
+    SetMono(val)
+    if m3r == True:
+        if CheckBranch() == 'd':
+            print('\nalign_m3r()')
+            try:
+                align_m3r()
+                sleep(1)
+                if caget('29id_m3r:RY_POS_SP') == -16.52:
+                    align_m3r(debug=True)
+            except:
+                print('Unable to align; check camera settings.')
 
 def centroid(t=None,q=1): 
     '''
@@ -480,22 +499,16 @@ def centroid(t=None,q=1):
         print('(position, sigma, total intensity, integration time (s), mirror pitch):')
     return position,sigma,intensity,t,m3rRY
 
-def energy(val,c=1,m3r=True):
+def input_d(question):
     """
-    Sets the beamline energy: insertion device + mono + apertures.
-    Use c < 1 to kill flux density.
+    ask a question (e.g 'Are you sure you want to reset tth0 (Y or N)? >')
+    return the answer
     """
-    SetBL(val,c)
-    SetMono(val)
-    if m3r == True:
-        if CheckBranch() == 'd':
-            print('\nalign_m3r()')
-            try:
-                align_m3r()
-                sleep(1)
-                if caget('29id_m3r:RY_POS_SP') == -16.52:
-                    align_m3r(debug=True)
-            except:
-                print('Unable to align; check camera settings.')
-        
-def align_m3r(p=118,debug=False):
+    try:
+        print(question)
+        foo = input()
+        return foo
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        return

@@ -989,34 +989,7 @@ def MeshD(In_Out):
 
 
 
-def Move_GRT(which):
-    MonoeV=round(caget("29idmono:ENERGY_MON"),1)
-    Current_Shutter=caget("EPS:29:ID:SS2:POSITION")
-    if Current_Shutter!=1:
-        Close_MainShutter()
-        while caget("EPS:29:ID:SS2:POSITION")!=1:
-               sleep(0.5)
-    if which == "Imp_MEG":
-           caput("29idmonoGRT_TYPE_SP",1,wait=True,timeout=18000)          # MEG Imp
-           caput("29idmonoGRT:X_DCPL_CALC.PROC",1,wait=True,timeout=18000)
-           while caget("29idmonoGRT:X.RBV")!=3.872:
-               sleep(0.5)
-    elif which == "HEG":
-           caput("29idmonoGRT_TYPE_SP",2,wait=True,timeout=18000)          # HEG
-           caput("29idmonoGRT:X_DCPL_CALC.PROC",1,wait=True,timeout=18000)
-           while caget("29idmonoGRT:X.RBV")!=68.000:
-               sleep(0.5)
-    elif which == "MEG":
-           caput("29idmonoGRT_TYPE_SP",3,wait=True,timeout=18000)          # MEG
-           caput("29idmonoGRT:X_DCPL_CALC.PROC",1,wait=True,timeout=18000)
-           while caget("29idmonoGRT:X.RBV")!=130.624:
-               sleep(0.5)
-    SetMono(MonoeV)
-    if Current_Shutter!=1:
-        Open_MainShutter()
-        while caget("EPS:29:ID:PS2:POSITION")!=2:
-               sleep(0.5)
-    print("Mono Grating:",which)
+
 
 
 def Switch_Grating(which):
