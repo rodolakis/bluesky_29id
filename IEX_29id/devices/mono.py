@@ -1,5 +1,4 @@
-from epics import caget, caput
-from time import sleep
+from epics import caput
 
 
 def Reset_Mono_Limits():
@@ -11,3 +10,11 @@ def Reset_Mono_Limits():
     caput("29idmono:ENERGY_SP.LOLO",200)
     caput("29idmono:ENERGY_SP.LOPR",200)
     print("Mono limits have been reset.")
+
+def grating(which):
+    """
+    Change mono grating: which = \"HEG\", \"MEG\"
+        HEG = high resolution, low flux
+        MEG = medium resolution, high flux
+    """
+    Switch_Grating(which)
