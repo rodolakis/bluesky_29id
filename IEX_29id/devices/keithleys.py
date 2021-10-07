@@ -1,5 +1,5 @@
-from epics import caget, caput
-from time import sleep
+from epics import  caput
+
 
 
 ### Current Amplifier:

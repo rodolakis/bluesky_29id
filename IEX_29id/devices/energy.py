@@ -6,8 +6,9 @@ import numpy.polynomial.polynomial as poly
 from IEX_29id.utils.exp import CheckBranch
 from math import *
 from IEX_29id.devices.undulator import ID_State2Mode
-
-
+from os.path import join
+import ast
+from IEX_29id.devices.slits import SetSlit_BL
 def ID_Range():      # mode = state (0=RCP,1=LCP,2=V,3=H)
     Mode=caget("ID29:ActualMode")
     GRT=caget("29idmono:GRT_DENSITY")
@@ -352,36 +353,7 @@ def SetSlit2B(Hsize,Vsize,Hcenter,Vcenter,q=None):
     if not q:
         print("Slit-2B = ("+str(Hsize)+"x"+str(Vsize)+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
 
-def SetSlit_BL(c2B=1,c1A=1,q=None):
 
-    RBV=caget("29idmono:ENERGY_MON")
-    GRT=caget("29idmono:GRT_DENSITY")
-    hv=max(RBV,500)
-    hv=min(RBV,2000)
-    c=4.2/2.2
-
-    if GRT==1200:
-        GRT='MEG'
-        V=0.65        #  set to 65% of RR calculation for both grt => cf 2016_2_summary
-    elif GRT==2400:
-        GRT='HEG'
-        V=0.65*c        #  set to 65% of RR calculation (no longer 80%) => cf 2016_2_summary
-
-    try:
-        slit_position=read_dict(FileName='Dict_Slit.txt')
-    except KeyError:
-        print("Unable to read dictionary")
-        return
-
-    V2center= slit_position[GRT]['S2V']
-    H2center= slit_position[GRT]['S2H']
-    V1center= slit_position[GRT]['S1V']
-    H1center= slit_position[GRT]['S1H']
-
-    Size1A=( Aperture_Fit(hv,1)[0]*c1A,       Aperture_Fit(hv,1)[1]*c1A )
-    Size2B=( Aperture_Fit(hv,2)[0]*c2B, round(Aperture_Fit(hv,2)[1]*c2B*V,3))
-    SetSlit1A(Size1A[0],Size1A[1],H1center,V1center,q)    # standard operating
-    SetSlit2B(Size2B[0],Size2B[1],H2center,V2center,q)
 
 def SetBL(hv,c=1):
     caput("29id:BeamlineEnergyAllow",'Disable',wait=True,timeout=18000)
@@ -404,17 +376,19 @@ def Open_DShutter():
     branch="D"
     caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
     print("Opening "+branch+"-Shutter...")   
-def mvm3r_pitch_FR(x):
-        if -16.53<x<-16.38:
-            motor_pv="29id_m3r:RY_POS_SP"
-            #print('... moving to '+str(x))
-            caput(motor_pv,x)
-            sleep(0.5)
-            caput("29id_m3r:MOVE_CMD.PROC",1)
-            sleep(1)
-            #print('Positioned')
-        else:
-            print('Out of range')
+def align_m3r(p=118,debug=False):
+
+    def mvm3r_pitch_FR(x):
+            if -16.53<x<-16.38:
+                motor_pv="29id_m3r:RY_POS_SP"
+                #print('... moving to '+str(x))
+                caput(motor_pv,x)
+                sleep(0.5)
+                caput("29id_m3r:MOVE_CMD.PROC",1)
+                sleep(1)
+                #print('Positioned')
+            else:
+                print('Out of range')
 
     shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL')
     camera=caget('29id_ps6:cam1:Acquire',as_string=True)
@@ -462,6 +436,23 @@ def mvm3r_pitch_FR(x):
         print('Done')
         print(centroid())
         print('\n')
+def energy(val,c=1,m3r=True):
+    """
+    Sets the beamline energy: insertion device + mono + apertures.
+    Use c < 1 to kill flux density.
+    """
+    SetBL(val,c)
+    SetMono(val)
+    if m3r == True:
+        if CheckBranch() == 'd':
+            print('\nalign_m3r()')
+            try:
+                align_m3r()
+                sleep(1)
+                if caget('29id_m3r:RY_POS_SP') == -16.52:
+                    align_m3r(debug=True)
+            except:
+                print('Unable to align; check camera settings.')
 
 def centroid(t=None,q=1): 
     '''
@@ -480,22 +471,117 @@ def centroid(t=None,q=1):
         print('(position, sigma, total intensity, integration time (s), mirror pitch):')
     return position,sigma,intensity,t,m3rRY
 
-def energy(val,c=1,m3r=True):
+def input_d(question):
     """
-    Sets the beamline energy: insertion device + mono + apertures.
-    Use c < 1 to kill flux density.
+    ask a question (e.g 'Are you sure you want to reset tth0 (Y or N)? >')
+    return the answer
     """
-    SetBL(val,c)
-    SetMono(val)
-    if m3r == True:
-        if CheckBranch() == 'd':
-            print('\nalign_m3r()')
-            try:
-                align_m3r()
-                sleep(1)
-                if caget('29id_m3r:RY_POS_SP') == -16.52:
-                    align_m3r(debug=True)
-            except:
-                print('Unable to align; check camera settings.')
+    try:
+        print(question)
+        foo = input()
+        return foo
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        return
+
+def scanXAS(hv,StartStopStepLists,settling_time=0.2,**kwargs):
+    """
+    Sets the beamline to hv and then scans the mono for XAS scans
+    
+    StartStopStepLists is a list of lists for the different scan ranges
+        StartStopStepList[[start1,stop1,step1],[start1,stop1,step1],...]
+        Note duplicates are review and the resulting array is sorted in ascending order
+    
+    Normalization:2575
+        - If in the D-branch the Mesh is put in but is not removed
+        - If in the C-branch we use the slit blades for normalization (ca13)
         
-def align_m3r(p=118,debug=False):
+    Logging is automatic ; kwargs:  
+        mcp = True
+        m3r = True
+        average = None
+        scanIOC = BL_ioc
+        scanDIM = 1
+        run = True; False doesn't push Scan_Go
+    """
+
+    kwargs.setdefault("scanIOC",BL_ioc())
+    kwargs.setdefault("scanDIM",1)
+    kwargs.setdefault("average",None)
+    kwargs.setdefault("run",True)
+    kwargs.setdefault("debug",False)
+    kwargs.setdefault("m3r",True)
+    kwargs.setdefault("mcp",True)       
+
+
+    posNum=1 #positionioner 1
+    scanIOC=kwargs['scanIOC']
+    scanDIM=kwargs['scanDIM']
+    
+    #Setting up the ScanRecord for Mono in Table mode
+    VAL="29idmono:ENERGY_SP"
+    RBV="29idmono:ENERGY_MON"
+    myarray=Scan_MakeTable(StartStopStepLists)
+    Scan_FillIn_Table(VAL,RBV,scanIOC,scanDIM,myarray, posNum=posNum)
+    #mono needs to stay and have a longer settling time
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PASM","STAY")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
+    
+    #Averaging and Normalization
+    if kwargs["average"]:
+        CA_Average(kwargs["average"])
+    Branch=CheckBranch()
+    if Branch=="d":
+        MeshD("In")
+     
+    #Setting the beamline energy
+    energy(hv,m3r=kwargs["m3r"])
+    if Branch=="d" and kwargs["mcp"]:
+        MPA_HV_ON()
+        
+    #Scanning
+    Scan_Go(scanIOC,scanDIM)
+    Scan_Reset_AfterTable(scanIOC,scanDIM)
+
+    
+    #Setting everything back
+    SetMono(hv)
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",0.1)
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".P1SM","LINEAR") 
+    if Branch=="d":
+        if kwargs["mcp"]: MPA_HV_OFF()
+        print("WARNING: Mesh"+Branch+" is still in")        
+
+def Scan_MakeTable(StartStopStepLists):
+    """
+    Creates and returns a np.array with values based on StartStopStepList
+    StartStopStepList is a list of lists defining regions for a table array
+              StartStopStepList[[start1,stop1,step1],[start1,stop1,step1],...]
+    Automatically removes duplicates and sorts into ascending order
+    if you want descending
+               myarray=XAS_Table(StartStopStepLists)[::-1]
+    """
+    table_array=np.array([])
+    if type(StartStopStepLists) is not list:
+        start=StartStopStepLists[0]
+        stop=StartStopStepLists[1]
+        step=StartStopStepLists[2]
+        j=start
+        while j<=stop:
+            table_array=np.append(table_array, j)
+            j+=step
+    else:
+        for i in range(0,len(StartStopStepLists)):
+            start=StartStopStepLists[i][0]
+            stop=StartStopStepLists[i][1]
+            step=StartStopStepLists[i][2]
+            j=start
+            while j<=stop:
+                table_array=np.append(table_array, j)
+                j+=step
+    table_array=np.unique(table_array)#removing duplicate
+    table_array=np.sort(table_array) #sort into ascending order    
+    return table_array
+
+

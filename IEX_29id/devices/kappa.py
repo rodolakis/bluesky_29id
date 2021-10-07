@@ -1,10 +1,11 @@
 from epics import caget, caput
 from time import sleep
 from IEX_29id.utils.exp import CheckBranch, BL_ioc
-from IEX_29id.devices.motors import Move_Motor_vs_Branch, ARPES_PVmotor, Kappa_PVmotor
-from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go
+from IEX_29id.devices.motors import Move_Motor_vs_Branch, ARPES_PVmotor, Kappa_PVmotor, Move_ARPES_Motor
+from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go, Scan_Progress
 from math import *
-
+from IEX_29id.devices.motors import UMove_Motor_vs_Branch
+from IEX_29id.devices.kappa import cts
 ### all the function that move/scan the diffractometer:
 ### tth, th, phi, chi, x, y, z
 
@@ -259,3 +260,220 @@ def uan(tth,th):
         else:
             print('tth='+str(tth)+' th='+str(th))
             break
+
+def mvrchi(val):
+    """
+    Relative move
+    """
+    name="chi"
+    mybranch=CheckBranch()
+    #if branch == "c":
+    if mybranch == "c":
+        print("   chi motor not implemented")
+    #elif branch == "d":
+    else :
+        UMove_Motor_vs_Branch(name,val)
+
+def mvrchi(val):
+    """
+    Relative move
+    """
+    name="chi"
+    mybranch=CheckBranch()
+    #if branch == "c":
+    if mybranch == "c":
+        print("   chi motor not implemented")
+    #elif branch == "d":
+    else :
+        UMove_Motor_vs_Branch(name,val)
+
+def mvrphi(val):
+    """
+    Relative move
+    """
+    name="phi"
+    mybranch=CheckBranch()
+    #if branch == "c":
+    if mybranch == "c":
+        print("   phi motor not implemented")
+    #elif branch == "d":
+    else :
+        UMove_Motor_vs_Branch(name,val)
+def mvkrth(val):
+    """
+    Relative move
+    """
+    name="kth"
+    mybranch=CheckBranch()
+    if mybranch == "d":
+        UMove_Motor_vs_Branch(name,val)
+    else:
+        print("   kth motor does not exit")
+
+def mvrx(val):
+    """
+    Relative move
+    """
+    name="x"
+    UMove_Motor_vs_Branch(name,val)
+def mvry(val):
+    """
+    Relative move
+    """
+    name="y"
+    UMove_Motor_vs_Branch(name,val)
+def mvrz(val):
+    """
+    Relative move
+    """
+    name="z"
+    UMove_Motor_vs_Branch(name,val)
+
+def mvrkphi(val):
+    """
+    Relative move
+    """
+    name="kphi"
+    mybranch=CheckBranch()
+    if mybranch == "d":
+        UMove_Motor_vs_Branch(name,val)
+    else:
+        print("   kphi motor does not exit")
+
+def scankap(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
+    mybranch=CheckBranch()
+    if scanIOC is None:
+        scanIOC=BL_ioc()
+    if mybranch == "d":
+        Scan_Kappa_Motor_Go("kap",start,stop,step,mode=mode,scanIOC=scanIOC,scanDIM=scanDIM,**kwargs)        
+    else:
+        print("kap motor does not exit")
+
+
+def sample(ListPosition):
+    """
+    ARPES: ListPosition = ["Sample Name", x, y, z, th, chi, phi]
+    Kappa: ListPosition = ["Sample Name", x, y, z, tth, kth, kap, kphi]; tth does not move
+    RSoXS: ListPosition=["Sample Name",x,y,z,chi,phi,th,tth]
+    """
+    mybranch=CheckBranch()
+    if mybranch == "c":
+        Move_ARPES_Sample(ListPosition)
+    elif mybranch == "d":
+        Move_Kappa_Sample(ListPosition)
+        print("tth is kept fixed.")
+    elif mybranch =="e":
+        Move_RSoXS_Sample(ListPosition)
+
+def Move_ARPES_Sample(ListPosition):
+    """ListPosition = ["Sample Name", x, y, z, th, chi, phi]"""
+    if not isinstance(ListPosition[0],str):
+        ListPosition.insert(0,"")
+    name,x,y,z,th,chi,phi=ListPosition
+    print("\nx="+str(x), " y="+str(y)," z="+str(z), " theta="+str(th)," chi="+str(chi)," phi="+str(phi),"\n")
+    Move_ARPES_Motor("x",x)
+    Move_ARPES_Motor("y",y)
+    Move_ARPES_Motor("z",z)
+    Move_ARPES_Motor("th",th)
+    Move_ARPES_Motor("chi",chi)
+    Move_ARPES_Motor("phi",phi)
+    #print "Sample now @:",name
+
+def Move_Kappa_Sample(ListPosition):
+    """ListPosition = ["Sample Name", x, y, z, tth, kth, kap, kphi]
+    keeps tth fixes
+     """
+    if not isinstance(ListPosition[0],str):
+        ListPosition.insert(0,"")
+    #tth=round(caget("29idHydra:m1.RBV"),2)
+    name,x,y,z,tth,kth,kap,kphi=ListPosition
+    print("\nx="+str(x), " y="+str(y)," z="+str(z), " tth="+str(tth), " kth="+str(kth), " kap="+str(kap), " kphi="+str(kphi),"\n")
+    caput("29idKappa:m2.VAL",x,wait=True,timeout=18000)
+    caput("29idKappa:m3.VAL",y,wait=True,timeout=18000)
+    caput("29idKappa:m4.VAL",z,wait=True,timeout=18000)
+    caput("29idKappa:m8.VAL",kth,wait=True,timeout=18000)
+    caput("29idKappa:m7.VAL",kap,wait=True,timeout=18000)
+    caput("29idKappa:m1.VAL",kphi,wait=True,timeout=18000)
+    print("Sample now @:",name)
+
+def Move_RSoXS_Sample(ListPosition):
+    """
+    ListPosition=["Sample Name",x,y,z,chi,phi,th,tth]
+    """
+    if not isinstance(ListPosition[0],str):
+        ListPosition.insert(0,"")
+    name,x,y,z,chi,phi,th,tth=ListPosition
+    print("\nx="+str(x), " y="+str(y)," z="+str(z), " chi="+str(chi), " phi="+str(phi), " th="+str(th), " tth="+str(tth),"\n")
+    #Moving x/y to center of travel move tth then th
+    caput("29idRSoXS:m1.VAL",0,wait=True,timeout=18000)
+    caput("29idRSoXS:m2.VAL",10,wait=True,timeout=18000)
+    caput("29idRSoXS:m8.VAL",tth,wait=True,timeout=18000)
+    caput("29idRSoXS:m7.VAL",th,wait=True,timeout=18000)
+    #Moving the rest
+    caput("29idRSoXS:m3.VAL",z,wait=True,timeout=18000)
+    caput("29idRSoXS:m4.VAL",chi,wait=True,timeout=18000)
+    caput("29idRSoXS:m5.VAL",phi,wait=True,timeout=18000)
+    caput("29idRSoXS:m1.VAL",x,wait=True,timeout=18000)
+    caput("29idRSoXS:m2.VAL",y,wait=True,timeout=18000)
+
+def scanth2th(tth_start,tth_stop,tth_step,th_offset,ct,**kwargs):
+    """
+    Used for a linear (not table) scan where th =  tth /2 + th_offset
+    **kwargs
+        run = True (default) starts the scan; false just fills in the scanRecord
+        scanIOC = BL_ioc (default)
+        scanDIM = 1 (default)
+        settling_time = 0.1 (default)
+    """
+    
+    #scanIOC=BL_ioc()
+    kwargs.setdefault('run',True)
+    kwargs.setdefault("scanIOC",BL_ioc())
+    kwargs.setdefault("scanDIM",1)
+    kwargs.setdefault("settling_time",0.1)
+    
+    scanIOC=kwargs['scanIOC']
+    scanDIM=kwargs['scanDIM']
+    settling_time=kwargs['settling_time']
+    
+    th_start=(tth_start)/2+th_offset
+    th_stop=(tth_stop)/2+th_offset
+    
+    print('tth: '+str(tth_start)+"/"+str(tth_stop)+"/"+str(tth_step))
+    print('th: '+str(th_start)+"/"+str(th_stop)+"/"+str(tth_step/2.0))
+    
+    #write to the scanRecord
+    scanPV="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(scanPV+".PDLY",settling_time)
+    Scan_FillIn(Kappa_PVmotor("tth")[1],Kappa_PVmotor("tth")[0],scanIOC,scanDIM,tth_start,tth_stop,tth_step)
+    Scan_FillIn_Pos2(Kappa_PVmotor("th")[1],Kappa_PVmotor("th")[0],scanIOC,scanDIM,th_start,th_stop)
+    
+  
+    if kwargs['run']==True:
+        cts(ct)
+        Scan_Go(scanIOC,scanDIM)
+        
+        #Setting everything back
+        caput(scanPV+".PDLY",0.1)
+
+        # Need to clear positionner!
+        Clear_Scan_Positioners(scanIOC)
+
+def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
+    Scan_Progress(scanIOC,scanDIM)
+    start=start*1.0
+    stop=stop*1.0
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(pv+".P1SM","LINEAR")     
+    caput(pv+".P2PV",VAL)
+    caput(pv+".R2PV",RBV)
+    caput(pv+".P2SP",start)
+    caput(pv+".P2EP",stop)
+
+def Clear_Scan_Positioners(scanIOC,scanDIM=1):
+    """Clear all extra scan positioners"""
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    for i in range (1,5):
+        caput(pv+".R"+str(i)+"PV","")
+        caput(pv+".P"+str(i)+"PV","")
+    print("\nAll extra positionners cleared")
