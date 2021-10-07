@@ -1161,13 +1161,6 @@ def CA15():
     return diode
 
 
-def Clear_Scan_Positioners(scanIOC,scanDIM=1):
-    """Clear all extra scan positioners"""
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    for i in range (1,5):
-        caput(pv+".R"+str(i)+"PV","")
-        caput(pv+".P"+str(i)+"PV","")
-    print("\nAll extra positionners cleared")
 
 def Clear_Scan_Detectors(scanIOC,scanDIM=1):
     """Clear all scan detectors"""
@@ -1294,16 +1287,7 @@ def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
 
 
 ### Fill Scan Record - 2nd positionner:
-def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
-    Scan_Progress(scanIOC,scanDIM)
-    start=start*1.0
-    stop=stop*1.0
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(pv+".P1SM","LINEAR")     
-    caput(pv+".P2PV",VAL)
-    caput(pv+".R2PV",RBV)
-    caput(pv+".P2SP",start)
-    caput(pv+".P2EP",stop)
+
 
 ### Fill Scan Record - 3rd positionner:
 def Scan_FillIn_Pos3(VAL,RBV,scanIOC,scanDIM,start,stop):
@@ -1358,38 +1342,6 @@ def Scan_Reset_AfterTable(scanIOC,scanDIM):
         caput(scanPV+".P"+str(i)+"SM","LINEAR") 
     Clear_Scan_Positioners(scanIOC,scanDIM)
     
-def Scan_MakeTable(StartStopStepLists):
-    """
-    Creates and returns a np.array with values based on StartStopStepList
-    StartStopStepList is a list of lists defining regions for a table array
-              StartStopStepList[[start1,stop1,step1],[start1,stop1,step1],...]
-    Automatically removes duplicates and sorts into ascending order
-    if you want descending
-               myarray=XAS_Table(StartStopStepLists)[::-1]
-    """
-    table_array=np.array([])
-    if type(StartStopStepLists) is not list:
-        start=StartStopStepLists[0]
-        stop=StartStopStepLists[1]
-        step=StartStopStepLists[2]
-        j=start
-        while j<=stop:
-            table_array=np.append(table_array, j)
-            j+=step
-    else:
-        for i in range(0,len(StartStopStepLists)):
-            start=StartStopStepLists[i][0]
-            stop=StartStopStepLists[i][1]
-            step=StartStopStepLists[i][2]
-            j=start
-            while j<=stop:
-                table_array=np.append(table_array, j)
-                j+=step
-    table_array=np.unique(table_array)#removing duplicate
-    table_array=np.sort(table_array) #sort into ascending order    
-    return table_array
-
-
 
 def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
     """
@@ -1501,26 +1453,6 @@ def CA_Passive():        # Put All commonly used (triggered) CA in passive mode 
     caput("29idb:ca5:read.SCAN","Passive")
     caput("29idc:ca2:read.SCAN","Passive")
 
-def ScalerInt(time):
-    """
-    Sets the integration time for the scalers
-    """
-    pv="29idMZ0:scaler1.TP"
-    caput(pv,time)
-#     if time>=1:
-#         caput('29iddMPA:Proc1:NumFilter',floor(time))
-#     else:
-#         caput('29iddMPA:Proc1:NumFilter',1)
-    caput('29iddMPA:Proc1:NumFilter',floor(time))
-    print("Integration time set to:", str(time))
-
-
-def cts(time):
-    """
-    Sets the integration time for the scalers
-    """
-    ScalerInt(time)
-
 
 
 def Reset_Lakeshore():
@@ -1531,32 +1463,6 @@ def Reset_Lakeshore():
     print("Lakeshore parameters have been reset.")
 
 
-
-
-
-def Detector_List(scanIOC):
-    """
-    Define the detector used for:
-        CA_Live_StrSeq()
-        Detector_Triggers_StrSeq()
-        BeforeScan_StrSeq() => puts everybody in passive
-        CA_Average()
-    WARNING: can't have more than 5 otherwise CA_Live_StrSeq gets angry.
-    """
-
-    BL_mode=BL_Mode_Read()[0]
-    if scanIOC == "ARPES":
-        CA_list=[["c",1],["b",15],["b",4],["b",13]]
-    elif scanIOC == "Kappa":
-        CA_list=[["d",2],["d",3],["d",4],["b",14]]
-    elif scanIOC == "RSoXS":
-        CA_list=[["d",3],["d",4],["d",5],["b",14],]
-    else:
-        CA_list=[]
-#    if BL_mode == 1:
-#        CA_list=[["b",1],["b",2],["b",3],["b",4],["b",5]] #JM was here
-#        CA_list=[["b",15],["d",2],["d",3],["d",4],["b",14]]
-    return CA_list
 
 
 
@@ -2022,49 +1928,6 @@ def ARPES_EA_Trigger_StringCalc():
 ##############################################################################################################
 ##############################             Kappa - Motor Scan Setting        ##############################
 ##############################################################################################################
-
-def scanth2th(tth_start,tth_stop,tth_step,th_offset,ct,**kwargs):
-    """
-    Used for a linear (not table) scan where th =  tth /2 + th_offset
-    **kwargs
-        run = True (default) starts the scan; false just fills in the scanRecord
-        scanIOC = BL_ioc (default)
-        scanDIM = 1 (default)
-        settling_time = 0.1 (default)
-    """
-    
-    #scanIOC=BL_ioc()
-    kwargs.setdefault('run',True)
-    kwargs.setdefault("scanIOC",BL_ioc())
-    kwargs.setdefault("scanDIM",1)
-    kwargs.setdefault("settling_time",0.1)
-    
-    scanIOC=kwargs['scanIOC']
-    scanDIM=kwargs['scanDIM']
-    settling_time=kwargs['settling_time']
-    
-    th_start=(tth_start)/2+th_offset
-    th_stop=(tth_stop)/2+th_offset
-    
-    print('tth: '+str(tth_start)+"/"+str(tth_stop)+"/"+str(tth_step))
-    print('th: '+str(th_start)+"/"+str(th_stop)+"/"+str(tth_step/2.0))
-    
-    #write to the scanRecord
-    scanPV="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(scanPV+".PDLY",settling_time)
-    Scan_FillIn(Kappa_PVmotor("tth")[1],Kappa_PVmotor("tth")[0],scanIOC,scanDIM,tth_start,tth_stop,tth_step)
-    Scan_FillIn_Pos2(Kappa_PVmotor("th")[1],Kappa_PVmotor("th")[0],scanIOC,scanDIM,th_start,th_stop)
-    
-    
-    if kwargs['run']==True:
-        cts(ct)
-        Scan_Go(scanIOC,scanDIM)
-        
-        #Setting everything back
-        caput(scanPV+".PDLY",0.1)
-
-        # Need to clear positionner!
-        Clear_Scan_Positioners(scanIOC)
 
 
 
@@ -5342,12 +5205,7 @@ def unit_dict(x):
     return u
 
 
-def setgain(det,gain,unit):
-    """
-    det  = 'SRS1', 'SRS2', 'SRS3', 'SRS4','mesh','tey','d3','d4'
-    gain = 1,2,5,10,20,50,100,200,500
-    unit = 'pA, 'nA', 'uA', 'mA'
-    """
+
     def SRS_dict(x):
         SRS_det={}
         SRS_det={'SRS1':1, 'SRS2':2, 'SRS3':3, 'SRS4':4,'mesh':1, 'tey':2, 'd3':3, 'd4':4}
@@ -5680,35 +5538,9 @@ def mv4C(th,chi,phi):
 ##############################################################################################################
 
 
-def MPA_HV_Set(volt):
-    volt=min(volt,2990)
-    caput("29idKappa:userCalcOut9.A",volt,wait=True,timeout=18000)
-    sleep(1)
-    RBV=caget("29idKappa:userCalcOut10.OVAL")
-    print("HV = "+str(RBV)+" V")
 
 
-def MPA_HV_ON():
-    n=1
-    tth = caget('29idKappa:m9.DRBV')
-    if -16<= tth <=-6:
-        print('MPA OFF: detector in direct beam (-5 < mcp < 5); move away before turning HV ON.')
-    else:
-        caput('29iddMPA:C1O',1,wait=True,timeout=18000)
-        caput('29iddMPA:C1O',0,wait=True,timeout=18000)
-        caput("29iddMPA:C0O",n,wait=True,timeout=18000)
-        print("MPA - HV On")
 
-def MPA_HV_OFF():
-    n=0
-    caput("29iddMPA:C0O",n,wait=True,timeout=18000)
-    print("MPA - HV Off")
-
-
-def MPA_HV_Reset():
-    caput('29iddMPA:C1O',1)
-    print("MPA - Reset")
-    
     
 def MPA_HV_scan(start=2400,stop=2990,step=10):
     cts(1)
@@ -5725,75 +5557,9 @@ def MPA_HV_scan(start=2400,stop=2990,step=10):
 
 
 
-def AD_ROI_SetUp(AD,ROInum,xcenter=500,ycenter=500,xsize=50,ysize=50,binX=1,binY=1):  
-    """
-    AD = "29id_ps4"
-    AD = "29iddMPA"
-    """
-    # roiNUM=1  MPA_ROI_SetUp(535,539,50,50)  center of MCP
-    
-    ADplugin=AD+':ROI'+str(ROInum)+':'
-    xstart=xcenter-xsize/2.0
-    ystart=ycenter-ysize/2.0
-    caput(ADplugin+'MinX',xstart)
-    caput(ADplugin+'MinY',ystart)
-    caput(ADplugin+'SizeX',xsize)
-    caput(ADplugin+'SizeY',ysize)
-    caput(ADplugin+'BinX',binX)
-    caput(ADplugin+'BinY',binY)
-    caput(ADplugin+'EnableCallbacks','Enable')
-    print(ADplugin+' - '+caget(ADplugin+'EnableCallbacks_RBV',as_string=True))
-    #MPA_ROI_Stats(roiNUM)
-    
-def AD_OVER_SetUp(AD,ROInum,OVERnum,linewidth=5,shape='Rectangle'):
-    """
-    AD = "29id_ps4"
-    AD = "29iddMPA"
-    shape= 'Cross', 'Rectangle', 'Ellipse','Text'
-    """
-    OVER1=AD+":Over1:"+str(OVERnum)+":"
-    ROI=AD+":ROI"+str(ROInum)+":"
-    
-    caput(ROI+'EnableCallbacks','Enable')
-    caput(OVER1+"Name","ROI"+str(ROInum))
-    caput(OVER1+"Shape",shape)
-    caput(OVER1+"Red",0)
-    caput(OVER1+"Green",255)
-    caput(OVER1+"Blue",0)
-    caput(OVER1+'WidthX',linewidth)
-    caput(OVER1+'WidthY',linewidth)
-    
-    caput(OVER1+"PositionXLink.DOL",ROI+"MinX_RBV CP")
-    caput(OVER1+"SizeXLink.DOL",ROI+"SizeX_RBV CP")
-    caput(OVER1+"PositionYLink.DOL",ROI+"MinY_RBV CP")
-    caput(OVER1+"SizeYLink.DOL",ROI+"SizeY_RBV CP")
-   
-    caput(OVER1+"Use","Yes")
-    
-    
 
-def MPA_ROI_SetUp(roiNUM=1,xcenter=535,ycenter=539,xsize=50,ysize=50,binX=1,binY=1):  
-    # roiNUM=1  MPA_ROI_SetUp(535,539,50,50)  center of MCP
-    AD_ROI_SetUp('29iddMPA',roiNUM,xcenter,ycenter,xsize,ysize,binX,binY)
-    pv="29iddMPA:ROI"+str(roiNUM)+':'
-    MPA_ROI_Stats(roiNUM)
-    
-def MPA_ROI_SetAll(xcenter=535,ycenter=539):
-    MPA_ROI_SetUp(1,xcenter,ycenter,xsize=50,ysize=50)
-    MPA_ROI_SetUp(2,xcenter,ycenter,xsize=100,ysize=100)
-    MPA_ROI_SetUp(3,xcenter,ycenter,xsize=150,ysize=150)
-    MPA_ROI_SetUp(4,xcenter,ycenter,xsize=200,ysize=200)
     
     
-def MPA_ROI_Stats(roiNUM):
-    pvROI="29iddMPA:ROI"+str(roiNUM)+':'
-    pvSTATS="29iddMPA:Stats"+str(roiNUM)+':'
-    caput(pvSTATS+'NDArrayPort','ROI'+str(roiNUM))
-    caput(pvSTATS+'EnableCallbacks','Enable')
-    caput(pvSTATS+'ArrayCallbacks','Enable')
-    caput(pvSTATS+'ComputeStatistics','Yes')
-    caput(pvSTATS+'ComputeCentroid','Yes')
-    caput(pvSTATS+'ComputeProfiles','Yes')
 
 def _MPA_Trigger_Callback(BeforeAfter,saveImg=False,**kwargs):
     """
@@ -6049,22 +5815,8 @@ def getE():
     E=Get_energy()[4]
     return E
 
-def slit(val):
-    """
-    Sets the exit slits:
-        ARPES = 0 < x < 300  um
-        Kappa  = 0 < x < 1000 um
-    """
-    SetExitSlit(val)
 
 
-
-
-def polarization(which):
-    """
-    Change beam polarization: which = \"H\", \"V\", \"RCP\" or \"LCP\"
-    """
-    Switch_IDMode(which)
 
 
 def resolution():
@@ -6247,41 +5999,7 @@ def mvrtth(val):
     #elif branch == "d":
     else:
         UMove_Motor_vs_Branch(name,val)
-def mvrchi(val):
-    """
-    Relative move
-    """
-    name="chi"
-    mybranch=CheckBranch()
-    #if branch == "c":
-    if mybranch == "c":
-        print("   chi motor not implemented")
-    #elif branch == "d":
-    else :
-        UMove_Motor_vs_Branch(name,val)
 
-def mvrphi(val):
-    """
-    Relative move
-    """
-    name="phi"
-    mybranch=CheckBranch()
-    #if branch == "c":
-    if mybranch == "c":
-        print("   phi motor not implemented")
-    #elif branch == "d":
-    else :
-        UMove_Motor_vs_Branch(name,val)
-def mvkrth(val):
-    """
-    Relative move
-    """
-    name="kth"
-    mybranch=CheckBranch()
-    if mybranch == "d":
-        UMove_Motor_vs_Branch(name,val)
-    else:
-        print("   kth motor does not exit")
 
 def mvrkap(val):
     """
@@ -6293,16 +6011,6 @@ def mvrkap(val):
         UMove_Motor_vs_Branch(name,val)
     else:
         print("   kap motor does not exit")
-def mvrkphi(val):
-    """
-    Relative move
-    """
-    name="kphi"
-    mybranch=CheckBranch()
-    if mybranch == "d":
-        UMove_Motor_vs_Branch(name,val)
-    else:
-        print("   kphi motor does not exit")
 
 
 def LastMDA():
@@ -6439,14 +6147,7 @@ def scankth(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
     else:
         print("kth motor does not exit")
 
-def scankap(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
-    mybranch=CheckBranch()
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    if mybranch == "d":
-        Scan_Kappa_Motor_Go("kap",start,stop,step,mode=mode,scanIOC=scanIOC,scanDIM=scanDIM,**kwargs)        
-    else:
-        print("kap motor does not exit")
+
 
 def scankphi(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
     mybranch=CheckBranch()
@@ -6634,73 +6335,6 @@ def scanhv(start,stop,step,average=None,settling_time=0.2,**kwargs):
     if average:
         CA_Average(0)
 
-def scanXAS(hv,StartStopStepLists,settling_time=0.2,**kwargs):
-    """
-    Sets the beamline to hv and then scans the mono for XAS scans
-    
-    StartStopStepLists is a list of lists for the different scan ranges
-        StartStopStepList[[start1,stop1,step1],[start1,stop1,step1],...]
-        Note duplicates are review and the resulting array is sorted in ascending order
-    
-    Normalization:2575
-        - If in the D-branch the Mesh is put in but is not removed
-        - If in the C-branch we use the slit blades for normalization (ca13)
-        
-    Logging is automatic ; kwargs:  
-        mcp = True
-        m3r = True
-        average = None
-        scanIOC = BL_ioc
-        scanDIM = 1
-        run = True; False doesn't push Scan_Go
-    """
-
-    kwargs.setdefault("scanIOC",BL_ioc())
-    kwargs.setdefault("scanDIM",1)
-    kwargs.setdefault("average",None)
-    kwargs.setdefault("run",True)
-    kwargs.setdefault("debug",False)
-    kwargs.setdefault("m3r",True)
-    kwargs.setdefault("mcp",True)       
-
-
-    posNum=1 #positionioner 1
-    scanIOC=kwargs['scanIOC']
-    scanDIM=kwargs['scanDIM']
-    
-    #Setting up the ScanRecord for Mono in Table mode
-    VAL="29idmono:ENERGY_SP"
-    RBV="29idmono:ENERGY_MON"
-    myarray=Scan_MakeTable(StartStopStepLists)
-    Scan_FillIn_Table(VAL,RBV,scanIOC,scanDIM,myarray, posNum=posNum)
-    #mono needs to stay and have a longer settling time
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PASM","STAY")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
-    
-    #Averaging and Normalization
-    if kwargs["average"]:
-        CA_Average(kwargs["average"])
-    Branch=CheckBranch()
-    if Branch=="d":
-        MeshD("In")
-     
-    #Setting the beamline energy
-    energy(hv,m3r=kwargs["m3r"])
-    if Branch=="d" and kwargs["mcp"]:
-        MPA_HV_ON()
-        
-    #Scanning
-    Scan_Go(scanIOC,scanDIM)
-    Scan_Reset_AfterTable(scanIOC,scanDIM)
-
-    
-    #Setting everything back
-    SetMono(hv)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",0.1)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".P1SM","LINEAR") 
-    if Branch=="d":
-        if kwargs["mcp"]: MPA_HV_OFF()
-        print("WARNING: Mesh"+Branch+" is still in")        
 
 def Tables_BLenergy(StartStopStepLists,**kwargs):
     """
@@ -6858,19 +6492,6 @@ def mvxyz(ListPosition):
 
 
 
-def Move_ARPES_Sample(ListPosition):
-    """ListPosition = ["Sample Name", x, y, z, th, chi, phi]"""
-    if not isinstance(ListPosition[0],str):
-        ListPosition.insert(0,"")
-    name,x,y,z,th,chi,phi=ListPosition
-    print("\nx="+str(x), " y="+str(y)," z="+str(z), " theta="+str(th)," chi="+str(chi)," phi="+str(phi),"\n")
-    Move_ARPES_Motor("x",x)
-    Move_ARPES_Motor("y",y)
-    Move_ARPES_Motor("z",z)
-    Move_ARPES_Motor("th",th)
-    Move_ARPES_Motor("chi",chi)
-    Move_ARPES_Motor("phi",phi)
-    #print "Sample now @:",name
 
 
 def Move_Kappa_Sample(ListPosition):
@@ -6912,25 +6533,7 @@ def Move_RSoXS_xyz(ListPosition):
     mvx(ListPosition[1])
     mvy(ListPosition[2])
     mvz(ListPosition[3])
-def Move_RSoXS_Sample(ListPosition):
-    """
-    ListPosition=["Sample Name",x,y,z,chi,phi,th,tth]
-    """
-    if not isinstance(ListPosition[0],str):
-        ListPosition.insert(0,"")
-    name,x,y,z,chi,phi,th,tth=ListPosition
-    print("\nx="+str(x), " y="+str(y)," z="+str(z), " chi="+str(chi), " phi="+str(phi), " th="+str(th), " tth="+str(tth),"\n")
-    #Moving x/y to center of travel move tth then th
-    caput("29idRSoXS:m1.VAL",0,wait=True,timeout=18000)
-    caput("29idRSoXS:m2.VAL",10,wait=True,timeout=18000)
-    caput("29idRSoXS:m8.VAL",tth,wait=True,timeout=18000)
-    caput("29idRSoXS:m7.VAL",th,wait=True,timeout=18000)
-    #Moving the rest
-    caput("29idRSoXS:m3.VAL",z,wait=True,timeout=18000)
-    caput("29idRSoXS:m4.VAL",chi,wait=True,timeout=18000)
-    caput("29idRSoXS:m5.VAL",phi,wait=True,timeout=18000)
-    caput("29idRSoXS:m1.VAL",x,wait=True,timeout=18000)
-    caput("29idRSoXS:m2.VAL",y,wait=True,timeout=18000)
+
 
 def Move_RSoXS_Det(ListPosition):
     """
@@ -6969,57 +6572,6 @@ def BranchPV_StrSeq():
 
 
 
-def Before_After_Scan(scanIOC,scanDIM):
-    """
-    Clear all Before/After scan (1,2,3,4).
-    Proc Before/AfterScan StrSeq  for the most outer loop:
-        - before scan puts all relevant detectors in passive
-        - after scan puts back all relevant detector in Live and reset scan1 to default settings.
-    """
-    All_Scans=[1,2,3,4]
-    All_Scans.remove(scanDIM)
-    #Clearing all Before/Afters
-    for i in All_Scans:
-        caput("29id"+scanIOC+":scan"+str(i)+".BSPV","")
-        caput("29id"+scanIOC+":scan"+str(i)+".ASPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV",BeforeScan_StrSeq(scanIOC))
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSCD",1)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSWAIT","Wait")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV",AfterScan_StrSeq(scanIOC))
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASCD",1)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASWAIT","Wait")
-
-
-
-def CA_Live_StrSeq(scanIOC):              # do we need to add 29idb:ca5 ???
-    n=7
-    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","CA_Live_"+scanIOC)
-    n=len(Detector_List(scanIOC))
-    for (i,list) in enumerate(Detector_List(scanIOC)):
-        pvCA_read='29id'+list[0]+':ca'+str(list[1])+':read.SCAN CA NMS'
-        pvCA_avg='29id'+list[0]+':ca'+str(list[1])+':digitalFilterSet PP NMS'
-
-        caput(pvstr+".LNK"+str(i+1),pvCA_avg)
-        caput(pvstr+".STR" +str(i+1),"Off")
-
-        if n+1+i < 10:
-            caput(pvstr+".LNK" +str(n+1+i),pvCA_read)
-            caput(pvstr+".STR" +str(n+1+i),".5 second")
-            caput(pvstr+".WAIT"+str(n+1+i),"After"+str(n))
-        elif n+1+i == 10:
-            caput(pvstr+".LNKA",pvCA_read)
-            caput(pvstr+".STRA",".5 second")
-            caput(pvstr+".WAITA","After"+str(n))
-#    if scanIOC == 'Kappa':
-
-#        caput(pvstr+".LNK" +str(2*n+1),'29idMZ0:scaler1.CONT CA NMS')
-#        caput(pvstr+".STR" +str(2*n+1),"AutoCount")
-#        caput(pvstr+".WAIT"+str(2*n+1),"After"+str(2*n))
-
-    return pvstr+".PROC"
-
 
 
 
@@ -7038,59 +6590,6 @@ def Detector_Triggers_StrSeq(scanIOC,scalerOnly=None):    # do we need to add 29
     return pvstr+".PROC"
 
 
-def BeforeScan_StrSeq(scanIOC):        # Put All relevant (triggered) CA in passive mode
-    n=9
-    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","BeforeScan_"+scanIOC)
-    for (i,list) in enumerate(Detector_List(scanIOC)):
-        pvCA='29id'+list[0]+':ca'+str(list[1])+':read.SCAN PP NMS'
-        caput(pvstr+".LNK" +str(i+1),pvCA)
-        caput(pvstr+".STR" +str(i+1),"Passive")
-    return pvstr+".PROC"
-
-def AfterScan_StrSeq(scanIOC,scanDIM=1,Snake=None):
-    n=10
-    pvstr ="29id"+scanIOC+":userStringSeq"+str(n)
-    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
-    
-    SnakePV="29id"+scanIOC+":userCalcOut"+str(1) #Snake UserCal
-        
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","AfterScan_"+scanIOC)
-    ## Put All relevant CA back in live mode29idARPES:userStringSeq10.LNK8
-    caput(pvstr+".LNK1",CA_Live_StrSeq(scanIOC)+" PP NMS")
-    caput(pvstr+".DO1",1)
-    ## Put scan record back in absolute mode
-    caput(pvstr+".LNK2",pvscan+".P1AR")
-    caput(pvstr+".STR2","ABSOLUTE")
-    ## Put Positionner Settling time to 0.1s
-    caput(pvstr+".LNK3",pvscan+".PDLY NPP NMS")
-    caput(pvstr+".DO3",0.1)
-    ## Clear DetTriggers 2 to 4:
-    #caput(pvstr+".LNK4",pvscan+".T2PV NPP NMS")    # FR is testing - why remove all trigger after scan?
-    caput(pvstr+".LNK5",pvscan+".T3PV NPP NMS")
-    caput(pvstr+".LNK6",pvscan+".T4PV NPP NMS")
-    if scanIOC == 'Kappa':
-        caput(pvstr+".STR4","")
-    #    caput(pvstr+".STR4","29idMZ0:scaler1.CNT")   # to be fixed FR 2020/10/27
-    else:
-        caput(pvstr+".STR4","")
-    caput(pvstr+".STR5","")
-    caput(pvstr+".STR6","")
-    caput(pvstr+".LNK7",pvscan+".PASM")
-    caput(pvstr+".STR7","PRIOR POS")
-    #if Snake is not None:
-    #    ## Put scan record back in 'STAY POS'
-
-#        caput(pvstr+".LNK8",SnakePV+".PROC")
-#        caput(pvstr+".D8",1)
-#    #caput(pvstr+"")JM was here
-#    else:
-#        ## Put scan record back in 'PRIOR POS'
-#        caput(pvstr+".LNK7",SnakePV+".PROC PP NMS")
-#        caput(pvstr+".DO1",1)
-    return pvstr+".PROC"
 
 
 def UserAvg_Trigger_StrSeq(ioc,num):
