@@ -1,8 +1,16 @@
-from epics import caput,caget,PV
+from epics import caput,caget,PV, EA
 from time import sleep
-from IEX_29id.utils.exp import BL_ioc, CheckBranch, BL_Mode_Read
+from IEX_29id.utils.exp import BL_ioc, CheckBranch, BL_Mode_Read, Check_MainShutter
 from IEX_29id.utils.log import scanlog
 from IEX_29id.utils.misc import dateandtime
+from IEX_29id.devices.detectors import Detector_List, Before_After_Scan, BeforeScan_StrSeq, AfterScan_StrSeq
+from IEX_29id.utils.strings import ClearStringSeq
+from IEX_29id.devices.motors import Kappa_PVmotor
+from math import *
+import numpy as np
+import numpy.polynomial.polynomial as poly
+
+
 
 
 def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
@@ -68,6 +76,20 @@ def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
     Scan_Check(scanIOC,scanDIM)
 
 ### Reset detectors in scan record:
+def Detector_Triggers_StrSeq(scanIOC,scalerOnly=None):    # do we need to add 29idb:ca5 ???
+    n=8
+    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
+    ClearStringSeq(scanIOC,n)
+    caput(pvstr+".DESC","Triggers_"+scanIOC)
+    branch=CheckBranch()
+    n=len(Detector_List(scanIOC))
+    for (i,list) in enumerate(Detector_List(scanIOC)):
+        pvCA='29id'+list[0]+':ca'+str(list[1])+':read.PROC CA NMS'
+        caput(pvstr+".LNK" +str(i+1),pvCA)
+        caput(pvstr+".WAIT"+str(i+1),"After"+str(n))
+    return pvstr+".PROC"
+
+
 def Scan_Check(scanIOC,scanDIM=1):
     """
     Check if any of the detectors or positions are not connected
@@ -149,7 +171,7 @@ def Scan_Go(scanIOC,scanDIM=1,**kwargs):
     BL_mode=BL_Mode_Read()[0]
     if not(BL_mode==2 or BL_mode==4):
         Check_MainShutter()
-    Before_After_Scan(scanIOC,scanDIM)
+        Before_After_Scan(scanIOC,scanDIM)
     for i in range(1,scanDIM+1):
         drive = caget("29id"+scanIOC+":scan"+str(i)+".P1PV")
         start = caget("29id"+scanIOC+":scan"+str(i)+".P1SP")
@@ -193,3 +215,179 @@ def Scan_Progress(scanIOC,scanDIM=1,q=None):
             print(pv+" in progress - please wait...")
         sleep(30)
         check=caget(pv+".FAZE")
+
+def Detector_Default(scanIOC,scanDIM=1,BL_mode=None):
+    """
+    Sets the ScanRecord detectors
+    """
+    Note_endstation = "Detectors are set for "+scanIOC+","
+    Note_xrays="with X-rays"
+    if BL_mode==None:
+        BL_mode=BL_Mode_Read()[0]        # possible to overwrite (e.g. set up time scan to monitor all PVs)
+    #Endstation parameters
+    if scanIOC == "ARPES":
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D17PV","29idARPES:LS335:TC1:IN1")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D18PV","29idARPES:LS335:TC1:IN2")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idc:ca2:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D16PV","29idc:ca1:read")
+        if caget(EA._statsPlugin+"Total_RBV") != None:
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D17PV",EA._statsPlugin+"Total_RBV")
+        else:
+            print(EA.PHV+" is not running")
+        
+    elif scanIOC == "Kappa":
+        # D14  D5D - mesh
+        # D15  D5C - gas cell
+        # D16  free        
+        # D17  free
+        # D18  free        
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D19PV","29idd:ca2:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D20PV","29idd:ca3:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D21PV","29idd:ca4:read")
+        #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D22PV","29idd:ca5:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D23PV","29idd:LS331:TC1:SampleA")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D24PV","29idd:LS331:TC1:SampleB")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D25PV","29id_ps6:Stats1:CentroidX_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D26PV","29id_ps6:Stats1:SigmaX_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D27PV","29id_ps6:Stats1:CentroidTotal_RBV")
+        # D28  free
+        # D29  free
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D30PV","29iddMPA:det1:TotalRate_RBV") # MPA software count rate?
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D31PV","29idMZ0:scaler1.S14") #-mesh D
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D32PV","29idMZ0:scaler1.S2") # TEY
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D33PV","29idMZ0:scaler1.S3") # D3
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D34PV","29idMZ0:scaler1.S4") # D4
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D35PV","29idMZ0:scaler1.S5") # MCP
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D36PV","29idMZ0:scaler1_calc1.B") #TEY/mesh
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D37PV","29idMZ0:scaler1_calc1.C") #D3/mesh
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D38PV","29idMZ0:scaler1_calc1.D") #D4/mesh
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D39PV","29idMZ0:scaler1_calc1.E") #MCP/mesh
+        # D40 free
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D41PV","29iddMPA:Stats1:Total_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D42PV","29iddMPA:Stats2:Total_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D43PV","29iddMPA:Stats3:Total_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D44PV","29iddMPA:Stats4:Total_RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D45PV","29iddMPA:Stats5:Total_RBV")
+        # D46  <H>
+        # D47  <K>        
+        # D48  <L>        
+        # D49  free
+        # D50  free            
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D51PV","29idKappa:m8.RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D52PV","29idKappa:m7.RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D53PV","29idKappa:m1.RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D54PV","29idKappa:m9.RBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D55PV","29idKappa:Euler_ThetaRBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D56PV","29idKappa:Euler_ChiRBV")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D57PV","29idKappa:Euler_PhiRBV")
+    elif scanIOC == "RSoXS":#JM need to get another keithly for RSoXS -BS+Diode
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D19PV","29idd:ca2:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D20PV","29idd:ca3:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D21PV","29idd:ca4:read")
+        #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D22PV","29idd:ca5:read")
+    #Beamline parameters
+    if BL_mode < 2:     # (User or staff) + Xrays"
+        #Setting Detectors -- main shutter & ring current
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D01PV","S:SRcurrentAI.VAL")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D02PV","EPS:29:ID:SS1:POSITION")
+        #Setting Detectors -- Beamline Energy
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D03PV","29idmono:ENERGY_MON")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D04PV","ID29:EnergySet.VAL")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D05PV","ID29:Energy.VAL")
+        #Setting Detectors -- Keithleys
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D06PV","29idb:ca1:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D07PV","29idb:ca2:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D08PV","29idb:ca3:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D09PV","29idb:ca4:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D10PV","29idb:ca5:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D11PV","29idb:ca9:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D11PV","29idb:ca10:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D12PV","29idb:ca12:read")
+        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D13PV","29idb:ca13:read")
+        #Setting Detectors -- Meshes/Diodes
+        if scanIOC == "ARPES":
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D15PV","29idb:ca15:read")
+        elif scanIOC == "Kappa":
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
+        elif scanIOC == "RSoXS":
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
+        Note_user="and in Users mode"
+        if BL_mode==1: # "Staff + Xrays"
+            # C/D diodes:
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D15PV","29idb:ca15:read")
+            #Setting Detectors -- beamline vacuum and shutters
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D61PV","29idb:VS1A.VAL")   
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D62PV","29idb:VS2A.VAL")
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D63PV","29idb:VS3AB.VAL")
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D64PV","29idb:VS4B.VAL")
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D65PV","29idb:IP4B.VAL")
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D66PV","PA:29ID:SCS_BLOCKING_BEAM.VAL")
+            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D67PV","PA:29ID:SDS_BLOCKING_BEAM.VAL")
+            #Setting Detectors -- Slits & Apertures
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D58PV","29idb:Slit1Ht2.C")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D59PV","29idb:Slit1Ht2.D")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D60PV","29idb:Slit1Vt2.C")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D61PV","29idb:Slit1Vt2.D")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D62PV","29idb:Slit2Ht2.C")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D63PV","29idb:Slit2Ht2.D")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D64PV","29idb:Slit2Vt2.C")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D65PV","29idb:Slit2Vt2.D")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D66PV","29idb:Slit3CRBV")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D67PV","29idb:Slit4Vt2.C")
+            #Setting Detectors -- Mono details
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D68PV","29idmono:ENERGY_SP")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D69PV","29idmonoMIR:P.RBV")
+            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D70PV","29idmonoGRT:P.RBV")
+
+            Note_user=" and in Staff mode"
+    else:
+        Note_user=""
+        Note_xrays="no Xrays"
+    print("\nWARNING: %s %s %s" % (Note_endstation, Note_xrays, Note_user))
+
+
+def Clear_Scan_Triggers(scanIOC,scanDIM=1):
+    """Clear all scan detectors triggers"""
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    for i in range(1,5):
+        caput(pv+'.T'+str(i)+'PV',"")
+
+def Scan_FillIn_Pos3(VAL,RBV,scanIOC,scanDIM,start,stop):
+    Scan_Progress(scanIOC,scanDIM)
+    start=start*1.0
+    stop=stop*1.0
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(pv+".P1SM","LINEAR")     
+    caput(pv+".P3PV",VAL)
+    caput(pv+".R3PV",RBV)
+    caput(pv+".P3SP",start)
+    caput(pv+".P3EP",stop)
+
+def Scan_FillIn_Table(VAL,RBV,scanIOC,scanDIM,myarray,posNum=1):
+    """
+    Fills in the scan record for table scans given positioner=posNum
+    myarray can be generated by myarray=Scan_MakeTable(StartStopStepLists)
+    """
+    Scan_Progress(scanIOC,scanDIM)
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    #positioner detting
+    caput(pv+".P"+str(posNum)+"SM","TABLE") 
+    caput(pv+".P"+str(posNum)+"PV",VAL)         #Drive
+    caput(pv+".R"+str(posNum)+"PV",RBV)         #Read
+    #caput(pv+".P"+str(posNum)+"SP",myarray[0])  #Start
+    #caput(pv+".P"+str(posNum)+"EP",myarray[-1]) #Stop    
+    #caput(pv+".P"+str(posNum)+"SI",0)           #Step     
+    caput(pv+".P"+str(posNum)+"PA",myarray)
+    caput(pv+'.NPTS',len(myarray))    
+    
+def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
+    Scan_Progress(scanIOC,scanDIM)
+    start=start*1.0
+    stop=stop*1.0
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(pv+".P1SM","LINEAR")     
+    caput(pv+".P2PV",VAL)
+    caput(pv+".R2PV",RBV)
+    caput(pv+".P2SP",start)
+    caput(pv+".P2EP",stop)

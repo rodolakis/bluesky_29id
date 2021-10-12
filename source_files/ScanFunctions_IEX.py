@@ -73,6 +73,17 @@ def Folder_ARPES(UserName,**kwargs):
         else:
             print(EA.PHV+" is not running")
 
+def Reset_CA_all(rate="Slow"):
+    for i in [1,2,3,4,5,9,10,12,13,14,15]:
+        Reset_CA("b",i,rate)
+    for i in [1,2]:
+        Reset_CA("c",i,rate)
+    #for i in [1,2,3,4,5]:
+    for i in [2,3,4]:
+        Reset_CA("d",i,rate)
+    caput("29idb:ca5:read.SCAN","Passive")    # CA5 in passive
+    print("\nAll the current amplifiers have been reset; ca5 set to passive.")
+
 
 
 def Folder_RSoXS(run,UserName,scanIOC="RSoXS",ftp=None):        # FR: scanIOC argument added for new Kappa soft IOC  - 9/27/2018
@@ -238,36 +249,6 @@ def Mono_Optics():
         ARM=0
     return [[MIR,MIR_Offset,MIR_Tx],[GRT,GRT_Offset,GRT_Tx,GRT_LD,GRT_b2],[CFF,TUN0,TUN1,TUN2,TUN3,ARM]]
 
-def M0M1_Table(Run,Mirror):
-    """
-    Prints the positions TX / TY / TZ / RX / RY / RZ for either Mirror = 0 or 1 (M0 or M1) for the specified Run
-    Run='default' give a reasonable starting position after homing
-    M0M1_SP() will put those values as the set points, you will need to push the Move button
-    """
-    M0M1_Pos={}
-    M0M1_Pos['default']={0:'-0.400/-22.5/0/0/0.000/0.0000',1:'0.400/-21.5/0/0/8.400/2.800'}
-    M0M1_Pos['2019_1']= {0:'0.3010/-22.5/0/0/-0.151/0.0393',1:'1.449/-21.5/0/0/8.339/2.700'}
-    M0M1_Pos['2019_2']= {0:'-0.400/-22.5/0/0/ 0.000/0.000',1:'0.400 /-21.5/0/0/8.436/3.000'}
-    return M0M1_Pos[Run][Mirror]
-
-def M0M1_SP(Run,Mirror,Go='no'):
-    """
-    put values from a given run as defined by M0M1_Table as the set points
-     you will need to push the Move button
-    """
-    MirrorPos=M0M1_Table(Run,Mirror).split('/')
-    Motor=['TX','TY','TZ','RX','RY','RZ']
-    for i in range(len(Motor)):
-        PV="29id_m"+str(Mirror)+":"+Motor[i]+"_POS_SP"
-        Val=MirrorPos[i]#float(MirrorPos[i])
-        print(PV+" = "+Val)
-        caput(PV,Val)
-    sleep(0.5)
-    if Go == 'yes':
-        caput('29id_m'+str(Mirror)+':MOVE_CMD.PROC',0,wait=True,timeout=18000)
-    else:
-        print(" caput(\'29id_m"+str(Mirror)+":MOVE_CMD.PROC\',0)")
-
 def M3R_Table(branch,motor):   # WARNING: branch_pv uses: D => (Tx <= 0) and (Ry < 0) - Make sure this remains true or change it
     M3R_Table={}
     M3R_Table["C"] = {'scanIOC':'ARPES',  "TX":10,     "TY":0, "TZ":0, "RX":0,      "RY":0,       "RZ":0}
@@ -294,43 +275,9 @@ def GoToSlit1AScribe():
         caput('29idb:m'+str(m)+'.DVAL',0)
 
 
-def CheckFlux(hv=500,mode='RCP',stay=None):
-    Switch_IDMode(mode)
-    energy(hv)
-    branch=CheckBranch()
-    SR=round(caget("S:SRcurrentAI.VAL"),2)
-    if branch == "c":
-        current_slit=caget('29idb:Slit3CFit.A')
-        DiodeC('In')
-        diode=caget('29idb:ca15:read')
-    elif branch == "d":
-        current_slit=caget('29idb:Slit4Vsize.VAL')
-        DiodeD("In")
-        diode=caget('29idb:ca14:read')
-    SetExitSlit(50)
-    flux=ca2flux(diode)
-    print("\n----- Current on diode   : %.3e" % diode, "A")
-    print("----- Corresponding flux: %.3e" % flux, "ph/s \n")
-    print("----- Storage ring current: %.2f" % SR, "mA")
-    if stay is None:
-        AllDiagOut()
-    SetExitSlit(current_slit)
 
-def CheckM0M1(scanIOC='ARPES',hv=500,stay=None,wire=None,**kwargs): #JM added energy parameter
-    """
-    Prints Flux in C-branch
-    stay = 'yes' => Leaves diagnostics in the beam
-    wire ='yes'=> Does wire scans to determine M0M1 alignment
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
-    """
-    Switch_Branch('c')
-    Switch_Grating('HEG')
-    print("\nFlux at hv=500 as off Feb 2019:  ~3.3e-06 A = ~1.5e+11 ph/s")
-    Open_BranchShutter()
-    CheckFlux(hv=hv,stay=stay)
-    if wire is not None:
-        WireScan('H',scanIOC,**kwargs)
-        WireScan('V',scanIOC,**kwargs)
+
+
 
 def WireScan(which,scanIOC=None,diag='In',**kwargs):
     """
@@ -411,15 +358,6 @@ def WireScan(which,scanIOC=None,diag='In',**kwargs):
 
 
 
-def Energy_Range(grating,IDmode):
-    BL_range={}    #   Slit:PE
-    BL_range["HEG"]  = { "H":(250,2000), "V":(440,2000), "RCP":(400,2000), "LCP":(400,2000)  }
-    BL_range["MEG"]  = { "H":(250,2500), "V":(440,2500), "RCP":(400,2500), "LCP":(400,2500) }
-    energy_min, energy_max = BL_range[grating][IDmode]
-    return energy_min, energy_max
-
-
-
 
 
 
@@ -462,106 +400,16 @@ def Monitor_Beam(which='user'):
 
 
 
-def WaitForBeam():
-    """
-    Monitors the storage ring current and breaks when the ring current is above 60 mA
-    Checks the status every 30 seconds
-    """
-    while True:
-        SR=caget("S:SRcurrentAI.VAL")
-        if (SR<60):
-    #        print "No beam current, please wait..."+dateandtime()
-            sleep(30)
-        else:
-            print("Beam is back -"+dateandtime())
-            break
-
-
-
 
 
 
 
 ###### ID modes & quasiperiodicity :
 
-def Check_IDMode(which):
-    if which in ["RCP","LCP","V","H"]:
-        Mode=ID_State2Mode("Mode",which)
-        Check_MainShutter()
-        ActualMode=caget("ID29:ActualMode")
-        if Mode != ActualMode:
-            print("Switching ID mode, please wait...")
-            caput("ID29:DesiredMode.VAL",Mode,wait=True,timeout=18000)     # RCP
-            ID_Ready()
-    else:
-        print("WARNING: Not a valid polarization mode, please select one of the following:")
-        print(" \"RCP\", \"LCP\", \"H\", \"V\" ")
 
-
-
-def Switch_IDQP(energy,mode,QP):
-    QP=max(70,QP)
-    ID_Stop()
-    caput("ID29:QuasiRatioIn.C",QP)
-    ID_Start(mode)
-    sleep(15)
-    SetID_Raw(energy)
-    Byq=caget("ID29:ByqRdbk")
-    Vcoil=caget("ID29:ByRdbk.VAL")
-    ratio=Byq/Vcoil
-    ratio_RBV=caget("ID29:QuasiRatio.RVAL")
-    print("QP ratio =", round(ratio,3)*100,"%")
-    print("QP RBV   =", ratio_RBV,"%")
-    sleep(15)
 
 
 ##### ID energy :
-
-
-
-def SetID_Raw(hv):
-    "Sets the ID set point to a specific value (hv(eV)) which will not likely be optimum"
-    Check_MainShutter()
-    Mode=caget("ID29:ActualMode")
-    Mode_RBV=("state",Mode)
-    ID_min=ID_Range()[0]
-    ID_max=ID_Range()[3]
-    ID_SP=min(max(hv,ID_min),ID_max)*1.0
-    if hv < ID_min or hv > ID_max:
-        print("\nWARNING:Set point out of BL energy range !!!")
-        print("Please select a different energy.")
-    else:
-        ID_SP_RBV=round(caget("ID29:EnergySet.VAL"),3)*1000
-        if ID_SP == ID_SP_RBV:                # checks if ID is already at the SP energy
-            ID_RBV=caget("ID29:EnergyRBV")
-            print("ID SET : "+"%.1f" % ID_SP, "eV")
-            #print "\nID SET : "+"%.1f" % ID_SP, "eV"
-            print("ID RBV : "+"%.1f" % ID_RBV, "eV")
-            print(caget('ID29:TableDirection',as_string=True))
-        else:
-            caput("ID29:EnergyScanSet.VAL",ID_SP/1000,wait=True,timeout=18000)
-            sleep(1)
-            caput("ID29:EnergyScanSet.VAL",(ID_SP+0.001)/1000,wait=True,timeout=18000)
-            caput('ID29:StartRamp.VAL',1)
-            #caput("ID29:EnergyScanSeteV",ID_SP,wait=True,timeout=18000)
-            ID_Ready(q='q')
-            print("\nID SET : "+"%.1f" % ID_SP, "eV")
-            sleep(5)
-            ID_RBV=caget("ID29:EnergyRBV")
-            print("ID RBV : "+"%.1f" % ID_RBV, "eV")
-            ID_DIF=abs(ID_RBV-ID_SP)
-            ID_BW=ID_SP*0.095
-            if ID_DIF>ID_BW:
-                sleep(20)
-                ID_RBV=caget("ID29:EnergyRBV")
-                print("\nID RBV : "+"%.1f" % ID_RBV, "eV")
-                ID_DIF=abs(ID_RBV-ID_SP)
-                if ID_DIF>ID_BW:
-                    ID_Restart()
-                    SetID_Raw(hv)
-            print(caget('ID29:TableDirection',as_string=True))
-
-
 
 
 
@@ -576,17 +424,6 @@ def SetID_Raw(hv):
 
 ###### Shutters & branches:
 
-
-def Get_MainShutter():
-    "Checks main shutter is open, does not opens it"
-    SS1=caget("EPS:29:ID:SS1:POSITION")
-    SS2=caget("EPS:29:ID:SS2:POSITION")
-    PS2=caget("EPS:29:ID:PS2:POSITION")
-    check=SS1*SS2*PS2
-    if (check!=8):
-        return False
-    else:
-        return True
 
 
 
@@ -611,14 +448,6 @@ def Check_BranchShutter():
             break
 
 
-def light(ON_OFF):
-    if ON_OFF in ['On','on','ON']:
-        light=0
-    elif ON_OFF in ['Off','off','OFF']:
-        light=1
-    caput('29idd:Unidig1Bo0',light)
-    print(("Turning light "+ON_OFF+"."))
-
 def Close_MainShutter():
     caput("PC:29ID:FES_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
     print("Closing Main Shutter...")
@@ -631,65 +460,7 @@ def Close_BranchShutter():
 
 
 
-def Close_CValve():
-    branch="C"
-    caput("29id:BLEPS:GV10:CLOSE.VAL",1,wait=True,timeout=18000)
-    print("Closing "+branch+"-Valve...")
 
-def Close_DValve():
-    branch="D"
-    caput("29id:BLEPS:GV14:CLOSE.VAL",1,wait=True,timeout=18000)
-    print("Closing "+branch+"-Valve...")
-
-
-def Close_CBranch(**kwargs):
-    """
-    EA.off()
-    Close_CShutter()
-    Close_CValve()
-    **kwargs
-        EA="off"; turns off EA (None = doesn't check)
-    """
-    kwargs.setdefault("EA","off")
-    if kwargs["EA"] == "off":
-        EA.off()
-    shutter=caget('PA:29ID:SCS_BLOCKING_BEAM.VAL',as_string=True)
-    if shutter == 'OFF':  #OFF = beam not blocked = shutter open
-        Close_CShutter()
-    i=0
-    while True:
-        valve=caget('29id:BLEPS:GV10:OPENED:STS',as_string=True)
-        if (valve=='GOOD'):
-            sleep(10)
-            Close_CValve()
-            i+=1
-            if i == 3:
-                print("Can't close valve; check status")
-                break
-        elif (valve == 'BAD'):
-            print('ARPES chamber valve now closed')
-            break
-
-def Close_DBranch():
-    try:
-        MPA_HV_OFF()
-    except:
-        shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL',as_string=True)
-        if shutter == 'OFF':  #OFF = beam not blocked = shutter open
-            Close_DShutter()
-        i=0
-        while True:
-            valve=caget('29id:BLEPS:GV14:OPENED:STS',as_string=True)
-            if (valve=='GOOD'):
-                sleep(10)
-                Close_DValve()
-                i+=1
-                if i == 3:
-                    print("Can't close valve; check status")
-                    break
-            elif (valve == 'BAD'):
-                print('RSXS chamber valve now closed')
-                break
 
 def Close_RSoXS():
     shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL',as_string=True)
@@ -710,15 +481,7 @@ def Close_RSoXS():
             break
 
 
-def Open_BranchShutter():
-    "Opens current branch shutter (based on deflecting mirror position)"
-    branch=CheckBranch().upper()
-    status=caget("PA:29ID:S"+branch+"S_BLOCKING_BEAM.VAL")
-    if status == "ON":
-        caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
-        print("Opening "+branch+"-Shutter...")
-    elif status == "OFF":
-        print(branch+"-Shutter already open...")
+
 
 def Open_CShutter():
     branch="C"
@@ -841,119 +604,12 @@ def Tweak_M3R_Pitch(sign):
 
 ###### Diagnostics:
 
-def AllDiag_dict():
-    """
-    Dictionary of Diagnostic positions In and Out by either motor number or name
-    WARNING: When updating motor values, also update the following screens:
-        - 29id_BL_Layout.ui               (for MeshD and DiodeC)
-        - 29id_Diagnostic.ui
-        - 29idd_graphic
-    useage:       
-        AllDiag_dict()['name'] returns dictionary motor:name
-        AllDiag_dict()['motor'] returns dictionary name:motor   
-        AllDiag_dict()['In'] returns dictionary motor:In position  (where val can be a list for multiple position)  
-        AllDiag_dict()['Out'] returns dictionary motor:In position  
-                motor=AllDiag_dict()['motor']['gas-cell']
-                pos_in=AllDiag_dict()['In'][motor]
-    """
-    diag={}
-    diag["In"]  = {                5:-55, 6:-46,          17:-56, 20:-30, 25:-56, 28:[-57,-71.25]}
-                                                                                    
-    diag["Out"] = {1:-4, 2:-10, 3:-4, 4:-4, 5:-20, 6:-20, 7:-20, 17:-20, 20:-21, 25:-20, 28:-20}    
-    diag["name"]= {1:"H-wire", 2:"V-wire", 3:"H-Diagon", 4:"V-Diagon", 5:"W-mesh",
-     6:"D2B", 7:"D3B", 17:"D4C/pre-slit", 20:"gas-cell", 25:"D4D/pre-slit", 28:"D5D/pre-RSXS"}
-    diag["motor"]= {"H-wire":1, "V-wire":2, "H-Diagon":3, "V-Diagon":4,"W-mesh":5,
-     "D2B":6, "D3B":7, "D4C":17, "gas-cell":20,"D4D":25,"D5D":28}
-    return diag
 
 
-def Diagnostic(which,In_Out):
-    "Inserts/retracts a diagnostic(motor number or name) either = \"In\" or \"Out\""
-    diag=AllDiag_dict()
-    if type(which) is int:
-        motor=which
-        name=diag['name'][motor]
-    else:
-        name=which
-        motor=diag["motor"][name]
-    position=diag[In_Out][motor]
-
-    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    print("\n"+name+": "+ In_Out)
-
-def AllDiagOut(DiodeStayIn=None):
-    """Retracts all diagnostic
-    if DiodeStayIn = something then it leaves the diode in for the current branch
-    """
-    diag=AllDiag_dict()
-    text=""
-    #which motor is Diode of interest
-    if DiodeStayIn != None:
-        DiodeStayIn=CheckBranch()
-    if DiodeStayIn == 'c':
-        diode_motor=diag["motor"]["gas-cell"]
-    elif DiodeStayIn == 'd':
-        diode_motor=diag["motor"]["D5D"]
-    else:
-        diode_motor=None
-    #Taking out the diagnostic
-    for motor in list(diag["Out"].keys()):
-        if motor is diode_motor:
-            text=' except Diode-'+DiodeStayIn
-            #putting Diode In if not already in -JM
-            position=diag["In"][motor]
-            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-        else:
-            position=diag["Out"][motor]
-            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    text="All diagnostics out"+text
-    print("\n",text)
-
-def AllDiagIn():
-    "Inserts all diagnostic (meshes and diodes) for pinhole scans"
-    diag=AllDiag_dict()
-    for motor in list(diag["In"].keys()):
-        position=diag["In"][motor]
-        if type(position) == list:
-            position=position[0]
-        caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-        print('m'+str(motor)+' = '+str(position))
-    print("All diagnostics in (meshes and diodes) for pinhole scans")
-
-def AllMeshIn():
-    "Inserts all diagnostic (meshes and gas-cell is out) for wire scans"
-    diag=AllDiag_dict()
-    for motor in list(diag["In"].keys()):
-        position=diag["In"][motor]
-        if type(position) == list:
-            position=position[0]
-        caput("29idb:m"+str(motor)+".VAL",position,timeout=18000)
-        print('m'+str(motor)+' = '+str(position))
-    print("All diagnostics in (meshes and diodes) for pinhole scans")
-
-def MeshW(In_Out):
-    "Inserts/retracts RSXS mesh (post-slit); arg = \"In\" or \"Out\""
-    diag=AllDiag_dict()
-    motor=5; position=diag[In_Out][motor]
-    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    print("\nD1A W-Mesh: "+ In_Out)
 
 
-def DiodeC(In_Out):
-    "Inserts/retracts ARPES (gas-cell) diode; arg = \"In\" or \"Out\""
-    diag=AllDiag_dict()
-    motor=20; position=diag[In_Out][motor]
-    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    print("\nARPES Diode: "+ In_Out)
 
-def DiodeD(In_Out):
-    "Inserts/retracts RSXS diode; arg = \"In\" or \"Out\""
-    diag=AllDiag_dict()
-    motor=28; position=position=diag[In_Out][motor]
-    if type(position) == list:
-        position=position[1]
-    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    print("\nRSXS Diode: "+ In_Out)
+
 
 
 def MeshC(In_Out,which="postSlit"):
@@ -966,15 +622,6 @@ def MeshC(In_Out,which="postSlit"):
 
     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
     print("\nD4C Au-Mesh: "+ In_Out)
-
-def MeshD(In_Out):
-    "Inserts/retracts RSXS mesh (post-slit); arg = \"In\" or \"Out\""
-    diag=AllDiag_dict()
-    motor=28; position=position=diag[In_Out][motor]
-    if type(position) == list:
-        position=position[0]
-    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    print("\nD5D Au-Mesh: "+ In_Out)
 
 
 
@@ -1171,11 +818,7 @@ def Clear_Scan_Detectors(scanIOC,scanDIM=1):
         caput(pv+".D"+str(i)+"PV","")
     print("\nAll detectors cleared")
 
-def Clear_Scan_Triggers(scanIOC,scanDIM=1):
-    """Clear all scan detectors triggers"""
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    for i in range(1,5):
-        caput(pv+'.T'+str(i)+'PV',"")
+
 
 def Scan_Empty_Go():#HERE need to not hard code
     scanIOC=BL_ioc()
@@ -1290,16 +933,6 @@ def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
 
 
 ### Fill Scan Record - 3rd positionner:
-def Scan_FillIn_Pos3(VAL,RBV,scanIOC,scanDIM,start,stop):
-    Scan_Progress(scanIOC,scanDIM)
-    start=start*1.0
-    stop=stop*1.0
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(pv+".P1SM","LINEAR")     
-    caput(pv+".P3PV",VAL)
-    caput(pv+".R3PV",RBV)
-    caput(pv+".P3SP",start)
-    caput(pv+".P3EP",stop)
 
 def Scan_FillIn_Pos4(VAL,RBV,scanIOC,scanDIM,start,stop):
     Scan_Progress(scanIOC,scanDIM)
@@ -1312,36 +945,8 @@ def Scan_FillIn_Pos4(VAL,RBV,scanIOC,scanDIM,start,stop):
     caput(pv+".P4SP",start)
     caput(pv+".P4EP",stop)
     
-def Scan_FillIn_Table(VAL,RBV,scanIOC,scanDIM,myarray,posNum=1):
-    """
-    Fills in the scan record for table scans given positioner=posNum
-    myarray can be generated by myarray=Scan_MakeTable(StartStopStepLists)
-    """
-    Scan_Progress(scanIOC,scanDIM)
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    #positioner detting
-    caput(pv+".P"+str(posNum)+"SM","TABLE") 
-    caput(pv+".P"+str(posNum)+"PV",VAL)         #Drive
-    caput(pv+".R"+str(posNum)+"PV",RBV)         #Read
-    #caput(pv+".P"+str(posNum)+"SP",myarray[0])  #Start
-    #caput(pv+".P"+str(posNum)+"EP",myarray[-1]) #Stop    
-    #caput(pv+".P"+str(posNum)+"SI",0)           #Step     
-    caput(pv+".P"+str(posNum)+"PA",myarray)
-    caput(pv+'.NPTS',len(myarray))    
-    
-def Scan_Reset_AfterTable(scanIOC,scanDIM):
-    """
-    resets positioner settling time 0.1
-    sets all positionitonser to linear
-    clears positioners
-    """
-    #Setting everything back
-    scanPV="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(scanPV+".PDLY",0.1)
-    for i in range(1,5):
-        caput(scanPV+".P"+str(i)+"SM","LINEAR") 
-    Clear_Scan_Positioners(scanIOC,scanDIM)
-    
+
+
 
 def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
     """
@@ -1365,79 +970,11 @@ def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
             sleep(1)
             print("Gain set to:",caget(pv+":range",as_string=True))
 
-def Reset_CA_all(rate="Slow"):
-    for i in [1,2,3,4,5,9,10,12,13,14,15]:
-        Reset_CA("b",i,rate)
-    for i in [1,2]:
-        Reset_CA("c",i,rate)
-    #for i in [1,2,3,4,5]:
-    for i in [2,3,4]:
-        Reset_CA("d",i,rate)
-    caput("29idb:ca5:read.SCAN","Passive")    # CA5 in passive
-    print("\nAll the current amplifiers have been reset; ca5 set to passive.")
-
-
-
-def CA_Name(ca_ioc,ca_num):    #{motor,position}
-    ca={}
-    ca["b"] = {4:'Slit1A',13:'Slit3C',14:'MeshD',15:'DiodeC'}
-    ca["c"] = {1:'TEY'   ,2:'Diode'}
-    ca["d"] = {1:'APD'   ,2:'TEY',  3:'D-3',  4:'D-4',5:'RSoXS Diode'}
-    try:
-        name=ca[ca_ioc][ca_num]
-    except:
-        name=""
-    return name
-
-
-def CA_Filter(ca_ioc,ca_num,avg_pts,rate,quiet=None,scanDIM=1):
-    scanIOC=BL_ioc()
-    pv="29id"+ca_ioc+":ca"+str(ca_num)
-    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
-    name=CA_Name(ca_ioc,ca_num)
-    t=0.1
-    if rate == "Slow":
-        t=6/60.0
-    elif rate == "Medium":
-        t=1/60.0
-    elif rate == "Fast":
-        t=0.1/60.0
-    settling=round(max(0.15,avg_pts*t+0.1),2)
-    if avg_pts  <= 1:
-        Reset_CA(ca_ioc,ca_num,rate)    # change for Reset_CA(ca_ioc,ca_num) if we want to
-        caput(pvscan+".DDLY",0.15)    # reset to default reset speed ie slow
-        if not quiet:
-            print("Average disabled: "+name+" - "+pv)
-            print("Detector settling time ("+pvscan+") set to: 0.15s")
-    else:
-        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
-        caput(pv+":rateSet",rate)
-        sleep(1)
-        caput(pv+":digitalFilterCountSet",avg_pts,wait=True,timeout=500)
-        caput(pv+":digitalFilterControlSet","Repeat",wait=True,timeout=500)
-        caput(pv+":digitalFilterSet","On",wait=True,timeout=500)
-        caput(pvscan+".DDLY",settling)
-        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
-        if not quiet:
-            print("Average enabled: "+name+" - "+pv)
-            print("Detector settling time ("+pvscan+") set to: "+str(settling)+"s")
 
 
 
 
-def CA_Average(avg_pts,quiet='q',rate="Slow",scanDIM=1):
-    """
-    Average reading of the relevant current amplifiers for the current scanIOC/branch.
-    By default it is chatty (i.e. quiet argument not specified).
-    To make it quiet, specify quiet=''.
-    """
-    print("\nAverage set to:   "+str(max(avg_pts,1)))
-    CA_list=Detector_List(BL_ioc())
-    n=len(CA_list)-1
-    for i in RangeUp(0,n,1):
-        ca_ioc=CA_list[i][0]
-        ca_num=CA_list[i][1]
-        CA_Filter(ca_ioc,ca_num,avg_pts,rate,quiet,scanDIM)
+
 
 
 
@@ -1466,137 +1003,6 @@ def Reset_Lakeshore():
 
 
 
-
-
-def Detector_Default(scanIOC,scanDIM=1,BL_mode=None):
-    """
-    Sets the ScanRecord detectors
-    """
-    Note_endstation = "Detectors are set for "+scanIOC+","
-    Note_xrays="with X-rays"
-    if BL_mode==None:
-        BL_mode=BL_Mode_Read()[0]        # possible to overwrite (e.g. set up time scan to monitor all PVs)
-    #Endstation parameters
-    if scanIOC == "ARPES":
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D17PV","29idARPES:LS335:TC1:IN1")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D18PV","29idARPES:LS335:TC1:IN2")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idc:ca2:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D16PV","29idc:ca1:read")
-        if caget(EA._statsPlugin+"Total_RBV") != None:
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D17PV",EA._statsPlugin+"Total_RBV")
-        else:
-            print(EA.PHV+" is not running")
-        
-    elif scanIOC == "Kappa":
-        # D14  D5D - mesh
-        # D15  D5C - gas cell
-        # D16  free        
-        # D17  free
-        # D18  free        
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D19PV","29idd:ca2:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D20PV","29idd:ca3:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D21PV","29idd:ca4:read")
-        #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D22PV","29idd:ca5:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D23PV","29idd:LS331:TC1:SampleA")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D24PV","29idd:LS331:TC1:SampleB")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D25PV","29id_ps6:Stats1:CentroidX_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D26PV","29id_ps6:Stats1:SigmaX_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D27PV","29id_ps6:Stats1:CentroidTotal_RBV")
-        # D28  free
-        # D29  free
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D30PV","29iddMPA:det1:TotalRate_RBV") # MPA software count rate?
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D31PV","29idMZ0:scaler1.S14") #-mesh D
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D32PV","29idMZ0:scaler1.S2") # TEY
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D33PV","29idMZ0:scaler1.S3") # D3
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D34PV","29idMZ0:scaler1.S4") # D4
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D35PV","29idMZ0:scaler1.S5") # MCP
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D36PV","29idMZ0:scaler1_calc1.B") #TEY/mesh
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D37PV","29idMZ0:scaler1_calc1.C") #D3/mesh
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D38PV","29idMZ0:scaler1_calc1.D") #D4/mesh
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D39PV","29idMZ0:scaler1_calc1.E") #MCP/mesh
-        # D40 free
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D41PV","29iddMPA:Stats1:Total_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D42PV","29iddMPA:Stats2:Total_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D43PV","29iddMPA:Stats3:Total_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D44PV","29iddMPA:Stats4:Total_RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D45PV","29iddMPA:Stats5:Total_RBV")
-        # D46  <H>
-        # D47  <K>        
-        # D48  <L>        
-        # D49  free
-        # D50  free            
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D51PV","29idKappa:m8.RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D52PV","29idKappa:m7.RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D53PV","29idKappa:m1.RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D54PV","29idKappa:m9.RBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D55PV","29idKappa:Euler_ThetaRBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D56PV","29idKappa:Euler_ChiRBV")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D57PV","29idKappa:Euler_PhiRBV")
-    elif scanIOC == "RSoXS":#JM need to get another keithly for RSoXS -BS+Diode
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D19PV","29idd:ca2:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D20PV","29idd:ca3:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D21PV","29idd:ca4:read")
-        #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D22PV","29idd:ca5:read")
-    #Beamline parameters
-    if BL_mode < 2:     # (User or staff) + Xrays"
-        #Setting Detectors -- main shutter & ring current
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D01PV","S:SRcurrentAI.VAL")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D02PV","EPS:29:ID:SS1:POSITION")
-        #Setting Detectors -- Beamline Energy
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D03PV","29idmono:ENERGY_MON")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D04PV","ID29:EnergySet.VAL")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D05PV","ID29:Energy.VAL")
-        #Setting Detectors -- Keithleys
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D06PV","29idb:ca1:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D07PV","29idb:ca2:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D08PV","29idb:ca3:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D09PV","29idb:ca4:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D10PV","29idb:ca5:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D11PV","29idb:ca9:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D11PV","29idb:ca10:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D12PV","29idb:ca12:read")
-        caput("29id"+scanIOC+":scan"+str(scanDIM)+".D13PV","29idb:ca13:read")
-        #Setting Detectors -- Meshes/Diodes
-        if scanIOC == "ARPES":
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D15PV","29idb:ca15:read")
-        elif scanIOC == "Kappa":
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
-        elif scanIOC == "RSoXS":
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
-        Note_user="and in Users mode"
-        if BL_mode==1: # "Staff + Xrays"
-            # C/D diodes:
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D14PV","29idb:ca14:read")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D15PV","29idb:ca15:read")
-            #Setting Detectors -- beamline vacuum and shutters
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D61PV","29idb:VS1A.VAL")   
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D62PV","29idb:VS2A.VAL")
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D63PV","29idb:VS3AB.VAL")
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D64PV","29idb:VS4B.VAL")
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D65PV","29idb:IP4B.VAL")
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D66PV","PA:29ID:SCS_BLOCKING_BEAM.VAL")
-            #caput("29id"+scanIOC+":scan"+str(scanDIM)+".D67PV","PA:29ID:SDS_BLOCKING_BEAM.VAL")
-            #Setting Detectors -- Slits & Apertures
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D58PV","29idb:Slit1Ht2.C")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D59PV","29idb:Slit1Ht2.D")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D60PV","29idb:Slit1Vt2.C")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D61PV","29idb:Slit1Vt2.D")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D62PV","29idb:Slit2Ht2.C")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D63PV","29idb:Slit2Ht2.D")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D64PV","29idb:Slit2Vt2.C")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D65PV","29idb:Slit2Vt2.D")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D66PV","29idb:Slit3CRBV")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D67PV","29idb:Slit4Vt2.C")
-            #Setting Detectors -- Mono details
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D68PV","29idmono:ENERGY_SP")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D69PV","29idmonoMIR:P.RBV")
-            caput("29id"+scanIOC+":scan"+str(scanDIM)+".D70PV","29idmonoGRT:P.RBV")
-
-            Note_user=" and in Staff mode"
-    else:
-        Note_user=""
-        Note_xrays="no Xrays"
-    print("\nWARNING: %s %s %s" % (Note_endstation, Note_xrays, Note_user))
 
 
 
@@ -2719,29 +2125,8 @@ def getUserInput_b(which):
 
 
 
-def LoadResponsivityCurve():
-    FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
-    FileName="DiodeResponsivityCurve"
-    data = np.loadtxt(FilePath+FileName, delimiter=' ', skiprows=1)
-    return data
 
 
-
-def ca2flux(ca,hv=None,p=1):
-    curve=LoadResponsivityCurve()
-    responsivity=curve[:,0]
-    energy=curve[:,1]
-    charge = 1.602e-19
-    if hv is None:
-        hv=caget('29idmono:ENERGY_SP')
-        print("\nCalculating flux for:")
-        print("   hv = %.1f eV" % hv)
-        print("   ca = %.3e Amp" % ca)
-    eff=np.interp(hv,energy,responsivity)
-    flux = ca/(eff*hv*charge)
-    if p is not None:
-        print("Flux = %.3e ph/s\n" % flux)
-    return flux
 
 
 def flux2ca(flux,hv=None,p=1):
@@ -6575,19 +5960,6 @@ def BranchPV_StrSeq():
 
 
 
-
-def Detector_Triggers_StrSeq(scanIOC,scalerOnly=None):    # do we need to add 29idb:ca5 ???
-    n=8
-    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","Triggers_"+scanIOC)
-    branch=CheckBranch()
-    n=len(Detector_List(scanIOC))
-    for (i,list) in enumerate(Detector_List(scanIOC)):
-        pvCA='29id'+list[0]+':ca'+str(list[1])+':read.PROC CA NMS'
-        caput(pvstr+".LNK" +str(i+1),pvCA)
-        caput(pvstr+".WAIT"+str(i+1),"After"+str(n))
-    return pvstr+".PROC"
 
 
 
