@@ -1,25 +1,20 @@
 from time import sleep
 from epics import caget, caput
-from IEX_29id.utils.misc import dateandtime
-from IEX_29id.devices.undulator import ID_State2Mode
+from IEX_29id.utils.misc import dateandtime, RangeUp
 import numpy.polynomial.polynomial as poly
-from IEX_29id.utils.exp import CheckBranch
+from IEX_29id.utils.exp import CheckBranch, WaitForPermission,  Check_MainShutter, BL_ioc, AllDiag_dict
 from math import *
-from IEX_29id.devices.undulator import ID_State2Mode
+from IEX_29id.devices.undulator import ID_State2Mode, ID_Coef, ID_Range, SetID, SetID_keV_pV
 from os.path import join
 import ast
-from IEX_29id.devices.slits import SetSlit_BL
-def ID_Range():      # mode = state (0=RCP,1=LCP,2=V,3=H)
-    Mode=caget("ID29:ActualMode")
-    GRT=caget("29idmono:GRT_DENSITY")
-    ID_min=[400,400,440,250,250]
-    ID_max=3800
-    hv_min=[390,390,430,245,245]
-    if GRT == 2400:
-        hv_max=2000
-    elif GRT == 1200:
-        hv_max=3000
-    return ID_min[Mode],hv_min[Mode],hv_max,ID_max
+from IEX_29id.devices.slits import SetSlit_BL,  Slit_Coef
+from IEX_29id.devices.detectors import MPA_HV_ON, MPA_HV_OFF, Detector_List
+from IEX_29id.scans.setup import Scan_Go, Scan_Progress, Scan_FillIn_Table
+from IEX_29id.devices.kappa import Clear_Scan_Positioners
+
+import numpy as np
+
+
 
 def SetRange(hv):
     Mode=caget("ID29:ActualMode")
@@ -32,102 +27,12 @@ def SetRange(hv):
     if hv < hv_min or hv > hv_max:
         print("\nWARNING: Set point out of BL energy range:")
     return hv_SP
-def WaitForPermission():
-    """
-    Monitors the ID permissions and waits for the ID to be in User Mode and then breaks
-    Checks the status every 30 seconds
-    """
-    while True:
-        ID_Access=caget("ID29:AccessSecurity.VAL")
-        if (ID_Access!=0):
-            print("Checking ID permission, please wait..."+dateandtime())
-            sleep(30)
-        else:
-            print("ID now in user mode -"+dateandtime())
-            break
 
 def Open_MainShutter():
     caput("PC:29ID:FES_OPEN_REQUEST.VAL",1, wait=True,timeout=180000)
     print("Opening Main Shutter...")
 
-def ID_Ready(q=None):
-    while True:
-        checkready=caget("ID29:feedback.VAL")
-        checkbusy=caget("ID29:BusyRecord")
-        if (checkready!="Ready")|(checkbusy==1):
-            sleep(2)
-        else:
-            break
-    if q is None:
-        print("ID Ready")
 
-def ID_Stop():
-    WaitForPermission()
-    caput("ID29:Main_on_off.VAL",1,wait=True,timeout=18000)
-
-def Switch_IDMode(which):
-    "Change ID polarization; which = \"H\", \"V\", \"RCP\" or \"LCP\""
-    GRT=caget("29idmono:GRT_DENSITY")
-    if which in ["RCP","LCP","V","H"]:
-        Mode=ID_State2Mode("Mode",which)
-        Check_MainShutter()
-        ActualMode=caget("ID29:ActualMode")
-        if Mode != ActualMode:
-            print("Turning ID off...")
-            ID_Stop()
-            
-            sleep(10)
-            caput("ID29:EnergySet.VAL",3.8)
-            caput("ID29:Main_on_off.VAL",0,wait=True,timeout=18000)
-            print("Switching ID mode, please wait...")
-            caput("ID29:DesiredMode.VAL",Mode,wait=True,timeout=18000)     # RCP
-            ID_Ready()
-        print("ID Mode:",which)
-    else:
-        print("WARNING: Not a valid polarization mode, please select one of the following:")
-        print(" \"RCP\", \"LCP\", \"H\", \"V\" ")
-
-
-
-def ID_Start(Mode):
-    "Starts ID with a specific polarization; Mode = \"H\", \"V\", \"RCP\" or \"LCP\""
-    WaitForPermission()
-    print("Starting ID  -  "+dateandtime())
-    caput("ID29:EnergySet.VAL",3.8)
-    caput("ID29:Main_on_off.VAL",0,wait=True,timeout=18000)
-    ID_Ready()
-    Switch_IDMode(Mode)
-    while True:
-        SS1=caget("EPS:29:ID:SS1:POSITION")
-        SS2=caget("EPS:29:ID:SS2:POSITION")
-        PS2=caget("EPS:29:ID:PS2:POSITION")
-        check=SS1*SS2*PS2
-        if (check!=8):
-            print("MAIN SHUTTER CLOSED !!!" , dateandtime())
-            Open_MainShutter()
-            sleep(60)
-        else:
-            print("Shutter is now open" , dateandtime())
-            break
-
-def Check_MainShutter():
-    "Checks main shutter is open, if not opens it"
-    while True:
-        SS1=caget("EPS:29:ID:SS1:POSITION")
-        SS2=caget("EPS:29:ID:SS2:POSITION")
-        PS2=caget("EPS:29:ID:PS2:POSITION")
-        check=SS1*SS2*PS2
-        if (check!=8):
-            print("MAIN SHUTTER CLOSED !!!" , dateandtime())
-            WaitForPermission()
-            Open_MainShutter()
-            sleep(10)
-        else:
-            break
-    ID_off=caget("ID29:Main_on_off.VAL")
-    if ID_off == 1:
-        ID_Start("RCP")
-        sleep(30)
 
 def Check_Grating():
     GRTd=caget("29idmono:GRT_DENSITY")
@@ -137,13 +42,6 @@ def Check_Grating():
         GRT = "HEG"
     return GRT
 
-def ID_Coef(grt,mode,hv):    # Mode = state (0=RCP,1=LCP,2=V,3=H); 
-    
-    """Return the ID coeff for a given polarization mode and energy;
-    with Mode = 0 (RCP),1 (LCP), 2 (V), 3 (H).
-    Current coefficient dictionary:
-        /home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/Dict_IDCal.txt
-    """
 
 def ID_Calc(grt,mode,hv):    # Mode = state (0=RCP,1=LCP,2=V,3=H)
     """Calculate the ID SP for a given polarization mode and energy;
@@ -162,109 +60,6 @@ def ID_Calc(grt,mode,hv):    # Mode = state (0=RCP,1=LCP,2=V,3=H)
         print("        mode 3 = H")
         ID=caget("ID29:EnergySeteV")
     return round(ID,1)
-def ID_Restart():
-    Mode=caget("ID29:ActualMode")
-    print("Restarting ID", dateandtime())
-    caput("ID29:Main_on_off.VAL",1,wait=True,timeout=18000)
-    sleep(10)
-    while True:
-        RBV=caget("ID29:Energy.VAL")
-        checkready=caget("ID29:feedback.VAL")
-        checkbusy=caget("ID29:BusyRecord")
-        if (checkready!="Ready") or (RBV < 3.7):
-            sleep(2)
-        elif ((checkready=="Ready") and (RBV > 3.7)) and (checkbusy=="Busy"):
-            caput("ID29:Busy.VAL",0)
-        else:
-            break
-    sleep(10)
-    caput("ID29:EnergySet.VAL",3.8)
-    caput("ID29:Main_on_off.VAL",0,wait=True,timeout=18000)
-    ID_Ready()
-    caput("ID29:DesiredMode.VAL",Mode,wait=True,timeout=18000)
-    sleep(10)
-
-    print("ID is back ON", dateandtime())
-
-def SetID_keV_pV(hv_eV):
-    "Sets optimum ID set point for hv(eV) (max intensity) using KeV PVs"
-    Check_MainShutter()
-    hv_SP=SetRange(hv_eV)                # check hv range
-    GRT=Check_Grating()
-    if hv_SP == hv_eV:
-        Mode=caget("ID29:ActualMode")
-        ID_SP=ID_Calc(GRT,Mode,hv_SP)/1000.0        # ID_SP in keV
-        ID_SP_RBV=round(caget("ID29:EnergySet.VAL"),3)    # ID_SP_RBV in keV
-        if ID_SP == ID_SP_RBV:                # checks if ID is already at the SP energy
-            ID_RBV=caget("ID29:Energy.VAL")
-            print("\nID SET : "+"%.3f" % ID_SP, "keV")
-            print("ID RBV : "+"%.3f" % ID_RBV, "keV")
-            print(caget('ID29:TableDirection',as_string=True))
-        else:
-            caput("ID29:EnergyScanSet",ID_SP,wait=True,timeout=18000)
-            sleep(1)
-            caput("ID29:EnergyScanSet",ID_SP+0.0001,wait=True,timeout=18000)
-        
-            ID_Ready()
-            print("\nID SET : "+"%.3f" % ID_SP, "keV")
-            sleep(5)
-            ID_RBV=caget("ID29:Energy.VAL")
-            print("ID RBV : "+"%.3f" % ID_RBV, "keV")
-            ID_DIF=abs(ID_RBV-ID_SP)
-            ID_BW=ID_SP*0.095
-            if ID_DIF > ID_BW:
-                sleep(20)
-                ID_RBV=caget("ID29:Energy.VAL")
-                print("\nID RBV : "+"%.3f" % ID_RBV, "keV")
-                ID_DIF=abs(ID_RBV-ID_SP)
-                if ID_DIF > ID_BW:
-                    ID_Restart()
-                    SetID_keV_pV(hv_eV)
-            print(caget('ID29:TableDirection',as_string=True))
-    else:
-        print("Please select a different energy.")
-
-
-def SetID(hv):
-    "Sets optimum ID set point for hv(eV) (max intensity)"
-    Check_MainShutter()
-    GRT=Check_Grating()
-    hv_SP=round(SetRange(hv),3)
-    ID_min=ID_Range()[0]
-    if hv_SP == round(hv,2) and hv_SP < 3001:
-        Mode=caget("ID29:ActualMode")
-        ID_SP=max(ID_Calc(GRT,Mode,hv_SP),ID_min)
-        ID_SP_RBV=round(caget("ID29:EnergySet.VAL"),4)*1000
-        if ID_SP == ID_SP_RBV:                    # compare ID (eV)SP to the (keV)SP energy
-            ID_RBV=caget("ID29:EnergyRBV")
-            print("\nID SET : "+"%.1f" % ID_SP, "eV")
-            print("ID RBV : "+"%.1f" % ID_RBV, "eV")
-            print(caget('ID29:TableDirection',as_string=True))
-        else:
-            caput("ID29:EnergyScanSeteV",ID_SP,wait=True,timeout=18000)
-            sleep(1)
-            caput("ID29:EnergyScanSeteV",ID_SP+0.001,wait=True,timeout=18000)
-
-            ID_Ready()
-            print("\nID SET : "+"%.1f" % ID_SP, "eV")
-            sleep(5)
-            ID_RBV=caget("ID29:EnergyRBV")
-            print("ID RBV : "+"%.1f" % ID_RBV, "eV")
-            ID_DIF=abs(ID_RBV-ID_SP)
-            ID_BW=ID_SP*0.095
-            if ID_DIF>ID_BW:
-                sleep(20)
-                ID_RBV=caget("ID29:EnergyRBV")
-                print("ID RBV : "+"%.1f" % ID_RBV, "eV")
-                ID_DIF=abs(ID_RBV-ID_SP)
-                if ID_DIF>ID_BW:
-                    ID_Restart()
-                    SetID_keV_pV(hv_SP)
-            print(caget('ID29:TableDirection',as_string=True))
-#    elif  2450 < hv_SP < 3000:
-#        print("Not calibrated above 2450 eV. ID set point needs to be determined manually.")
-    else:
-        print("Please select a different energy.")
 
 def SetMono(eV):
     GRT=Check_Grating()
@@ -295,29 +90,6 @@ def Mono_Status():
     Status=MIR_Status*GRT_Status
     return Status
 
-def Slit_Coef(n):
-    if n == 1:
-        pv='29id:k_slit1A'
-        #Redshifted x (H):
-        H0=2.3325
-        H1=-.000936
-        H2=2.4e-7
-         #Redshifted z (V):
-        V0=2.3935
-        V1=-.0013442
-        V2=3.18e-7
-    if n == 2:
-        pv='29id:k_slit2B'
-        #Redshifted x (H):
-        H0=3.61
-        H1=-0.00186
-        H2=5.2e-7
-        #Redshifted z (V):
-        V0=6.8075
-        V1=-0.003929
-        V2=9.5e-7
-    K=H0,H1,H2,V0,V1,V2
-    return pv,K
 
 def Aperture_Fit(hv,n):
     K=Slit_Coef(n)[1]
@@ -551,7 +323,32 @@ def scanXAS(hv,StartStopStepLists,settling_time=0.2,**kwargs):
     caput("29id"+scanIOC+":scan"+str(scanDIM)+".P1SM","LINEAR") 
     if Branch=="d":
         if kwargs["mcp"]: MPA_HV_OFF()
-        print("WARNING: Mesh"+Branch+" is still in")        
+        print("WARNING: Mesh"+Branch+" is still in")  
+
+def MeshD(In_Out):
+    "Inserts/retracts RSXS mesh (post-slit); arg = \"In\" or \"Out\""
+    diag=AllDiag_dict()
+    motor=28; position=position=diag[In_Out][motor]
+    if type(position) == list:
+        position=position[0]
+    caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
+    print("\nD5D Au-Mesh: "+ In_Out)
+
+
+def CA_Average(avg_pts,quiet='q',rate="Slow",scanDIM=1):
+    """
+    Average reading of the relevant current amplifiers for the current scanIOC/branch.
+    By default it is chatty (i.e. quiet argument not specified).
+    To make it quiet, specify quiet=''.
+    """
+    print("\nAverage set to:   "+str(max(avg_pts,1)))
+    CA_list=Detector_List(BL_ioc())
+    n=len(CA_list)-1
+    for i in RangeUp(0,n,1):
+        ca_ioc=CA_list[i][0]
+        ca_num=CA_list[i][1]
+        CA_Filter (ca_ioc,ca_num,avg_pts,rate,quiet,scanDIM)
+
 
 def Scan_MakeTable(StartStopStepLists):
     """
@@ -584,4 +381,68 @@ def Scan_MakeTable(StartStopStepLists):
     table_array=np.sort(table_array) #sort into ascending order    
     return table_array
 
+def Scan_Reset_AfterTable(scanIOC,scanDIM):
+    """
+    resets positioner settling time 0.1
+    sets all positionitonser to linear
+    clears positioners
+    """
+    #Setting everything back
+    scanPV="29id"+scanIOC+":scan"+str(scanDIM)
+    caput(scanPV+".PDLY",0.1)
+    for i in range(1,5):
+        caput(scanPV+".P"+str(i)+"SM","LINEAR") 
+        Clear_Scan_Positioners (scanIOC,scanDIM)
+
+def CA_Filter(ca_ioc,ca_num,avg_pts,rate,quiet=None,scanDIM=1):
+    scanIOC=BL_ioc()
+    pv="29id"+ca_ioc+":ca"+str(ca_num)
+    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
+    name=CA_Name(ca_ioc,ca_num)
+    t=0.1
+    if rate == "Slow":
+        t=6/60.0
+    elif rate == "Medium":
+        t=1/60.0
+    elif rate == "Fast":
+        t=0.1/60.0
+    settling=round(max(0.15,avg_pts*t+0.1),2)
+    if avg_pts  <= 1:
+        Reset_CA(ca_ioc,ca_num,rate)    # change for Reset_CA(ca_ioc,ca_num) if we want to
+        caput(pvscan+".DDLY",0.15)    # reset to default reset speed ie slow
+        if not quiet:
+            print("Average disabled: "+name+" - "+pv)
+            print("Detector settling time ("+pvscan+") set to: 0.15s")
+    else:
+        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
+        caput(pv+":rateSet",rate)
+        sleep(1)
+        caput(pv+":digitalFilterCountSet",avg_pts,wait=True,timeout=500)
+        caput(pv+":digitalFilterControlSet","Repeat",wait=True,timeout=500)
+        caput(pv+":digitalFilterSet","On",wait=True,timeout=500)
+        caput(pvscan+".DDLY",settling)
+        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
+        if not quiet:
+            print("Average enabled: "+name+" - "+pv)
+            print("Detector settling time ("+pvscan+") set to: "+str(settling)+"s")
+
+
+def CA_Name(ca_ioc,ca_num):    #{motor,position}
+    ca={}
+    ca["b"] = {4:'Slit1A',13:'Slit3C',14:'MeshD',15:'DiodeC'}
+    ca["c"] = {1:'TEY'   ,2:'Diode'}
+    ca["d"] = {1:'APD'   ,2:'TEY',  3:'D-3',  4:'D-4',5:'RSoXS Diode'}
+    try:
+        name=ca[ca_ioc][ca_num]
+    except:
+        name=""
+    return name 
+
+
+def Energy_Range(grating,IDmode):
+    BL_range={}    #   Slit:PE
+    BL_range["HEG"]  = { "H":(250,2000), "V":(440,2000), "RCP":(400,2000), "LCP":(400,2000)  }
+    BL_range["MEG"]  = { "H":(250,2500), "V":(440,2500), "RCP":(400,2500), "LCP":(400,2500) }
+    energy_min, energy_max = BL_range[grating][IDmode]
+    return energy_min, energy_max
 

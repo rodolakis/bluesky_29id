@@ -1,5 +1,5 @@
 
-from epics import caput, caget
+from epics import caput, caget, EA
 from IEX_29id.utils.folders import *
 from IEX_29id.utils.strings import ClearCalcOut
 import datetime
@@ -7,9 +7,13 @@ from math import *
 from IEX_29id.utils.misc import dateandtime
 from time import sleep
 from IEX_29id.scans.setup import Reset_Scan
-
 from epics import PV
-
+from IEX_29id.devices.energy import Switch_IDMode, energy, Open_MainShutter, ID_Start
+from IEX_29id.devices.slits import SetExitSlit
+from IEX_29id.devices.diagnostics import DiodeC, DiodeD
+from IEX_29id.devices.detectors import MPA_HV_OFF
+import numpy as np
+from IEX_29id.devices.mirror import Move_M3R, M3R_Table
 def Check_run():
     todays_date = datetime.today()
     
@@ -118,36 +122,6 @@ def Close_CShutter():
     caput("PC:29ID:S"+branch+"S_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
     print("Closing "+branch+"-Shutter...")
 
-def M3R_Table(branch,motor):   # WARNING: branch_pv uses: D => (Tx <= 0) and (Ry < 0) - Make sure this remains true or change it
-    M3R_Table={}
-    M3R_Table["C"] = {'scanIOC':'ARPES',  "TX":10,     "TY":0, "TZ":0, "RX":0,      "RY":0,       "RZ":0}
-    M3R_Table["D"] = {'scanIOC':'Kappa',  "TX":-2.5,"TY":0, "TZ":0, "RX":-13.955,"RY":-16.450, "RZ":-6} # Optimized for MEG @ 500 eV on 2/29/def start
-    M3R_Table["E"] = {'scanIOC':'RSoXS',  "TX":-2.000,"TY":0, "TZ":0, "RX":-13.960,"RY":-16.614, "RZ":-7.500}     #2018_3-- JM changed for RSoXS alignment max diode current
-    try:
-        position=M3R_Table[branch][motor]
-    except KeyError:
-        print("WARNING: Not a valid MIR position - check spelling!")
-        position=0
-    return position
-
-############# WARNING: when changing table, make sure the string sequence below is still relevant:
-
-def Move_M3R(which,Position,q=None):    #motor = "TX","TY","TZ","RX","RY","RZ"
-    """
-        \"TX\" = lateral                 \"RX\" = Yaw
-        \"TY\" = vertical                \"RY\" = Pitch
-        \"TZ\" = longitudinal            \"RZ\" = Roll
-    """
-    motor_pv="29id_m3r:"+which+"_POS_SP"
-    caput(motor_pv,Position)
-    sleep(2)
-    caput("29id_m3r:MOVE_CMD.PROC",1)
-    sleep(2)
-    while caget("29id_m3r:SYSTEM_STS")==0:
-        sleep(.5)
-    if q is not None:
-        m3=caget('29id_m3r:'+which+'_MON')
-        print('\nM3R:{} = {:.4f}'.format(which,m3))
 
 def Check_BranchShutter():
     "Checks current branch shutter is open, if not opens it (based on deflecting mirror position)"
@@ -262,3 +236,226 @@ def Switch_Branch(which, forced=False, noshutter=False,noreset=False,nocam=False
         print("\nWARNING: Not a valid branch name, please select one of the following:")
         print(" \"c\" for ARPES, \"d\" for Kappa ")
 
+def CheckFlux(hv=500,mode='RCP',stay=None):
+    Switch_IDMode(mode)
+    energy(hv)
+    branch=CheckBranch()
+    SR=round(caget("S:SRcurrentAI.VAL"),2)
+    if branch == "c":
+        current_slit=caget('29idb:Slit3CFit.A')
+        DiodeC('In')
+        diode=caget('29idb:ca15:read')
+    elif branch == "d":
+        current_slit=caget('29idb:Slit4Vsize.VAL')
+        DiodeD("In")
+        diode=caget('29idb:ca14:read')
+    SetExitSlit(50)
+    flux=ca2flux(diode)
+    print("\n----- Current on diode   : %.3e" % diode, "A")
+    print("----- Corresponding flux: %.3e" % flux, "ph/s \n")
+    print("----- Storage ring current: %.2f" % SR, "mA")
+    if stay is None:
+        AllDiagOut()
+    SetExitSlit(current_slit)
+
+
+def AllDiagOut(DiodeStayIn=None):
+    """Retracts all diagnostic
+    if DiodeStayIn = something then it leaves the diode in for the current branch
+    """
+    diag=AllDiag_dict()
+    text=""
+    #which motor is Diode of interest
+    if DiodeStayIn != None:
+        DiodeStayIn=CheckBranch()
+    if DiodeStayIn == 'c':
+        diode_motor=diag["motor"]["gas-cell"]
+    elif DiodeStayIn == 'd':
+        diode_motor=diag["motor"]["D5D"]
+    else:
+        diode_motor=None
+    #Taking out the diagnostic
+    for motor in list(diag["Out"].keys()):
+        if motor is diode_motor:
+            text=' except Diode-'+DiodeStayIn
+            #putting Diode In if not already in -JM
+            position=diag["In"][motor]
+            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
+        else:
+            position=diag["Out"][motor]
+            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
+    text="All diagnostics out"+text
+    print("\n",text)
+
+def ca2flux(ca,hv=None,p=1):
+    curve=LoadResponsivityCurve()
+    responsivity=curve[:,0]
+    energy=curve[:,1]
+    charge = 1.602e-19
+    if hv is None:
+        hv=caget('29idmono:ENERGY_SP')
+        print("\nCalculating flux for:")
+        print("   hv = %.1f eV" % hv)
+        print("   ca = %.3e Amp" % ca)
+    eff=np.interp(hv,energy,responsivity)
+    flux = ca/(eff*hv*charge)
+    if p is not None:
+        print("Flux = %.3e ph/s\n" % flux)
+    return flux
+
+def AllDiag_dict():
+    """
+    Dictionary of Diagnostic positions In and Out by either motor number or name
+    WARNING: When updating motor values, also update the following screens:
+        - 29id_BL_Layout.ui               (for MeshD and DiodeC)
+        - 29id_Diagnostic.ui
+        - 29idd_graphic
+    useage:       
+        AllDiag_dict()['name'] returns dictionary motor:name
+        AllDiag_dict()['motor'] returns dictionary name:motor   
+        AllDiag_dict()['In'] returns dictionary motor:In position  (where val can be a list for multiple position)  
+        AllDiag_dict()['Out'] returns dictionary motor:In position  
+                motor=AllDiag_dict()['motor']['gas-cell']
+                pos_in=AllDiag_dict()['In'][motor]
+    """
+    diag={}
+    diag["In"]  = {                5:-55, 6:-46,          17:-56, 20:-30, 25:-56, 28:[-57,-71.25]}
+                                                                                    
+    diag["Out"] = {1:-4, 2:-10, 3:-4, 4:-4, 5:-20, 6:-20, 7:-20, 17:-20, 20:-21, 25:-20, 28:-20}    
+    diag["name"]= {1:"H-wire", 2:"V-wire", 3:"H-Diagon", 4:"V-Diagon", 5:"W-mesh",
+     6:"D2B", 7:"D3B", 17:"D4C/pre-slit", 20:"gas-cell", 25:"D4D/pre-slit", 28:"D5D/pre-RSXS"}
+    diag["motor"]= {"H-wire":1, "V-wire":2, "H-Diagon":3, "V-Diagon":4,"W-mesh":5,
+     "D2B":6, "D3B":7, "D4C":17, "gas-cell":20,"D4D":25,"D5D":28}
+    return diag
+
+def LoadResponsivityCurve():
+    FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
+    FileName="DiodeResponsivityCurve"
+    data = np.loadtxt(FilePath+FileName, delimiter=' ', skiprows=1)
+    return data
+
+def WaitForPermission():
+    """
+    Monitors the ID permissions and waits for the ID to be in User Mode and then breaks
+    Checks the status every 30 seconds
+    """
+    while True:
+        ID_Access=caget("ID29:AccessSecurity.VAL")
+        if (ID_Access!=0):
+            print("Checking ID permission, please wait..."+dateandtime())
+            sleep(30)
+        else:
+            print("ID now in user mode -"+dateandtime())
+            break
+def WaitForBeam():
+    """
+    Monitors the storage ring current and breaks when the ring current is above 60 mA
+    Checks the status every 30 seconds
+    """
+    while True:
+        SR=caget("S:SRcurrentAI.VAL")
+        if (SR<60):
+    #        print "No beam current, please wait..."+dateandtime()
+            sleep(30)
+        else:
+            print("Beam is back -"+dateandtime())
+            break
+
+def Get_MainShutter():
+    "Checks main shutter is open, does not opens it"
+    SS1=caget("EPS:29:ID:SS1:POSITION")
+    SS2=caget("EPS:29:ID:SS2:POSITION")
+    PS2=caget("EPS:29:ID:PS2:POSITION")
+    check=SS1*SS2*PS2
+    if (check!=8):
+        return False
+    else:
+        return True
+
+def Check_MainShutter():
+    "Checks main shutter is open, if not opens it"
+    while True:
+        SS1=caget("EPS:29:ID:SS1:POSITION")
+        SS2=caget("EPS:29:ID:SS2:POSITION")
+        PS2=caget("EPS:29:ID:PS2:POSITION")
+        check=SS1*SS2*PS2
+        if (check!=8):
+            print("MAIN SHUTTER CLOSED !!!" , dateandtime())
+            WaitForPermission()
+            Open_MainShutter()
+            sleep(10)
+        else:
+            break
+    ID_off=caget("ID29:Main_on_off.VAL")
+    if ID_off == 1:
+        ID_Start("RCP")
+        sleep(30)
+
+
+def Close_CBranch(**kwargs):
+    """
+    EA.off()
+    Close_CShutter()
+    Close_CValve()
+    **kwargs
+        EA="off"; turns off EA (None = doesn't check)
+    """
+    kwargs.setdefault("EA","off")
+    if kwargs["EA"] == "off":
+        EA.off()
+    shutter=caget('PA:29ID:SCS_BLOCKING_BEAM.VAL',as_string=True)
+    if shutter == 'OFF':  #OFF = beam not blocked = shutter open
+        Close_CShutter()
+    i=0
+    while True:
+        valve=caget('29id:BLEPS:GV10:OPENED:STS',as_string=True)
+        if (valve=='GOOD'):
+            sleep(10)
+            Close_CValve()
+            i+=1
+            if i == 3:
+                print("Can't close valve; check status")
+                break
+        elif (valve == 'BAD'):
+            print('ARPES chamber valve now closed')
+            break
+
+def Close_DBranch():
+    try:
+        MPA_HV_OFF()
+    except:
+        shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL',as_string=True)
+        if shutter == 'OFF':  #OFF = beam not blocked = shutter open
+            Close_DShutter()
+        i=0
+        while True:
+            valve=caget('29id:BLEPS:GV14:OPENED:STS',as_string=True)
+            if (valve=='GOOD'):
+                sleep(10)
+                Close_DValve()
+                i+=1
+                if i == 3:
+                    print("Can't close valve; check status")
+                    break
+            elif (valve == 'BAD'):
+                print('RSXS chamber valve now closed')
+                break
+
+
+def Close_CValve():
+    branch="C"
+    caput("29id:BLEPS:GV10:CLOSE.VAL",1,wait=True,timeout=18000)
+    print("Closing "+branch+"-Valve...")
+
+def Close_DValve():
+    branch="D"
+    caput("29id:BLEPS:GV14:CLOSE.VAL",1,wait=True,timeout=18000)
+    print("Closing "+branch+"-Valve...")
+
+def light(ON_OFF):
+    if ON_OFF in ['On','on','ON']:
+        light=0
+    elif ON_OFF in ['Off','off','OFF']:
+        light=1
+    caput('29idd:Unidig1Bo0',light)
+    print(("Turning light "+ON_OFF+"."))

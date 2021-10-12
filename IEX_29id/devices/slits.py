@@ -74,3 +74,26 @@ def Slit3C_Fit(size):
     motor=K0+K1*size+K2*size**2+K3*size**3+K4*size**4+K5*size**5+K6*size**6
     return motor
 
+def Slit_Coef(n):
+    if n == 1:
+        pv='29id:k_slit1A'
+        #Redshifted x (H):
+        H0=2.3325
+        H1=-.000936
+        H2=2.4e-7
+         #Redshifted z (V):
+        V0=2.3935
+        V1=-.0013442
+        V2=3.18e-7
+    if n == 2:
+        pv='29id:k_slit2B'
+        #Redshifted x (H):
+        H0=3.61
+        H1=-0.00186
+        H2=5.2e-7
+        #Redshifted z (V):
+        V0=6.8075
+        V1=-0.003929
+        V2=9.5e-7
+    K=H0,H1,H2,V0,V1,V2
+    return pv,K

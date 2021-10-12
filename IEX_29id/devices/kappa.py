@@ -2,7 +2,7 @@ from epics import caget, caput
 from time import sleep
 from IEX_29id.utils.exp import CheckBranch, BL_ioc
 from IEX_29id.devices.motors import Move_Motor_vs_Branch, ARPES_PVmotor, Kappa_PVmotor, Move_ARPES_Motor
-from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go, Scan_Progress
+from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go, Scan_Progress, Scan_FillIn_Pos2
 from math import *
 from IEX_29id.devices.motors import UMove_Motor_vs_Branch
 from IEX_29id.devices.kappa import cts
@@ -459,16 +459,6 @@ def scanth2th(tth_start,tth_stop,tth_step,th_offset,ct,**kwargs):
         # Need to clear positionner!
         Clear_Scan_Positioners(scanIOC)
 
-def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
-    Scan_Progress(scanIOC,scanDIM)
-    start=start*1.0
-    stop=stop*1.0
-    pv="29id"+scanIOC+":scan"+str(scanDIM)
-    caput(pv+".P1SM","LINEAR")     
-    caput(pv+".P2PV",VAL)
-    caput(pv+".R2PV",RBV)
-    caput(pv+".P2SP",start)
-    caput(pv+".P2EP",stop)
 
 def Clear_Scan_Positioners(scanIOC,scanDIM=1):
     """Clear all extra scan positioners"""
