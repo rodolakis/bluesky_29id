@@ -1,5 +1,5 @@
 
-from epics import caput, caget, EA
+from epics import caput, caget
 from IEX_29id.utils.folders import *
 from IEX_29id.utils.strings import ClearCalcOut
 import datetime
@@ -14,6 +14,9 @@ from IEX_29id.devices.diagnostics import DiodeC, DiodeD
 from IEX_29id.devices.detectors import MPA_HV_OFF
 import numpy as np
 from IEX_29id.devices.mirror import Move_M3R, M3R_Table
+
+
+
 def Check_run():
     todays_date = datetime.today()
     
@@ -303,30 +306,6 @@ def ca2flux(ca,hv=None,p=1):
         print("Flux = %.3e ph/s\n" % flux)
     return flux
 
-def AllDiag_dict():
-    """
-    Dictionary of Diagnostic positions In and Out by either motor number or name
-    WARNING: When updating motor values, also update the following screens:
-        - 29id_BL_Layout.ui               (for MeshD and DiodeC)
-        - 29id_Diagnostic.ui
-        - 29idd_graphic
-    useage:       
-        AllDiag_dict()['name'] returns dictionary motor:name
-        AllDiag_dict()['motor'] returns dictionary name:motor   
-        AllDiag_dict()['In'] returns dictionary motor:In position  (where val can be a list for multiple position)  
-        AllDiag_dict()['Out'] returns dictionary motor:In position  
-                motor=AllDiag_dict()['motor']['gas-cell']
-                pos_in=AllDiag_dict()['In'][motor]
-    """
-    diag={}
-    diag["In"]  = {                5:-55, 6:-46,          17:-56, 20:-30, 25:-56, 28:[-57,-71.25]}
-                                                                                    
-    diag["Out"] = {1:-4, 2:-10, 3:-4, 4:-4, 5:-20, 6:-20, 7:-20, 17:-20, 20:-21, 25:-20, 28:-20}    
-    diag["name"]= {1:"H-wire", 2:"V-wire", 3:"H-Diagon", 4:"V-Diagon", 5:"W-mesh",
-     6:"D2B", 7:"D3B", 17:"D4C/pre-slit", 20:"gas-cell", 25:"D4D/pre-slit", 28:"D5D/pre-RSXS"}
-    diag["motor"]= {"H-wire":1, "V-wire":2, "H-Diagon":3, "V-Diagon":4,"W-mesh":5,
-     "D2B":6, "D3B":7, "D4C":17, "gas-cell":20,"D4D":25,"D5D":28}
-    return diag
 
 def LoadResponsivityCurve():
     FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
@@ -392,33 +371,33 @@ def Check_MainShutter():
         sleep(30)
 
 
-def Close_CBranch(**kwargs):
-    """
-    EA.off()
-    Close_CShutter()
-    Close_CValve()
-    **kwargs
-        EA="off"; turns off EA (None = doesn't check)
-    """
-    kwargs.setdefault("EA","off")
-    if kwargs["EA"] == "off":
-        EA.off()
-    shutter=caget('PA:29ID:SCS_BLOCKING_BEAM.VAL',as_string=True)
-    if shutter == 'OFF':  #OFF = beam not blocked = shutter open
-        Close_CShutter()
-    i=0
-    while True:
-        valve=caget('29id:BLEPS:GV10:OPENED:STS',as_string=True)
-        if (valve=='GOOD'):
-            sleep(10)
-            Close_CValve()
-            i+=1
-            if i == 3:
-                print("Can't close valve; check status")
-                break
-        elif (valve == 'BAD'):
-            print('ARPES chamber valve now closed')
-            break
+# def Close_CBranch(**kwargs):
+#     """
+#     EA.off()
+#     Close_CShutter()
+#     Close_CValve()
+#     **kwargs
+#         EA="off"; turns off EA (None = doesn't check)
+#     """
+#     kwargs.setdefault("EA","off")
+#     if kwargs["EA"] == "off":
+#         EA.off()
+#     shutter=caget('PA:29ID:SCS_BLOCKING_BEAM.VAL',as_string=True)
+#     if shutter == 'OFF':  #OFF = beam not blocked = shutter open
+#         Close_CShutter()
+#     i=0
+#     while True:
+#         valve=caget('29id:BLEPS:GV10:OPENED:STS',as_string=True)
+#         if (valve=='GOOD'):
+#             sleep(10)
+#             Close_CValve()
+#             i+=1
+#             if i == 3:
+#                 print("Can't close valve; check status")
+#                 break
+#         elif (valve == 'BAD'):
+#             print('ARPES chamber valve now closed')
+#             break
 
 def Close_DBranch():
     try:
