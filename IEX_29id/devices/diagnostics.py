@@ -1,40 +1,13 @@
-from epics import caget, caput
-from time import sleep
-from IEX_29id.utils.exp import AllDiag_dict
-
-# ----------------------------------
 __all__ = """
-    motors
-    MeshW_plan
+    meshW_plan
+    diodeC_plan
+    diodeD_plan
+    meshD_plan
 """.split()
 
-"""markdown
-# Bluesky documentation reference tables
-
-## The most common ophyd imports
-
-class | import | description | URL
---- | --- | --- | ---
-`EpicsSignal` | `from ophyd import EpicsSignal` | connect with ONE PV | part of https://blueskyproject.io/ophyd/tutorials/device.html?highlight=epicssignalro#define-a-custom-device
-`EpicsSignalRO` | `from ophyd import EpicsSignalRO` | connect with ONE read-only PV | part of https://blueskyproject.io/ophyd/tutorials/device.html?highlight=epicssignalro#define-a-custom-device
-`EpicsSignalWithRBV` | `from ophyd import EpicsSignalWithRBV` | connect with TWO PVs (one for read AND one for write) | https://blueskyproject.io/ophyd/generated/ophyd.areadetector.base.EpicsSignalWithRBV.html#ophyd.areadetector.base.EpicsSignalWithRBV
-`EpicsMotor` | `from ophyd import EpicsMotor` | connect with ONE EPICS motor record | https://blueskyproject.io/ophyd/generated/ophyd.epics_motor.EpicsMotor.html#ophyd.epics_motor.EpicsMotor
-`ScalerCH` | `from ophyd.scaler import ScalerCH` | connect with one EPICS scaler record | https://blueskyproject.io/ophyd/generated/ophyd.scaler.ScalerCH.html#ophyd.scaler.ScalerCH
-`Signal` | `from ophyd import Signal` | fundamental single piece of information, non-EPICS, in Python memory only
-`Device` | `from ophyd import Device` | make a group of Signal(s) and/or Device(s) | part of https://blueskyproject.io/ophyd/tutorials/device.html?highlight=epicssignalro#define-a-custom-device
-`Component` | `from ophyd import Component` | Used in a Device to define one attribute | part of https://blueskyproject.io/ophyd/tutorials/device.html?highlight=epicssignalro#define-a-custom-device
-
-other: EPICS Area Detector, MCA
-
-## The most common bluesky imports
-description | import | URL
---- | --- | ---
-Pre-assembled Plans | `from bluesky import plans as bp` | https://blueskyproject.io/bluesky/plans.html
-Stub Plans (used in plans) | `from bluesky import plan_stubs as bps` | https://blueskyproject.io/bluesky/plans.html#stub-plans
-
-Other: databroker, metadata, baseline, monitor
-"""
-
+from epics import caget, caput
+#from time import sleep
+#from IEX_29id.utils.exp import AllDiag_dict
 from bluesky import plan_stubs as bps
 import logging
 from ophyd import EpicsMotor
@@ -42,39 +15,69 @@ from ophyd import Component, Device
 
 logger = logging.getLogger(__name__)
 
-# from diagnostics import *
 
-
-# m5 = EpicsMotor("29idb:m5", name="m5")
-# m20 = EpicsMotor("29idb:m20", name="m20")
-# m28 = EpicsMotor("29idb:m28", name="m28")
-
-class MyMotors(Device):
+class _DiagnosticMotors(Device):
     m5 = Component(EpicsMotor, "5")
     m20 = Component(EpicsMotor, "20")
     m28 = Component(EpicsMotor, "28")
 
-motors = MyMotors("29idb:m", name="motors")
-# motors.m5
-# motors.m20
-# motors.m28
+diagnostic_motors = _DiagnosticMotors("29idb:m", name="motors")
+# now I can import diagnostic motors if needed: from diagnostic import diagnostic_motors
+# diagnostic_motors.m5
+# diagnostic_motors.m20
+# diagnostic_motors.m28
 
-def pick_motor(number):
-    return getattr(motors, f"m{number}")
+def _pick_motor(number):
+    return getattr(diagnostic_motors, f"m{number}")
 
-def MeshW_plan(insert):
+def _diagnostic_plan(insert,motor_number,desc,n=None):
     """
-    Inserts/retracts RSXS mesh (post-slit)
+    Inserts/retracts diagnostic
 
     insert bool: ``True`` if should insert, ``False`` to retract 
     """
     diag = AllDiag_dict()
-    motor_number = 5
-    motor = pick_motor(motor_number)  # motors.m5
-    placement = {True: "In", False: "Out"}
-    position = diag[placement][motor_number]
+    motor = _pick_motor(motor_number)  # motors.m#
+    placement = {True: "In", False: "Out"}[insert]
+    if n is None:
+        position=diag[placement][motor_number]
+    else:
+        position=diag[placement][motor_number][n]
     yield from bps.mv(motor, position)
-    logger.info("D1A W-Mesh: %s", placement)
+    logger.info("%s: %s", desc, placement)
+
+def meshW_plan(insert):
+    """
+    Inserts/retracts W mesh (post-M0M1)
+
+    insert bool: ``True`` if should insert, ``False`` to retract 
+    """
+    yield from _diagnostic_plan(insert,5,'W-mesh')
+
+def diodeC_plan(insert):
+    """
+    Inserts/retracts gas cell diode (post ARPES slit)
+
+    insert bool: ``True`` if should insert, ``False`` to retract 
+    """
+    yield from _diagnostic_plan(insert,20,'Diode ARPES')
+
+def diodeD_plan(insert):
+    """
+    Inserts/retracts RSXS diode (post-slit)
+
+    insert bool: ``True`` if should insert, ``False`` to retract 
+    """
+    yield from _diagnostic_plan(insert,28,'Diode  RSXS',n=1)  # n=1 diode position
+
+def meshD_plan(insert):
+    """
+    Inserts/retracts RSXS diode (RSXS-slit)
+
+    insert bool: ``True`` if should insert, ``False`` to retract 
+    """
+    yield from _diagnostic_plan(insert,28,'Diode  RSXS',n=0) # n=0 mesh position
+
 # ----------------------------------
 
 
@@ -84,29 +87,6 @@ def MeshW(In_Out):
     motor=5; position=diag[In_Out][motor]
     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
     print("\nD1A W-Mesh: "+ In_Out)
-
-def AllDiagIn():
-    "Inserts all diagnostic (meshes and diodes) for pinhole scans"
-    diag=AllDiag_dict()
-    for motor in list(diag["In"].keys()):
-        position=diag["In"][motor]
-        if isinstance(position, list):  #  type(position) == list:
-            position=position[0]
-        caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-        print('m'+str(motor)+' = '+str(position))
-    print("All diagnostics in (meshes and diodes) for pinhole scans")
-
-
-def AllMeshIn():
-    "Inserts all diagnostic (meshes and gas-cell is out) for wire scans"
-    diag=AllDiag_dict()
-    for motor in list(diag["In"].keys()):
-        position=diag["In"][motor]
-        if type(position) == list:
-            position=position[0]
-        caput("29idb:m"+str(motor)+".VAL",position,timeout=18000)
-        print('m'+str(motor)+' = '+str(position))
-    print("All diagnostics in (meshes and diodes) for pinhole scans")
 
 def DiodeC(In_Out):
     "Inserts/retracts ARPES (gas-cell) diode; arg = \"In\" or \"Out\""
@@ -139,4 +119,53 @@ def Diagnostic(which,In_Out):
     print("\n"+name+": "+ In_Out)
 
 
+def AllDiagIn():
+    "Inserts all diagnostic (meshes and diodes) for pinhole scans"
+    diag=AllDiag_dict()
+    for motor in list(diag["In"].keys()):
+        position=diag["In"][motor]
+        if isinstance(position, list):  #  type(position) == list:
+            position=position[0]
+        caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
+        print('m'+str(motor)+' = '+str(position))
+    print("All diagnostics in (meshes and diodes) for pinhole scans")
 
+
+def AllMeshIn():
+    "Inserts all diagnostic (meshes and gas-cell is out) for wire scans"
+    diag=AllDiag_dict()
+    for motor in list(diag["In"].keys()):
+        position=diag["In"][motor]
+        if type(position) == list:
+            position=position[0]
+        caput("29idb:m"+str(motor)+".VAL",position,timeout=18000)
+        print('m'+str(motor)+' = '+str(position))
+    print("All diagnostics in (meshes and diodes) for pinhole scans")
+
+
+
+
+
+def AllDiag_dict():
+    """
+    Dictionary of Diagnostic positions In and Out by either motor number or name
+    WARNING: When updating motor values, also update the following screens:
+        - 29id_BL_Layout.ui               (for MeshD and DiodeC)
+        - 29id_Diagnostic.ui
+        - 29idd_graphic
+    usage:       
+        AllDiag_dict()['name'] returns dictionary motor:name
+        AllDiag_dict()['motor'] returns dictionary name:motor   
+        AllDiag_dict()['In'] returns dictionary motor:In position  (where val can be a list for multiple position)  
+        AllDiag_dict()['Out'] returns dictionary motor:In position  
+                motor=AllDiag_dict()['motor']['gas-cell']
+                pos_in=AllDiag_dict()['In'][motor]
+    """
+    diag={}
+    diag["In"]  = {1:-4, 2:-10, 3:-4, 4:-4, 5:-55, 6:-46, 7:-20, 17:-56, 20:-30, 25:-56, 28:[-57,-71.25]}                                                                          
+    diag["Out"] = {1:-4, 2:-10, 3:-4, 4:-4, 5:-20, 6:-20, 7:-20, 17:-20, 20:-21, 25:-20, 28:-20}    
+    diag["name"]= {1:"H-wire", 2:"V-wire", 3:"H-Diagon", 4:"V-Diagon", 5:"W-mesh",
+     6:"D2B", 7:"D3B", 17:"D4C/pre-slit", 20:"gas-cell", 25:"D4D/pre-slit", 28:"D5D/pre-RSXS"}
+    diag["motor"]= {"H-wire":1, "V-wire":2, "H-Diagon":3, "V-Diagon":4,"W-mesh":5,
+     "D2B":6, "D3B":7, "D4C":17, "gas-cell":20,"D4D":25,"D5D":28}
+    return diag
