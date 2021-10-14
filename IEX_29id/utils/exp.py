@@ -10,7 +10,7 @@ from IEX_29id.scans.setup import Reset_Scan
 from epics import PV
 from IEX_29id.devices.energy import Switch_IDMode, energy, Open_MainShutter, ID_Start
 from IEX_29id.devices.slits import SetExitSlit
-from IEX_29id.devices.diagnostics import DiodeC, DiodeD
+from IEX_29id.devices.diagnostics import diodeC_plan, diodeD_plan, all_diag_out
 from IEX_29id.devices.detectors import MPA_HV_OFF
 import numpy as np
 from IEX_29id.devices.mirror import Move_M3R, M3R_Table
@@ -246,11 +246,11 @@ def CheckFlux(hv=500,mode='RCP',stay=None):
     SR=round(caget("S:SRcurrentAI.VAL"),2)
     if branch == "c":
         current_slit=caget('29idb:Slit3CFit.A')
-        DiodeC('In')
+        diodeC_plan('In')
         diode=caget('29idb:ca15:read')
     elif branch == "d":
         current_slit=caget('29idb:Slit4Vsize.VAL')
-        DiodeD("In")
+        diodeD_plan("In")
         diode=caget('29idb:ca14:read')
     SetExitSlit(50)
     flux=ca2flux(diode)
@@ -258,37 +258,10 @@ def CheckFlux(hv=500,mode='RCP',stay=None):
     print("----- Corresponding flux: %.3e" % flux, "ph/s \n")
     print("----- Storage ring current: %.2f" % SR, "mA")
     if stay is None:
-        AllDiagOut()
+        all_diag_out()
     SetExitSlit(current_slit)
 
 
-def AllDiagOut(DiodeStayIn=None):
-    """Retracts all diagnostic
-    if DiodeStayIn = something then it leaves the diode in for the current branch
-    """
-    diag=AllDiag_dict()
-    text=""
-    #which motor is Diode of interest
-    if DiodeStayIn != None:
-        DiodeStayIn=CheckBranch()
-    if DiodeStayIn == 'c':
-        diode_motor=diag["motor"]["gas-cell"]
-    elif DiodeStayIn == 'd':
-        diode_motor=diag["motor"]["D5D"]
-    else:
-        diode_motor=None
-    #Taking out the diagnostic
-    for motor in list(diag["Out"].keys()):
-        if motor is diode_motor:
-            text=' except Diode-'+DiodeStayIn
-            #putting Diode In if not already in -JM
-            position=diag["In"][motor]
-            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-        else:
-            position=diag["Out"][motor]
-            caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-    text="All diagnostics out"+text
-    print("\n",text)
 
 def ca2flux(ca,hv=None,p=1):
     curve=LoadResponsivityCurve()
