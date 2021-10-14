@@ -2,6 +2,41 @@ from os import system
 from datetime import datetime
 from time import strftime, localtime, sleep
 
+def read_dict(FileName,FilePath="/home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/"):
+    with open(join(FilePath, FileName)) as f:
+        for c,line in enumerate(f.readlines()):
+            if line[0] == '=':
+                lastdate=line[8:16]
+            lastline=line
+        mydict=ast.literal_eval(lastline)
+    return mydict
+
+
+def ca2flux(ca,hv=None,p=1):
+    curve=LoadResponsivityCurve()
+    responsivity=curve[:,0]
+    energy=curve[:,1]
+    charge = 1.602e-19
+    if hv is None:
+        hv=caget('29idmono:ENERGY_SP')
+        print("\nCalculating flux for:")
+        print("   hv = %.1f eV" % hv)
+        print("   ca = %.3e Amp" % ca)
+    eff=np.interp(hv,energy,responsivity)
+    flux = ca/(eff*hv*charge)
+    if p is not None:
+        print("Flux = %.3e ph/s\n" % flux)
+    return flux
+
+
+def LoadResponsivityCurve():
+    FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
+    FileName="DiodeResponsivityCurve"
+    data = np.loadtxt(FilePath+FileName, delimiter=' ', skiprows=1)
+    return data
+
+
+
 def playsound(sound='FF'):
     """
     plays a sound when run
@@ -56,6 +91,34 @@ def WaitForIt(D,H,M):
     print("Waaaaaaaait for it...")
     sleep(timeToWait.total_seconds())
     print(dateandtime())
+
+def WaitForPermission():
+    """
+    Monitors the ID permissions and waits for the ID to be in User Mode and then breaks
+    Checks the status every 30 seconds
+    """
+    while True:
+        ID_Access=caget("ID29:AccessSecurity.VAL")
+        if (ID_Access!=0):
+            print("Checking ID permission, please wait..."+dateandtime())
+            sleep(30)
+        else:
+            print("ID now in user mode -"+dateandtime())
+            break
+        
+def WaitForBeam():
+    """
+    Monitors the storage ring current and breaks when the ring current is above 60 mA
+    Checks the status every 30 seconds
+    """
+    while True:
+        SR=caget("S:SRcurrentAI.VAL")
+        if (SR<60):
+    #        print "No beam current, please wait..."+dateandtime()
+            sleep(30)
+        else:
+            print("Beam is back -"+dateandtime())
+            break
 
 
 def today(which='default'):

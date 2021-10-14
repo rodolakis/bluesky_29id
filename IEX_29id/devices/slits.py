@@ -11,6 +11,28 @@ def slit(val):
     SetExitSlit(val)
 
 
+def SetSlit1A(Hsize,Vsize,Hcenter,Vcenter,q=None):
+    caput("29idb:Slit1Hsync.PROC",1)
+    caput("29idb:Slit1Vsync.PROC",1)
+    caput("29idb:Slit1Hsize.VAL", Hsize)
+    caput("29idb:Slit1Vsize.VAL", Vsize, wait=True,timeout=18000)
+    caput("29idb:Slit1Hcenter.VAL",Hcenter)
+    caput("29idb:Slit1Vcenter.VAL",Vcenter, wait=True,timeout=18000)
+    if not q:
+        print("Slit-1A = ("+str(round(Hsize,3))+"x"+str(round(Vsize,3))+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
+
+def SetSlit2B(Hsize,Vsize,Hcenter,Vcenter,q=None):
+    caput("29idb:Slit2Hsync.PROC",1)
+    caput("29idb:Slit2Vsync.PROC",1)
+    caput("29idb:Slit2Hsize.VAL", Hsize)
+    caput("29idb:Slit2Vsize.VAL", Vsize, wait=True,timeout=18000)
+    caput("29idb:Slit2Hcenter.VAL",Hcenter)
+    caput("29idb:Slit2Vcenter.VAL",Vcenter, wait=True,timeout=18000)
+    if not q:
+        print("Slit-2B = ("+str(Hsize)+"x"+str(Vsize)+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
+
+
+
 
 
 def SetSlit3D(size,position=None):
@@ -51,6 +73,8 @@ def SetSlit_BL(c2B=1,c1A=1,q=None):
     Size2B=( Aperture_Fit(hv,2)[0]*c2B, round(Aperture_Fit(hv,2)[1]*c2B*V,3))
     SetSlit1A (Size1A[0],Size1A[1],H1center,V1center,q)    # standard operating
     SetSlit2B(Size2B[0],Size2B[1],H2center,V2center,q)
+
+
 def SetExitSlit(size):
     branch=CheckBranch()
     if branch == "c":
@@ -97,3 +121,12 @@ def Slit_Coef(n):
         V2=9.5e-7
     K=H0,H1,H2,V0,V1,V2
     return pv,K
+
+
+
+
+def Aperture_Fit(hv,n):
+    K=Slit_Coef(n)[1]
+    sizeH=K[0]+K[1]*hv+K[2]*hv*hv
+    sizeV=K[3]+K[4]*hv+K[5]*hv*hv
+    return [round(sizeH,3),round(sizeV,3)]

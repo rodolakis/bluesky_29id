@@ -1,5 +1,6 @@
 __all__ = """
     all_diag_in
+    all_diag_out
     meshW_plan
     diodeC_plan
     diodeD_plan
@@ -152,4 +153,16 @@ def diodeD_plan(insert):
     insert bool: ``True`` if should insert, ``False`` to retract 
     """
     yield from _diagnostic_plan(insert,28,n=1)  # n=1 diode position
+
+
+
+
+# def MeshD(In_Out):
+#     "Inserts/retracts RSXS mesh (post-slit); arg = \"In\" or \"Out\""
+#     diag=AllDiag_dict()
+#     motor=28; position=position=diag[In_Out][motor]
+#     if type(position) == list:
+#         position=position[0]
+#     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
+#     print("\nD5D Au-Mesh: "+ In_Out)
 

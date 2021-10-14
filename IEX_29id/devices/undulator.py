@@ -5,6 +5,25 @@ from IEX_29id.utils.exp import WaitForPermission, Check_MainShutter
 from IEX_29id.utils.misc import dateandtime, RangeUp
 
 
+def ID_Calc(grt,mode,hv):    # Mode = state (0=RCP,1=LCP,2=V,3=H)
+    """Calculate the ID SP for a given polarization mode and energy;
+    with Mode = 0 (RCP),1 (LCP), 2 (V), 3 (H)"""
+    if type(mode)== str:
+        mode={'RCP':0,'LCP':1,'V':2,'H':3}[mode]
+    try:
+        K=ID_Coef(grt,mode,hv)
+        #ID = K[0] + K[1]*hv**1 + K[2]*hv**2 + K[3]*hv**3 + K[4]*hv**4 + K[5]*hv**5
+        ID=poly.polyval(hv,K)
+    except KeyError:
+        print("WARNING: PLease select one of the following:")
+        print("        mode 0 = RCP")
+        print("        mode 1 = LCP")
+        print("        mode 2 = V")
+        print("        mode 3 = H")
+        ID=caget("ID29:EnergySeteV")
+    return round(ID,1)
+
+
 def ID_State2Mode(which,mode):
     ID_State2Mode={}
     ID_State2Mode["Mode"]  = {"RCP":0, "LCP":1, "V":2, "H":3, "HN":4}

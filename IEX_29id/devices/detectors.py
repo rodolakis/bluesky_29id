@@ -128,28 +128,6 @@ def MPA_ROI_Stats(roiNUM):
     caput(pvSTATS+'ComputeCentroid','Yes')
     caput(pvSTATS+'ComputeProfiles','Yes')
 
-
-def Before_After_Scan(scanIOC,scanDIM):
-    """
-    Clear all Before/After scan (1,2,3,4).
-    Proc Before/AfterScan StrSeq  for the most outer loop:
-        - before scan puts all relevant detectors in passive
-        - after scan puts back all relevant detector in Live and reset scan1 to default settings.
-    """
-    All_Scans=[1,2,3,4]
-    All_Scans.remove(scanDIM)
-    #Clearing all Before/Afters
-    for i in All_Scans:
-        caput("29id"+scanIOC+":scan"+str(i)+".BSPV","")
-        caput("29id"+scanIOC+":scan"+str(i)+".ASPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV",BeforeScan_StrSeq(scanIOC))
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSCD",1)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSWAIT","Wait")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV",AfterScan_StrSeq(scanIOC))
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASCD",1)
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASWAIT","Wait")
-
-
 def AD_ROI_SetUp(AD,ROInum,xcenter=500,ycenter=500,xsize=50,ysize=50,binX=1,binY=1):  
     """
     AD = "29id_ps4"
@@ -244,112 +222,10 @@ def AD_OVER_SetUp(AD,ROInum,OVERnum,linewidth=5,shape='Rectangle'):
     
     
 
-def AfterScan_StrSeq(scanIOC,scanDIM=1,Snake=None):
-    n=10
-    pvstr ="29id"+scanIOC+":userStringSeq"+str(n)
-    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
-    
-    SnakePV="29id"+scanIOC+":userCalcOut"+str(1) #Snake UserCal
-        
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","AfterScan_"+scanIOC)
-    ## Put All relevant CA back in live mode29idARPES:userStringSeq10.LNK8
-    caput(pvstr+".LNK1",CA_Live_StrSeq(scanIOC)+" PP NMS")
-    caput(pvstr+".DO1",1)
-    ## Put scan record back in absolute mode
-    caput(pvstr+".LNK2",pvscan+".P1AR")
-    caput(pvstr+".STR2","ABSOLUTE")
-    ## Put Positionner Settling time to 0.1s
-    caput(pvstr+".LNK3",pvscan+".PDLY NPP NMS")
-    caput(pvstr+".DO3",0.1)
-    ## Clear DetTriggers 2 to 4:
-    #caput(pvstr+".LNK4",pvscan+".T2PV NPP NMS")    # FR is testing - why remove all trigger after scan?
-    caput(pvstr+".LNK5",pvscan+".T3PV NPP NMS")
-    caput(pvstr+".LNK6",pvscan+".T4PV NPP NMS")
-    if scanIOC == 'Kappa':
-        caput(pvstr+".STR4","")
-    #    caput(pvstr+".STR4","29idMZ0:scaler1.CNT")   # to be fixed FR 2020/10/27
-    else:
-        caput(pvstr+".STR4","")
-    caput(pvstr+".STR5","")
-    caput(pvstr+".STR6","")
-    caput(pvstr+".LNK7",pvscan+".PASM")
-    caput(pvstr+".STR7","PRIOR POS")
-    #if Snake is not None:
-    #    ## Put scan record back in 'STAY POS'
 
-#        caput(pvstr+".LNK8",SnakePV+".PROC")
-#        caput(pvstr+".D8",1)
-#    #caput(pvstr+"")JM was here
-#    else:
-#        ## Put scan record back in 'PRIOR POS'
-#        caput(pvstr+".LNK7",SnakePV+".PROC PP NMS")
-#        caput(pvstr+".DO1",1)
-    return pvstr+".PROC"
 
-def CA_Live_StrSeq(scanIOC):              # do we need to add 29idb:ca5 ???
-    n=7
-    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","CA_Live_"+scanIOC)
-    n=len(Detector_List(scanIOC))
-    for (i,list) in enumerate(Detector_List(scanIOC)):
-        pvCA_read='29id'+list[0]+':ca'+str(list[1])+':read.SCAN CA NMS'
-        pvCA_avg='29id'+list[0]+':ca'+str(list[1])+':digitalFilterSet PP NMS'
 
-        caput(pvstr+".LNK"+str(i+1),pvCA_avg)
-        caput(pvstr+".STR" +str(i+1),"Off")
 
-        if n+1+i < 10:
-            caput(pvstr+".LNK" +str(n+1+i),pvCA_read)
-            caput(pvstr+".STR" +str(n+1+i),".5 second")
-            caput(pvstr+".WAIT"+str(n+1+i),"After"+str(n))
-        elif n+1+i == 10:
-            caput(pvstr+".LNKA",pvCA_read)
-            caput(pvstr+".STRA",".5 second")
-            caput(pvstr+".WAITA","After"+str(n))
-#    if scanIOC == 'Kappa':
-
-#        caput(pvstr+".LNK" +str(2*n+1),'29idMZ0:scaler1.CONT CA NMS')
-#        caput(pvstr+".STR" +str(2*n+1),"AutoCount")
-#        caput(pvstr+".WAIT"+str(2*n+1),"After"+str(2*n))
-
-    return pvstr+".PROC"
-
-def BeforeScan_StrSeq(scanIOC):        # Put All relevant (triggered) CA in passive mode
-    n=9
-    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
-    ClearStringSeq(scanIOC,n)
-    caput(pvstr+".DESC","BeforeScan_"+scanIOC)
-    for (i,list) in enumerate(Detector_List(scanIOC)):
-        pvCA='29id'+list[0]+':ca'+str(list[1])+':read.SCAN PP NMS'
-        caput(pvstr+".LNK" +str(i+1),pvCA)
-        caput(pvstr+".STR" +str(i+1),"Passive")
-    return pvstr+".PROC"
-
-def Detector_List(scanIOC):
-    """
-    Define the detector used for:
-        CA_Live_StrSeq()
-        Detector_Triggers_StrSeq()
-        BeforeScan_StrSeq() => puts everybody in passive
-        CA_Average()
-    WARNING: can't have more than 5 otherwise CA_Live_StrSeq gets angry.
-    """
-
-    BL_mode=BL_Mode_Read()[0]
-    if scanIOC == "ARPES":
-        CA_list=[["c",1],["b",15],["b",4],["b",13]]
-    elif scanIOC == "Kappa":
-        CA_list=[["d",2],["d",3],["d",4],["b",14]]
-    elif scanIOC == "RSoXS":
-        CA_list=[["d",3],["d",4],["d",5],["b",14],]
-    else:
-        CA_list=[]
-#    if BL_mode == 1:
-#        CA_list=[["b",1],["b",2],["b",3],["b",4],["b",5]] #JM was here
-#        CA_list=[["b",15],["d",2],["d",3],["d",4],["b",14]]
-    return CA_list
 
 
 

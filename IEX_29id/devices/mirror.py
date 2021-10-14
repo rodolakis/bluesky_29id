@@ -5,27 +5,85 @@ from IEX_29id.devices.mono import Switch_Grating
 from epics import caget, caput
 from time import sleep
 
-def WireScan(which,scanIOC=None,diag='In',**kwargs):
-    """
-    Scans the wires located just downstream of M0/M1, 
-         which = 'H' for the horizontal, typically CA2
-         which = 'V' for the vertical, typically CA3
-    diag ='In' -> AllDiagIn(), otherwise you have to put any diagnostics in by hand
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details    
-    """
-    
-    if scanIOC is None:
-        scanIOC=BL_ioc()
-    if diag == 'In':
-        AllDiagIn()
-    if which=='H':
-        print("\n================== H wire scan (29idb:ca3):")
-        Scan_FillIn("29idb:m1.VAL","29idb:m1.RBV",scanIOC,1,-13,-27,-0.25)
+def centroid(t=None,q=1): 
+    '''
+    Return position of centroid, sigma, m3r:RY (mirror pitch)
+    Optional argument t to set camera intergration time.
+    '''
+    if t is not None:
+        caput('29id_ps6:cam1:AcquireTime',t)
+    else:
+        t=caget('29id_ps6:cam1:AcquireTime')
+    position=  round(caget('29id_ps6:Stats1:CentroidX_RBV'),2)
+    sigma=round(caget('29id_ps6:Stats1:SigmaX_RBV'),2)
+    intensity=round(caget('29id_ps6:Stats1:CentroidTotal_RBV'),2)
+    m3rRY=round(caget("29id_m3r:RY_MON"),4)
+    if q != None:
+        print('(position, sigma, total intensity, integration time (s), mirror pitch):')
+    return position,sigma,intensity,t,m3rRY
 
-    elif which=='V':
-        print("\n================== V wire scan (29idb:ca2):")
-        Scan_FillIn("29idb:m2.VAL","29idb:m2.RBV",scanIOC,1,-17,-30,-0.25)
-    Scan_Go(scanIOC,scanDIM=1,**kwargs)
+
+def align_m3r(p=118,debug=False):
+
+    def mvm3r_pitch_FR(x):
+            if -16.53<x<-16.38:
+                motor_pv="29id_m3r:RY_POS_SP"
+                #print('... moving to '+str(x))
+                caput(motor_pv,x)
+                sleep(0.5)
+                caput("29id_m3r:MOVE_CMD.PROC",1)
+                sleep(1)
+                #print('Positioned')
+            else:
+                print('Out of range')
+
+    shutter=caget('PA:29ID:SDS_BLOCKING_BEAM.VAL')
+    camera=caget('29id_ps6:cam1:Acquire',as_string=True)
+    hv=caget('29idmono:ENERGY_SP')
+    if shutter == 'ON':
+        foo=input_d('Shutter D is closed, do you want to open it (Y or N)? >')
+        if foo == 'Y'.lower() or foo == 'y' or foo == 'yes'.lower():
+            Open_DShutter()
+        else:
+            print('Aborting...')
+            return
+    if camera == 'Done':
+        caput('29id_ps6:cam1:Acquire','Acquire') 
+     
+    if hv < 2190:
+        caput('29id_ps6:cam1:AcquireTime',0.001)
+        caput('29id_ps6:Stats1:CentroidThreshold',7)
+    else:
+        caput('29id_ps6:cam1:AcquireTime',0.03)
+        caput('29id_ps6:Stats1:CentroidThreshold',7)
+    sleep(1)    
+    intensity=caget('29id_ps6:Stats1:CentroidTotal_RBV')
+    if intensity < 10000:
+        print('Count too low. Please adjust camera settings')
+    else:   
+        print('Starting...')
+        mvm3r_pitch_FR(-16.52)
+        position = centroid(q=None)[0]
+        max_pitch=-16.39
+        #print('position = '+str(position))
+        while position < p:
+            position = centroid(q=None)[0]
+            if position < p-10:
+                pitch = caget('29id_m3r:RY_POS_SP')
+                mvm3r_pitch_FR(min(pitch + 0.005,max_pitch))
+                #print(centroid(q=None)[4])
+                position = centroid(q=None)[0]
+                #print('position = '+str(position))
+            elif  p-10<= position:
+                pitch = caget('29id_m3r:RY_POS_SP')
+                mvm3r_pitch_FR(min(pitch + 0.001,max_pitch))
+                #print(centroid(q=None)[4])
+                position = centroid(q=None)[0]
+                #print('position = '+str(position))
+        print('Done')
+        print(centroid())
+        print('\n')
+
 
 def CheckM0M1(scanIOC='ARPES',hv=500,stay=None,wire=None,**kwargs): #JM added energy parameter
     """
@@ -43,15 +101,6 @@ def CheckM0M1(scanIOC='ARPES',hv=500,stay=None,wire=None,**kwargs): #JM added en
         WireScan('H',scanIOC,**kwargs)
         WireScan('V',scanIOC,**kwargs)
 
-def Open_BranchShutter():
-    "Opens current branch shutter (based on deflecting mirror position)"
-    branch=CheckBranch().upper()
-    status=caget("PA:29ID:S"+branch+"S_BLOCKING_BEAM.VAL")
-    if status == "ON":
-        caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
-        print("Opening "+branch+"-Shutter...")
-    elif status == "OFF":
-        print(branch+"-Shutter already open...")
 
 def Move_M3R(which,Position,q=None):    #motor = "TX","TY","TZ","RX","RY","RZ"
     """

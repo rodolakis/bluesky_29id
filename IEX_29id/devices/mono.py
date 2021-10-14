@@ -2,6 +2,9 @@ from epics import caget, caput
 from time import sleep
 from IEX_29id.devices.energy import SetSlit_BL
 from IEX_29id.utils.misc import dateandtime, SetMono, Open_MainShutter
+
+
+
 def Reset_Mono_Limits():
 #    caput("29idmono_GRT_TYPE_SP.ONST", 'MEG_PA')
 #    caput("29idmono_GRT_TYPE_SP.TWST", 'HEG_JY')
@@ -12,9 +15,16 @@ def Reset_Mono_Limits():
     caput("29idmono:ENERGY_SP.LOPR",200)
     print("Mono limits have been reset.")
 
-def Close_MainShutter():
-    caput("PC:29ID:FES_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
-    print("Closing Main Shutter...")
+
+def Check_Grating():
+    GRTd=caget("29idmono:GRT_DENSITY")
+    if GRTd == 1200:
+        GRT = "MEG"
+    elif GRTd == 2400:
+        GRT = "HEG"
+    return GRT
+
+
 
 def Move_GRT(which):
     MonoeV=round(caget("29idmono:ENERGY_MON"),1)

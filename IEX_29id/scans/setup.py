@@ -3,7 +3,7 @@ from time import sleep
 from IEX_29id.utils.exp import BL_ioc, CheckBranch, BL_Mode_Read, Check_MainShutter
 from IEX_29id.utils.log import scanlog
 from IEX_29id.utils.misc import dateandtime
-from IEX_29id.devices.detectors import Detector_List, Before_After_Scan, BeforeScan_StrSeq, AfterScan_StrSeq
+from IEX_29id.devices.detectors import Detector_List
 from IEX_29id.utils.strings import ClearStringSeq
 from IEX_29id.devices.motors import Kappa_PVmotor
 from math import *
@@ -74,6 +74,24 @@ def Reset_Scan(scanIOC,scanDIM=1,**kwargs):
     #Check that detector and positioner PVs are good
     sleep(10)
     Scan_Check(scanIOC,scanDIM)
+
+def Reset_Scan_Settings(scanIOC,scanDIM=1):
+    """
+    Reset scan settings to default: ABSOLUTE, STAY, 0.05/0.1 positioner/detector settling time
+    """
+    Cam_ScanClear(scanIOC,scanDIM)
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    innerScan="29id"+scanIOC+":scan"+str(scanDIM-1)+".EXSC"
+    caput(pv+".CMND",3)        # Clear all Positionners
+    caput(pv+".P1AR",0)        # Absolute position
+    caput(pv+".PASM","PRIOR POS")    # After scan: prior position
+    caput(pv+".PDLY",0.05)     # Positioner Settling time
+    caput(pv+".DDLY",0.1)         # Detector Settling time
+    if scanDIM > 1:    #Resets the higher dimensional scans to trigger the inner scan
+        caput(pv+".T1PV",innerScan)
+    print("Scan record reset to default.")
+
+
 
 ### Reset detectors in scan record:
 def Detector_Triggers_StrSeq(scanIOC,scalerOnly=None):    # do we need to add 29idb:ca5 ???
@@ -391,3 +409,97 @@ def Scan_FillIn_Pos2(VAL,RBV,scanIOC,scanDIM,start,stop):
     caput(pv+".R2PV",RBV)
     caput(pv+".P2SP",start)
     caput(pv+".P2EP",stop)
+
+
+
+def BeforeScan_StrSeq(scanIOC):        # Put All relevant (triggered) CA in passive mode
+    n=9
+    pvstr="29id"+scanIOC+":userStringSeq"+str(n)
+    ClearStringSeq(scanIOC,n)
+    caput(pvstr+".DESC","BeforeScan_"+scanIOC)
+    for (i,list) in enumerate(Detector_List(scanIOC)):
+        pvCA='29id'+list[0]+':ca'+str(list[1])+':read.SCAN PP NMS'
+        caput(pvstr+".LNK" +str(i+1),pvCA)
+        caput(pvstr+".STR" +str(i+1),"Passive")
+    return pvstr+".PROC"
+
+
+def AfterScan_StrSeq(scanIOC,scanDIM=1,Snake=None):
+    n=10
+    pvstr ="29id"+scanIOC+":userStringSeq"+str(n)
+    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
+    
+    SnakePV="29id"+scanIOC+":userCalcOut"+str(1) #Snake UserCal
+        
+    ClearStringSeq(scanIOC,n)
+    caput(pvstr+".DESC","AfterScan_"+scanIOC)
+    ## Put All relevant CA back in live mode29idARPES:userStringSeq10.LNK8
+    caput(pvstr+".LNK1",CA_Live_StrSeq(scanIOC)+" PP NMS")
+    caput(pvstr+".DO1",1)
+    ## Put scan record back in absolute mode
+    caput(pvstr+".LNK2",pvscan+".P1AR")
+    caput(pvstr+".STR2","ABSOLUTE")
+    ## Put Positionner Settling time to 0.1s
+    caput(pvstr+".LNK3",pvscan+".PDLY NPP NMS")
+    caput(pvstr+".DO3",0.1)
+    ## Clear DetTriggers 2 to 4:
+    #caput(pvstr+".LNK4",pvscan+".T2PV NPP NMS")    # FR is testing - why remove all trigger after scan?
+    caput(pvstr+".LNK5",pvscan+".T3PV NPP NMS")
+    caput(pvstr+".LNK6",pvscan+".T4PV NPP NMS")
+    if scanIOC == 'Kappa':
+        caput(pvstr+".STR4","")
+    #    caput(pvstr+".STR4","29idMZ0:scaler1.CNT")   # to be fixed FR 2020/10/27
+    else:
+        caput(pvstr+".STR4","")
+    caput(pvstr+".STR5","")
+    caput(pvstr+".STR6","")
+    caput(pvstr+".LNK7",pvscan+".PASM")
+    caput(pvstr+".STR7","PRIOR POS")
+    #if Snake is not None:
+    #    ## Put scan record back in 'STAY POS'
+
+#        caput(pvstr+".LNK8",SnakePV+".PROC")
+#        caput(pvstr+".D8",1)
+#    #caput(pvstr+"")JM was here
+#    else:
+#        ## Put scan record back in 'PRIOR POS'
+#        caput(pvstr+".LNK7",SnakePV+".PROC PP NMS")
+#        caput(pvstr+".DO1",1)
+    return pvstr+".PROC"
+
+
+
+
+
+
+def Before_After_Scan(scanIOC,scanDIM):
+    """
+    Clear all Before/After scan (1,2,3,4).
+    Proc Before/AfterScan StrSeq  for the most outer loop:
+        - before scan puts all relevant detectors in passive
+        - after scan puts back all relevant detector in Live and reset scan1 to default settings.
+    """
+    All_Scans=[1,2,3,4]
+    All_Scans.remove(scanDIM)
+    #Clearing all Before/Afters
+    for i in All_Scans:
+        caput("29id"+scanIOC+":scan"+str(i)+".BSPV","")
+        caput("29id"+scanIOC+":scan"+str(i)+".ASPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV",BeforeScan_StrSeq(scanIOC))
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSCD",1)
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSWAIT","Wait")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV",AfterScan_StrSeq(scanIOC))
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASCD",1)
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASWAIT","Wait")
+
+
+
+def Clear_Scan_Positioners(scanIOC,scanDIM=1):
+    """Clear all extra scan positioners"""
+    pv="29id"+scanIOC+":scan"+str(scanDIM)
+    for i in range (1,5):
+        caput(pv+".R"+str(i)+"PV","")
+        caput(pv+".P"+str(i)+"PV","")
+    print("\nAll extra positionners cleared")
+
+
