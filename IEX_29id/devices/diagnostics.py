@@ -98,6 +98,26 @@ def all_diag_in():
     logger.info("All diagnostics in (meshes and diodes) for pinhole scans")
 
 
+def all_diag_out(keep_diode_in=False, keep_mesh_in=False):
+    """
+    Retracts all diagnostics.
+    If keep_diode_in or keep_mesh_in = True then leaves it inserted.
+    """
+    diag=_diagnostic_dictionary()
+    diag_list=list(diag.keys())
+    insert=False
+    text='.'
+    if keep_diode_in:
+        diag_list = diag_list.remove(20)
+        text=' except diode ARPES'
+    if keep_mesh_in:
+        diag_list = diag_list.remove(28)
+        text=' except mesh RSXS'
+    for motor_number in diag_list:
+        yield from _diagnostic_plan(insert,motor_number)
+    logger.info("All diagnostics out"+text)
+
+
 def meshW_plan(insert):
     """
     Inserts/retracts W mesh (post-M0M1)
@@ -132,71 +152,4 @@ def diodeD_plan(insert):
     insert bool: ``True`` if should insert, ``False`` to retract 
     """
     yield from _diagnostic_plan(insert,28,n=1)  # n=1 diode position
-
-
-
-# ----------------------------------
-
-
-# def MeshW(In_Out):
-#     "Inserts/retracts RSXS mesh (post-slit); arg = \"In\" or \"Out\""
-#     diag=_diagnostic_dictionary()
-#     motor=5; position=diag[In_Out][motor]
-#     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-#     print("\nD1A W-Mesh: "+ In_Out)
-
-# def DiodeC(In_Out):
-#     "Inserts/retracts ARPES (gas-cell) diode; arg = \"In\" or \"Out\""
-#     diag=_diagnostic_dictionary()
-#     motor=20; position=diag[In_Out][motor]
-#     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-#     print("\nARPES Diode: "+ In_Out)
-
-# def DiodeD(In_Out):
-#     "Inserts/retracts RSXS diode; arg = \"In\" or \"Out\""
-#     diag=_diagnostic_dictionary()
-#     motor=28; position=position=diag[In_Out][motor]
-#     if type(position) == list:
-#         position=position[1]
-#     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-#     print("\nRSXS Diode: "+ In_Out)
-    
-# def Diagnostic(which,In_Out):
-#     "Inserts/retracts a diagnostic(motor number or name) either = \"In\" or \"Out\""
-#     diag=_diagnostic_dictionary()
-#     if type(which) is int:
-#         motor=which
-#         name=diag['name'][motor]
-#     else:
-#         name=which
-#         motor=diag["motor"][name]
-#     position=diag[In_Out][motor]
-
-#     caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-#     print("\n"+name+": "+ In_Out)
-
-
-# def AllDiagIn():
-#     "Inserts all diagnostic (meshes and diodes) for pinhole scans"
-#     diag=_diagnostic_dictionary()
-#     for motor in list(diag["In"].keys()):
-#         position=diag["In"][motor]
-#         if isinstance(position, list):  #  type(position) == list:
-#             position=position[0]
-#         caput("29idb:m"+str(motor)+".VAL",position,wait=True,timeout=18000)
-#         print('m'+str(motor)+' = '+str(position))
-#     print("All diagnostics in (meshes and diodes) for pinhole scans")
-
-
-# def AllMeshIn():
-#     "Inserts all diagnostic (meshes and gas-cell is out) for wire scans"
-#     diag=_diagnostic_dictionary()
-#     for motor in list(diag["In"].keys()):
-#         position=diag["In"][motor]
-#         if type(position) == list:
-#             position=position[0]
-#         caput("29idb:m"+str(motor)+".VAL",position,timeout=18000)
-#         print('m'+str(motor)+' = '+str(position))
-#     print("All diagnostics in (meshes and diodes) for pinhole scans")
-
 
