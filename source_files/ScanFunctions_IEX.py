@@ -73,6 +73,7 @@ def Folder_ARPES(UserName,**kwargs):
         else:
             print(EA.PHV+" is not running")
 
+
 def Reset_CA_all(rate="Slow"):
     for i in [1,2,3,4,5,9,10,12,13,14,15]:
         Reset_CA("b",i,rate)
@@ -1404,13 +1405,6 @@ def Scan_Kappa_2D(InnerMotorList,OuterMotorList,scanIOC,**kwargs):
 
 
 
-def Move_Kappa_Motor(name,val):
-    m_RBV=Kappa_PVmotor(name)[0]
-    m_VAL=Kappa_PVmotor(name)[1]
-    caput(m_VAL,val,wait=True,timeout=18000)
-
-
-
 
 ##############################################################################################################
 ##############################     General Area Detector            ##############################
@@ -1742,13 +1736,6 @@ def Scan_Cam_Pos2_Go(VAL1,RBV1,VAL2,RBV2,scanDIM,start1,stop1,step1,start2,stop2
     Scan_Go(scanIOC,scanDIM=1 )
     Cam_ScanClear(scanIOC,scanDIM)
     caput("29id"+scanIOC+":scan"+str(scanDIM)+".PASM","PRIOR POS")
-
-def Cam_ScanClear(scanIOC,scanDIM):
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".T2PV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".DDLY",0.5)
-    #print "Scan Record cleared from Camera Settings"
 
 
 

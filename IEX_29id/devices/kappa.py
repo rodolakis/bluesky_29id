@@ -6,6 +6,7 @@ from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go, Scan
 from math import *
 from IEX_29id.devices.motors import UMove_Motor_vs_Branch
 from IEX_29id.devices.kappa import cts
+from IEX_29id.devices.arpes import Move_ARPES_Sample
 ### all the function that move/scan the diffractometer:
 ### tth, th, phi, chi, x, y, z
 

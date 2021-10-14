@@ -3,7 +3,10 @@ from IEX_29id.devices.diagnostics import DiodeC, DiodeD, AllDiagIn
 from IEX_29id.scans.setup import Scan_FillIn, Scan_Go
 from IEX_29id.devices.mono import Switch_Grating
 from epics import caget, caput
+from IEX_29id.devices.kappa import input_d
 from time import sleep
+from IEX_29id.devices.eps import Open_DShutter, Open_BranchShutter
+from IEX_29id.scans.beamline import WireScan
 
 def centroid(t=None,q=1): 
     '''

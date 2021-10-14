@@ -11,8 +11,9 @@ from IEX_29id.devices.slits import SetSlit_BL,  Slit_Coef
 from IEX_29id.devices.detectors import MPA_HV_ON, MPA_HV_OFF, Detector_List
 from IEX_29id.scans.setup import Scan_Go, Scan_Progress, Scan_FillIn_Table
 from IEX_29id.devices.kappa import Clear_Scan_Positioners
-
+from IEX_29id.devices.mirror import align_m3r
 import numpy as np
+from IEX_29id.devices.mono import Check_Grating
 
 
 
