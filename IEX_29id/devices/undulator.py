@@ -32,6 +32,41 @@ def ID_Coef(grt,mode,hv):    # Mode = state (0=RCP,1=LCP,2=V,3=H);
     Current coefficient dictionary:
         /home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/Dict_IDCal.txt
     """
+    def ListRange(grt,mode,IDdict):  # extract the list of break pts for a given mode/grt 
+        tmp_list=[]
+        for item in (IDdict[grt][mode]):
+            tmp_list.append(item[0])  
+        return tmp_list
+
+
+    def FindRange(hv,range_list):         # returns the index for the corresponding range
+        B = [x - hv for x in range_list]
+        index = [i for (i, x) in enumerate(B) if x > 0]
+        return(index[0])
+    
+    try:
+        #FRPath = '/Users/fannysimoes/Box/6-Python/MyPython/Macros_29id/'   #   FR hardcoded
+        ID_function=read_dict(FileName='Dict_IDCal.txt')
+    
+    except KeyError:
+        print("Unable to read dictionary") 
+        
+    try:   
+        Lrange = ListRange(grt,mode,ID_function)
+        Erange = FindRange(hv,Lrange)
+        K = ID_function[grt][mode][Erange][1]
+        
+    except KeyError:
+        print("WARNING: PLease select one of the following:")
+        print("        mode 0 = RCP")
+        print("        mode 1 = LCP")
+        print("        mode 2 = V")
+        print("        mode 3 = H")
+        
+    return K
+
+
+
 
 def ID_Range():      # mode = state (0=RCP,1=LCP,2=V,3=H)
     Mode=caget("ID29:ActualMode")
