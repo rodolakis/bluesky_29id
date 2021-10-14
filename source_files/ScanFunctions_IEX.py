@@ -316,51 +316,6 @@ def WireScan(which,scanIOC=None,diag='In',**kwargs):
 
 
 
-    
-    def ListRange(grt,mode,IDdict):  # extract the list of break pts for a given mode/grt 
-        tmp_list=[]
-        for item in (IDdict[grt][mode]):
-            tmp_list.append(item[0])  
-        return tmp_list
-
-
-    def FindRange(hv,range_list):         # returns the index for the corresponding range
-        B = [x - hv for x in range_list]
-        index = [i for (i, x) in enumerate(B) if x > 0]
-        return(index[0])
-    
-    try:
-        #FRPath = '/Users/fannysimoes/Box/6-Python/MyPython/Macros_29id/'   #   FR hardcoded
-        ID_function=read_dict(FileName='Dict_IDCal.txt')
-    
-    except KeyError:
-        print("Unable to read dictionary") 
-        
-    try:   
-        Lrange = ListRange(grt,mode,ID_function)
-        Erange = FindRange(hv,Lrange)
-        K = ID_function[grt][mode][Erange][1]
-        
-    except KeyError:
-        print("WARNING: PLease select one of the following:")
-        print("        mode 0 = RCP")
-        print("        mode 1 = LCP")
-        print("        mode 2 = V")
-        print("        mode 3 = H")
-        
-    return K
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ##############################################################################################################
@@ -2215,7 +2170,7 @@ def Reset_Motor_User(m,motorIOC,value):
 def BL_Shutdown():
     BL_CloseAllShutters()
     BL_Valve_All(state="CLOSE")
-    AllDiagOut()
+    all_diag_out()
     EA.zeroSupplies()
     caput("29iddau1:dau1:011:DAC_Set",0)    #RSXS HV = "OFF"
 
@@ -2358,7 +2313,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
             return
 
     
-    AllDiagOut(DiodeStayIn=branch)
+    all_diag_out(keep_diode_in=True)
 
     if wait =='Y' or wait == 'y' or wait == 'yes'or wait == 'YES' or wait == True:
         t = datetime.datetime.today()
@@ -2407,7 +2362,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
         print("\n\n================== Mono/slit scans:")
         mono(500)
         SetSlit_BL()
-        AllDiagOut(DiodeStayIn=branch)
+        all_diag_out(keep_diode_in=True)
         SetID_Raw(500)
         Scan_MonoVsSlit('2V',[0.25,-2,2,0.5],[475,515,2],comment='Mono/Slit - 2V')    #10min
         Scan_MonoVsSlit('2H',[0.25,-2,2,0.5],[475,515,2],comment='Mono/Slit - 2H')    #10min
@@ -2421,7 +2376,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
         slit(50)
         energy(500)
         scanhv(475,525,1,comment='Mono Scan @ 500eV')
-        AllDiagOut()
+        all_diag_out()
 
     print("\n\n================== All done:")
     print("\nDon't forget to put back the user folder !!!!")
@@ -2567,7 +2522,7 @@ def Check_ID_steering(hv=2000):
 def BeamProfile(GRT,SlitList,c_slit=1,c_energy=1,scanIOC=None,**kwargs):
     """
         Makes a nice 2D image of the energy distribution of the beam across the grating at ID=500
-        Does NOT put the diagnostics into the beam you need to run the following if you haven't already (AllDiagOut(); DiodeCIn())
+        Does NOT put the diagnostics into the beam you need to run the following if you haven't already (all_diag_out(); DiodeCIn())
         SlitList=["2H","2V","1H","1V"]
         c_slit  = scaling of step size (c=1   Slit-1: step = 0.25. Slit-2: step = 0.5)
         c_energy = scaling of mono step size ( c=1   eV step = 2)
@@ -3188,7 +3143,7 @@ def FullPinhole():
     """
     AllDiagIn()
     Scan_Pinhole_Go(-3, 3, .5, .1, -3, 3, .5, .1)
-    AllDiagOut()
+    all_diag_out()
     DiodeC('In')
     Scan_Pinhole_Go(-3, 3, .5, .1, -3, 3, .5, .1)
 
@@ -3319,8 +3274,11 @@ def IDCalibration_Mode(which,start=None,stop=None,step=25,Harm=1):
     Better to run each mode in a separated cell (print statement at the end helps with calibration) 
     '''
     branch=CheckBranch()
-    AllDiagOut(DiodeStayIn=branch)
-    DiodeC('In')
+    if branch == 'c':
+        all_diag_out(keep_diode_in=True)
+        DiodeC('In')
+    else:
+        all_diag_out()
     polarization(which)
     GRT=caget("29idmono:GRT_DENSITY")
     if GRT==2400: GRT='HEG'
