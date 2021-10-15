@@ -5,7 +5,7 @@ from IEX_29id.scans.setup import Scan_FillIn_Table
 from IEX_29id.devices.keithleys import CA_Average
 from IEX_29id.devices.diagnostics import meshD_plan
 from IEX_29id.devices.beamline_energy import energy, SetMono
-from IEX_29id.devices.detectors import MPA_HV_ON, MPA_HV_OFF
+from IEX_29id.devices.area_detectors import MPA_HV_ON, MPA_HV_OFF
 from IEX_29id.scans.setup import Scan_Go, Clear_Scan_Positioners
 
 
