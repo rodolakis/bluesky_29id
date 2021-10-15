@@ -1,12 +1,14 @@
 from epics import caget, caput
 from time import sleep
 from IEX_29id.utils.exp import CheckBranch, BL_ioc
+from IEX_29id.utils.misc import prompt
 from IEX_29id.devices.motors import Move_Motor_vs_Branch, ARPES_PVmotor, Kappa_PVmotor, Move_ARPES_Motor
 from IEX_29id.scans.setup import Scan_Go, Scan_FillIn, Scan_Kappa_Motor_Go, Scan_Progress, Scan_FillIn_Pos2
 from math import *
 from IEX_29id.devices.motors import UMove_Motor_vs_Branch
 from IEX_29id.devices.kappa import cts
 from IEX_29id.devices.arpes import Move_ARPES_Sample
+
 ### all the function that move/scan the diffractometer:
 ### tth, th, phi, chi, x, y, z
 
@@ -245,8 +247,6 @@ def sample(ListPosition):
     elif mybranch == "d":
         Move_Kappa_Sample(ListPosition)
         print("tth is kept fixed.")
-    elif mybranch =="e":
-        Move_RSoXS_Sample(ListPosition)
 
 
 def Move_Kappa_Sample(ListPosition):

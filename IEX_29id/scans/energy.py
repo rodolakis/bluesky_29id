@@ -1,6 +1,15 @@
 from time import sleep
 from epics import caget, caput
-
+import numpy as np
+from IEX_29id.utils.exp import BL_ioc, CheckBranch
+from IEX_29id.scans.setup import Scan_FillIn_Table
+from IEX_29id.devices.keithleys import CA_Average
+from IEX_29id.devices.diagnostics import meshD_plan
+from IEX_29id.devices.energy import energy, SetMono
+from IEX_29id.devices.detectors import MPA_HV_ON, MPA_HV_OFF
+from IEX_29id.scans.setup import Scan_Go
+#from IEX_29id.devices.mono import SetMono
+from IEX_29id.utils.strings import Clear_Scan_Positioners
 
 def scanXAS(hv,StartStopStepLists,settling_time=0.2,**kwargs):
     """
@@ -50,7 +59,7 @@ def scanXAS(hv,StartStopStepLists,settling_time=0.2,**kwargs):
         CA_Average(kwargs["average"])
     Branch=CheckBranch()
     if Branch=="d":
-        MeshD("In")
+        meshD_plan("In")
      
     #Setting the beamline energy
     energy(hv,m3r=kwargs["m3r"])
