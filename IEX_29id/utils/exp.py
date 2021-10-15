@@ -3,17 +3,6 @@ from epics import caput, caget
 from IEX_29id.utils.folders import *
 from IEX_29id.utils.strings import ClearCalcOut
 import datetime
-from math import *
-from IEX_29id.utils.misc import dateandtime
-from time import sleep
-from IEX_29id.scans.setup import Reset_Scan
-from epics import PV
-from IEX_29id.devices.energy import Switch_IDMode, energy, Open_MainShutter, ID_Start
-from IEX_29id.devices.slits import SetExitSlit
-from IEX_29id.devices.diagnostics import diodeC_plan, diodeD_plan, all_diag_out
-from IEX_29id.devices.detectors import MPA_HV_OFF
-import numpy as np
-from IEX_29id.devices.mirror import Move_M3R, M3R_Table
 
 def light(ON_OFF):
     if ON_OFF in ['On','on','ON']:

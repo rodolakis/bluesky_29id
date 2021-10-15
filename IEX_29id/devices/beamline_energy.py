@@ -1,18 +1,9 @@
 from time import sleep
 from epics import caget, caput
-from IEX_29id.utils.misc import dateandtime, RangeUp
-import numpy.polynomial.polynomial as poly
-from IEX_29id.utils.exp import CheckBranch, WaitForPermission,  Check_MainShutter, BL_ioc, AllDiag_dict
-from math import *
-from IEX_29id.devices.undulator import ID_State2Mode, ID_Coef, ID_Range, SetID, SetID_keV_pV
-from os.path import join
-import ast
-from IEX_29id.devices.slits import SetSlit_BL,  Slit_Coef
-from IEX_29id.devices.detectors import MPA_HV_ON, MPA_HV_OFF, Detector_List
-from IEX_29id.scans.setup import Scan_Go, Scan_Progress, Scan_FillIn_Table
-from IEX_29id.devices.kappa import Clear_Scan_Positioners
+from IEX_29id.utils.exp import CheckBranch
+from IEX_29id.devices.undulator import ID_Range, SetID
+from IEX_29id.devices.slits import SetSlit_BL
 from IEX_29id.devices.mirror import align_m3r
-import numpy as np
 from IEX_29id.devices.mono import Check_Grating
 
 

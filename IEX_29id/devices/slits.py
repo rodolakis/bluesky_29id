@@ -1,6 +1,7 @@
 from epics import caput, caget
+from math import inf, nan
 from IEX_29id.utils.exp import CheckBranch
-from IEX_29id.devices.energy import SetSlit2B, Aperture_Fit, read_dict, SetSlit1A
+from IEX_29id.utils.misc import read_dict
 
 def slit(val):
     """
@@ -130,3 +131,21 @@ def Aperture_Fit(hv,n):
     sizeH=K[0]+K[1]*hv+K[2]*hv*hv
     sizeV=K[3]+K[4]*hv+K[5]*hv*hv
     return [round(sizeH,3),round(sizeV,3)]
+
+
+
+# SetSlits:
+    
+def SetSlit(n,Hsize=None,Vsize=None,Hcenter=0,Vcenter=0,q=None):
+    
+    if n == 1:
+        if Hsize in [inf,nan,None]: Hsize=4.5
+        if Vsize in [inf,nan,None]: Vsize=4.5
+        SetSlit1A(Hsize,Vsize,Hcenter,Vcenter,q=None)
+    elif n == 2:
+        if Hsize in [inf,nan,None]: Hsize=6
+        if Vsize in [inf,nan,None]: Vsize=8
+        SetSlit2B(Hsize,Vsize,Hcenter,Vcenter,q=None)
+    else:
+        print('Not a valid slit number')
+    

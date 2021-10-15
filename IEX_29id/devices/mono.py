@@ -1,7 +1,9 @@
 from epics import caget, caput
 from time import sleep
-from IEX_29id.devices.energy import SetSlit_BL
-from IEX_29id.utils.misc import dateandtime, SetMono, Open_MainShutter
+from IEX_29id.devices.slits import SetSlit_BL
+from IEX_29id.utils.misc import dateandtime 
+from IEX_29id.devices.beamline_energy import SetMono
+from IEX_29id.devices.eps import Open_MainShutter
 from IEX_29id.devices.eps import Close_MainShutter
 
 

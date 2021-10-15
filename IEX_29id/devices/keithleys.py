@@ -1,9 +1,35 @@
-from epics import  caput
+from epics import  caput, caget
 from IEX_29id.utils.strings import ClearStringSeq
 from IEX_29id.utils.exp import BL_Mode_Read, BL_ioc
 from IEX_29id.utils.misc import RangeUp
 from time import sleep
-### Current Amplifier:
+import numpy as np
+
+
+def ca2flux(ca,hv=None,p=1):
+    curve=LoadResponsivityCurve()
+    responsivity=curve[:,0]
+    energy=curve[:,1]
+    charge = 1.602e-19
+    if hv is None:
+        hv=caget('29idmono:ENERGY_SP')
+        print("\nCalculating flux for:")
+        print("   hv = %.1f eV" % hv)
+        print("   ca = %.3e Amp" % ca)
+    eff=np.interp(hv,energy,responsivity)
+    flux = ca/(eff*hv*charge)
+    if p is not None:
+        print("Flux = %.3e ph/s\n" % flux)
+    return flux
+
+
+
+def LoadResponsivityCurve():
+    FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
+    FileName="DiodeResponsivityCurve"
+    data = np.loadtxt(FilePath+FileName, delimiter=' ', skiprows=1)
+    return data
+
 
 def reset_keithley(keithley_ioc,keithley_num,rate="Slow"):
     pv="29id"+keithley_ioc+":ca"+str(keithley_num)
@@ -16,6 +42,17 @@ def reset_keithley(keithley_ioc,keithley_num,rate="Slow"):
     caput(pv+":rangeAutoUlimit","20mA")
     caput(pv+":read.SCAN",".5 second")
 
+
+def reset_all_keithley(rate="Slow"):
+    for i in [1,2,3,4,5,9,10,12,13,14,15]:
+        reset_keithley("b",i,rate)
+    for i in [1,2]:
+        reset_keithley("c",i,rate)
+    #for i in [1,2,3,4,5]:
+    for i in [2,3,4]:
+        reset_keithley("d",i,rate)
+    caput("29idb:ca5:read.SCAN","Passive")    # CA5 in passive
+    print("\nAll the current amplifiers have been reset; ca5 set to passive.")
 
 
 def keithley_live_strseq(scanIOC):              # do we need to add 29idb:ca5 ???
@@ -135,3 +172,40 @@ def CA_Name(ca_ioc,ca_num):    #{motor,position}
     except:
         name=""
     return name 
+
+
+def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
+    """
+    On_Off= 'On' => Turns On the Autoscale; gain is irrelevant.
+    On_Off= 'Off' => Turns Off the Autoscale with gain below:
+            0 = 2nA
+            1 = 20nA
+            2 = 200nA
+            3 = 2uA
+            4 = 20uA
+            5 = 200uA
+            6 = 2mA
+            7 = 20mA
+    """
+    pv="29id"+ca_ioc+":ca"+str(ca_num)
+    caput(pv+":rangeAutoSet",On_Off)
+    sleep(0.5)
+    caput(pv+":rangeSet",gain)
+    print(pv,"Autoscale",On_Off)
+    if On_Off == 'Off':
+            sleep(1)
+            print("Gain set to:",caget(pv+":range",as_string=True))
+
+
+
+def CA_Passive():        # Put All commonly used (triggered) CA in passive mode - legacy
+    caput("29idc:ca1:read.SCAN","Passive")
+    caput("29idd:ca2:read.SCAN","Passive")
+    caput("29idd:ca3:read.SCAN","Passive")
+    caput("29idd:ca4:read.SCAN","Passive")
+    #caput("29idd:ca5:read.SCAN","Passive")
+    caput("29idb:ca14:read.SCAN","Passive")
+    caput("29idb:ca15:read.SCAN","Passive")
+    caput("29idd:ca4:read.SCAN","Passive")
+    caput("29idb:ca5:read.SCAN","Passive")
+    caput("29idc:ca2:read.SCAN","Passive")

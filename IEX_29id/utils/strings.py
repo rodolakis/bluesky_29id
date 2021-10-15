@@ -1,5 +1,5 @@
 from epics import caput
-from .exp import RangeUp
+from IEX_29id.utils.misc import RangeUp
 
 ##############################################################################################################
 ###########################            String Sequences & User Average         ######################

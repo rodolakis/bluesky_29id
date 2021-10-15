@@ -3,13 +3,12 @@ from time import sleep
 from IEX_29id.utils.exp import BL_ioc, CheckBranch, BL_Mode_Read, Check_MainShutter
 from IEX_29id.utils.log import scanlog
 from IEX_29id.utils.misc import dateandtime
-from IEX_29id.devices.detectors import Detector_List
+from IEX_29id.devices.keithleys import Detector_List
 from IEX_29id.utils.strings import ClearStringSeq
 from IEX_29id.devices.motors import Kappa_PVmotor
 from IEX_29id.devices.keithleys import keithley_live_strseq
 from math import *
-import numpy as np
-import numpy.polynomial.polynomial as poly
+
 
 
 
@@ -506,5 +505,4 @@ def Clear_Scan_Positioners(scanIOC,scanDIM=1):
         caput(pv+".R"+str(i)+"PV","")
         caput(pv+".P"+str(i)+"PV","")
     print("\nAll extra positionners cleared")
-
 

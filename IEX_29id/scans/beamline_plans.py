@@ -1,5 +1,19 @@
-from epics import caget
-from utils.misc import prompt
+from epics import caget, caput
+from math import inf
+from IEX_29id.utils.misc import prompt, datetime, WaitForIt, today, playsound
+from IEX_29id.utils.exp import CheckBranch, BL_ioc, Check_run, BL_Mode_Set
+from IEX_29id.devices.eps import Switch_Branch, Open_BranchShutter
+from IEX_29id.devices.undulator import Switch_IDMode, ID_Start, polarization, SetID_Raw
+from IEX_29id.devices.mono import Switch_Grating, Reset_Mono_Limits, SetMono
+from IEX_29id.devices.beamline_energy import energy
+from IEX_29id.devices.diagnostics import diodeC_plan, diodeD_plan, all_diag_out, all_diag_in
+from IEX_29id.devices.slits import SetExitSlit, SetSlit1A, slit, SetSlit_BL, SetSlit
+from IEX_29id.devices.keithleys import ca2flux, CA_Autoscale, reset_all_keithley, CA_Average
+from IEX_29id.scans.setup import Scan_FillIn, Scan_Go, Reset_Scan
+from IEX_29id.utils.folders import Check_Staff_Directory
+from IEX_29id.utils.log import logname_set, logprint
+from IEX_29id.utils.status import Get_All
+from IEX_29id.mda.file import MDA_GetLastFileNum
 
 def CheckFlux(hv=500,mode='RCP',stay=None):
     Switch_IDMode(mode)
@@ -36,14 +50,14 @@ def WireScan(which,scanIOC=None,diag='In',**kwargs):
     Scans the wires located just downstream of M0/M1, 
          which = 'H' for the horizontal, typically CA2
          which = 'V' for the vertical, typically CA3
-    diag ='In' -> AllDiagIn(), otherwise you have to put any diagnostics in by hand
+    diag ='In' -> all_diag_in(), otherwise you have to put any diagnostics in by hand
     Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details    
     """
     
     if scanIOC is None:
         scanIOC=BL_ioc()
     if diag == 'In':
-        AllDiagIn()
+        all_diag_in()
     if which=='H':
         print("\n================== H wire scan (29idb:ca3):")
         Scan_FillIn("29idb:m1.VAL","29idb:m1.RBV",scanIOC,1,-13,-27,-0.25)
@@ -147,7 +161,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
     if not kwargs['repeat']:    
         Switch_Branch(branch)
         BL_Mode_Set('Staff')
-        Reset_Scan(BL_ioc()); Reset_CA_all(); Reset_Mono_Limits()
+        Reset_Scan(BL_ioc()); reset_all_keithley(); Reset_Mono_Limits()
         Get_All()
     
     shutter=caget('PA:29ID:S'+branch.upper()+'S_BLOCKING_BEAM.VAL')
@@ -207,7 +221,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
         else:
             slit(200)
         print("\n\n================== Mono/slit scans:")
-        mono(500)
+        SetMono(500)
         SetSlit_BL()
         all_diag_out(keep_diode_in=True)
         SetID_Raw(500)
@@ -240,4 +254,132 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
     return FirstScan
     
 
+def Scan_SlitCenter(slit,start,stop,step,setslit=None,scanIOC=None,scanDIM=1,**kwargs):
+    """
+    Scans the slit center: 
+    slit='1H','1V','2H' or '2V'
+    Slit 1A is set to (0.25,0.25,0,0) unless setslit= not None
+    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
+    default: scanDIM=1  
+    """
+    if setslit is None:
+        SetSlit1A(0.25,0.25,0,0)
+        #SetSlit1A(4.5,4.5,0,0,'q')
+        #SetSlit2B(6.0,8.0,0,0,'q')
+    if scanIOC is None:
+        scanIOC = BL_ioc()
+    VAL='29idb:Slit'+slit+'center.VAL'
+    RBV='29idb:Slit'+slit+'t2.D'   
+    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step) 
+    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)
+
+
+def Scan_SlitSize(slit,start,stop,step,setslit=None,scanIOC=None,scanDIM=1,**kwargs):
+    """
+    Scans the slit center: 
+    slit='1H','1V','2H' or '2V'
+    Slit 1A is set to (1.75,1.75,0,0) unless setslit= not None
+    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
+    default: scanDIM=1  
+    """
+    if setslit is None:
+        SetSlit1A(1.75,1.75,0,0)         #why is that?
+        #SetSlit1A(4.5,4.5,0,0,'q')        # would open all the way?
+        #SetSlit2B(6.0,8.0,0,0,'q')
+    if scanIOC is None:
+        scanIOC = BL_ioc()
+    VAL='29idb:Slit'+slit+'size.VAL'
+    RBV='29idb:Slit'+slit+'t2.C'   
+    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step) 
+    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)
+
+
+
+
+def Scan_NarrowSlit(which='2V',slit_parameters=[0.25,-2,2,0.5],scanDIM=1,scanIOC=None):
+    """
+        which='1V','1H','2V','2H'
+        slit_parameters = [SlitSize,start,stop,step]
   
+    Typical slit sizes/start/stop/step are (for full range): 
+        1H/1V : [0.50, -4.5, 4.5, 0.2]
+        2H    : [0.25, -3.0, 3.0, 0.2]
+        2V-MEG: [0.25, -4.0, 4.0, 0.2]    
+        2V-HEG: [0.50, -8.0, 8.0, 0.2]    
+    """
+    if scanIOC == None:
+        scanIOC=BL_ioc()
+    size,start,stop,step = slit_parameters
+    
+    SlitDict={"V":(inf,size),"H":(size,inf),'1':'2','2':'1'}     ## very complicated stuff to make a narrow slit along the direction perpendicular to the scan, and open the other slit all the way
+    Hsize=SlitDict[which[1]][0]
+    Vsize=SlitDict[which[1]][1]
+    scanslit=int(which[0])
+    otherslit=int(SlitDict[which[0]])
+
+    SetSlit(scanslit,Hsize,Vsize)
+    SetSlit(otherslit) 
+    if which in ['2V','2H']:
+        SetSlit1A(3,3,0,0)   # SetSlit_BL FR added on 9/24/2020
+    VAL="29idb:Slit"+which+"center.VAL"
+    RBV="29idb:Slit"+which+"t2.D"
+    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step)
+
+
+def Scan_MonoVsSlit(which='2V',slit_parameters=[0.25,-2,2,0.5],energy_parameters=[470,530,2],**kwargs):
+    """
+    This can be used to find the center of the resonant beam i.e. the slit value for the most blue shifted curve: 
+        which='1V','1H','2V','2H'
+        slit_parameters = [SlitSize,start,stop,step]
+        energy_parameters = [eVstart,eVstop,eVstep]= [470,530,2]
+        
+    Typical slit sizes/start/stop/step are (for full range): 
+        1H/1V : [0.50, -4.5, 4.5, 0.2]
+        2H    : [0.25, -3.0, 3.0, 0.2]
+        2V-MEG: [0.25, -4.0, 4.0, 0.2]    
+        2V-HEG: [0.50, -8.0, 8.0, 0.2] 
+        
+    """
+    scanIOC=BL_ioc()
+    eVstart,eVstop,eVstep=energy_parameters  
+    # Filling Scans:
+    Scan_Mono(1,eVstart,eVstop,eVstep) 
+    caput("29id"+scanIOC+":scan1.PASM","STAY")
+    Scan_NarrowSlit(which,slit_parameters,2)  
+    Scan_Go(scanIOC,2,**kwargs)
+    # Resetting everybody to normal:
+    caput("29id"+scanIOC+":scan1.PASM","PRIOR POS")
+    SetMono((eVstart+eVstop)/2.0)
+    SetSlit_BL()
+
+
+
+def scanhv(start,stop,step,average=None,settling_time=0.2,**kwargs):
+    """
+    scans the mono at the current ID value
+    """
+    scanDIM=1
+    if average:
+        CA_Average(average)
+    Scan_Mono_Go(scanDIM,start,stop,step,settling_time,**kwargs)
+    if average:
+        CA_Average(0)
+
+def Scan_Mono(scanDIM,start,stop,step,settling_time=0.2):
+    """Sets (but does NOT starts) a mono scan for a given scan dimension"""
+    scanIOC=BL_ioc()
+    VAL="29idmono:ENERGY_SP"
+    RBV="29idmono:ENERGY_MON"
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PASM","STAY")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
+    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step)
+
+def Scan_Mono_Go(scanDIM,start,stop,step,settling_time=0.2,**kwargs):
+    """Starts a mono scan for a given scan dimension
+    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details       
+    """
+    scanIOC=BL_ioc()
+    current_energy=caget('29idmono:ENERGY_SP')
+    Scan_Mono(scanDIM,start,stop,step,settling_time)  
+    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)    
+    SetMono(current_energy)

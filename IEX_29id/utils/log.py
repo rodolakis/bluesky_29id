@@ -1,9 +1,10 @@
 from epics import caput, caget 
 from IEX_29id.utils.exp import BL_ioc, CheckBranch
-from IEX_29id.utils.misc import today 
-from IEX_29id.mda.file import MDA_CurrentUser
+from IEX_29id.utils.misc import today, RangeUp
+from IEX_29id.mda.file import MDA_CurrentUser, MDA_CurrentDirectory
 from IEX_29id.devices.undulator import ID_State2Mode
-
+from IEX_29id.devices.arpes_motors import ARPES_PVmotor
+from os.path import join, isfile
 import time
 import os
 
@@ -228,3 +229,43 @@ def scanlog(**kwargs):
         except:
             print("scanlog did not write to file, check for errors.")
             
+
+   
+def SaveFile(FilePath,FileName,ListOfEntry,ListOfPv,ListOfFormat):
+    """ To be used for scanlog and scanEA functions.
+        Update SaveFile_Header version number when changing the structure of the file (indexing).
+    """
+    
+    if FileName[0] == '/':
+        FileName=FileName[1:] 
+    
+    if not isfile(join(FilePath, FileName)):
+        SaveFile_Header(FilePath,FileName,ListOfEntry)
+    with open(join(FilePath, FileName), "a+") as f:
+        for i in RangeUp(0,len(ListOfFormat)-2,1):
+            PvFormat="{0:"+ListOfFormat[i]+"},"
+            f.write(PvFormat.format(ListOfPv[i]))
+        LastEntry=len(ListOfFormat)-1
+        PvFormat="{0:"+ListOfFormat[LastEntry]+"}\n"
+        f.write(PvFormat.format(ListOfPv[LastEntry]))
+
+
+
+
+def SaveFile_Header(FilePath,FileName,ListOfEntry=None):   
+    version = '1.2'
+    FilePathC  = MDA_CurrentDirectory('ARPES')
+    FilePathD  = MDA_CurrentDirectory('Kappa')
+    ListOfEntry_EA   ="scan,x,y,z,th,chi,phi,T,scan_mode,E1,E2,step,i,f,PE,lens_mode,SES slit #,hv,exit_slit,GRT,ID_SP,ID_RBV,ID_Mode,ID_QP,TEY1,TEY2,time,comment"           
+    ListOfEntry_ARPES="scan,motor,start,stop,step,x,y,z,th,chi,phi,T,hv,exit_slit,GRT,ID_SP,ID_RBV,ID_Mode,ID_QP,TEY_1,TEY_2,time,comment"            
+    ListOfEntry_Kappa="scan,motor,start,stop,step,x,y,z,tth,kth,kap,kphi,TA,TB,hv,exit_slit,GRT,ID_SP,ID_RBV,ID_Mode,ID_QP,TEY,mesh,det,HV,centroid,time,comment"
+    if FileName[0] == '/':
+        FileName=FileName[1:] 
+    with open(join(FilePath, FileName), "w+") as f:
+        f.write('@Log version: '+ version+'\n\n')
+        f.write('FilePath ARPES:  '+ FilePathC+'\n')
+        f.write('FilePath Kappa:  '+ FilePathD+'\n\n')
+        f.write('EA Header:  '+ ListOfEntry_EA+'\n\n')
+        f.write('ARPES Header:\n'+ ListOfEntry_ARPES+'\n\n')
+        f.write('Kappa Header: \n'+ ListOfEntry_Kappa+'\n\n')
+        

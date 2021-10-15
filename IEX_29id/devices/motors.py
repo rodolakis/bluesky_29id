@@ -1,7 +1,7 @@
 from epics import caget, caput
 from IEX_29id.utils.exp import CheckBranch
-from IEX_29id.devices.arpes import Move_ARPES_Motor, ARPES_PVmotor
-from IEX_29id.devices.kappa import Kappa_PVmotor, Move_Kappa_Motor
+from IEX_29id.devices.arpes_motors import Move_ARPES_Motor, ARPES_PVmotor
+from IEX_29id.devices.kappa_motors import Kappa_PVmotor, Move_Kappa_Motor
 
 def Sync_Encoder_RBV(ioc):
     D={}
@@ -18,18 +18,12 @@ def Sync_Encoder_RBV(ioc):
 
 def Move_Motor_vs_Branch(name,val):
     mybranch=CheckBranch()
-    #if branch == "c":
     if mybranch == "c":
         Move_ARPES_Motor(name,val)
         RBV=round(caget(ARPES_PVmotor(name)[0]),3)
-    #elif branch == "d":
     elif mybranch == "d":
-        #caput('29idKappa:Kappa_sync.PROC',1)
         Move_Kappa_Motor(name,val)
         RBV=round(caget(Kappa_PVmotor(name)[0]),3)
-    #elif mybranch == "e":
-    #    Move_RSoXS_Motor(name,val)
-    #    RBV=round(caget(RSoXS_PVmotor(name)[0]),3)
     print(name+" = "+ str(RBV))
 
 

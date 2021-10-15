@@ -2,10 +2,8 @@ from IEX_29id.utils.strings import ClearCalcOut
 from time import sleep
 from epics import caget, caput
 from IEX_29id.scans.setup import Scan_FillIn,  Scan_Go
-from math import *
+from math import floor
 
-import numpy as np
-import numpy.polynomial.polynomial as poly
 #import pandas as pd
 
 # def Kappa_Detector_Offset(detector):

@@ -1,5 +1,8 @@
 from os import system
+from os.path import join
+from ast import literal_eval
 from datetime import datetime
+from epics import caget
 from time import strftime, localtime, sleep
 
 def prompt(question):
@@ -24,32 +27,10 @@ def read_dict(FileName,FilePath="/home/beams22/29IDUSER/Documents/User_Macros/Ma
             if line[0] == '=':
                 lastdate=line[8:16]
             lastline=line
-        mydict=ast.literal_eval(lastline)
+        mydict=literal_eval(lastline)
     return mydict
 
 
-def ca2flux(ca,hv=None,p=1):
-    curve=LoadResponsivityCurve()
-    responsivity=curve[:,0]
-    energy=curve[:,1]
-    charge = 1.602e-19
-    if hv is None:
-        hv=caget('29idmono:ENERGY_SP')
-        print("\nCalculating flux for:")
-        print("   hv = %.1f eV" % hv)
-        print("   ca = %.3e Amp" % ca)
-    eff=np.interp(hv,energy,responsivity)
-    flux = ca/(eff*hv*charge)
-    if p is not None:
-        print("Flux = %.3e ph/s\n" % flux)
-    return flux
-
-
-def LoadResponsivityCurve():
-    FilePath='/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/'
-    FileName="DiodeResponsivityCurve"
-    data = np.loadtxt(FilePath+FileName, delimiter=' ', skiprows=1)
-    return data
 
 
 
