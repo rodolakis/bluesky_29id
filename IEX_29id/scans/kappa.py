@@ -142,3 +142,21 @@ def scanth2th(tth_start,tth_stop,tth_step,th_offset,ct,**kwargs):
 
         # Need to clear positionner!
         Clear_Scan_Positioners(scanIOC)
+
+
+def kth0_set(value):
+    foo=prompt('Are you sure you want to reset kth0 (Y or N)? >')
+    if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
+        foo=prompt('Are you aligning at theta 0 or 180 (0 or 180)? >')
+        if foo == '180':
+            new_value=round(value-180,3)-56.06
+            print(str(value)+' - 180 = '+str(new_value))
+        elif foo == '0':
+            new_value=value
+        else:
+            print('Not a valid answer')
+        caput('29idKappa:userCalcOut1.G',new_value)
+        print("\nkth0 position set to",new_value)
+        print('which now corresponds to theta=0 @ chi=90')
+    else:
+        print("That's ok, keep going, you are doing great!")

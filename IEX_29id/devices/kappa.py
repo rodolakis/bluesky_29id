@@ -12,20 +12,6 @@ from IEX_29id.devices.arpes import Move_ARPES_Sample
 
 
 
-def input_d(question):
-    """
-    ask a question (e.g 'Are you sure you want to reset tth0 (Y or N)? >')
-    return the answer
-    """
-    try:
-        print(question)
-        foo = input()
-        return foo
-    except KeyboardInterrupt as e:
-        raise e
-    except:
-        return
-
 
 
 def mvtth(val):
@@ -70,27 +56,13 @@ def Home_SmarAct_Motor():
         sleep(10)
     print('SamrAct motors VAL homed')
 
-def input_d(question):
-    """
-    ask a question (e.g 'Are you sure you want to reset tth0 (Y or N)? >')
-    return the answer
-    """
-    try:
-        print(question)
-        foo = input()
-        return foo
-    except KeyboardInterrupt as e:
-        raise e
-    except:
-        return
-
 
 def tth0_set():
     current_det=caget('29idKappa:userStringSeq6.STR1',as_string=True)
     if current_det != 'd4':
         print('tth0 can only be redefined with d4')
     else:
-        foo=input_d('Are you sure you want to reset tth0 (Y or N)? >')
+        foo=prompt('Are you sure you want to reset tth0 (Y or N)? >')
         if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
             caput('29idKappa:m9.SET','Set')
             sleep(0.5)

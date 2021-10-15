@@ -4281,19 +4281,6 @@ def Reset_MPA_HV():
     # turn the high voltage on, clearing any current or voltage trips
     sock.send(b"HVON\n")
 
-def input_d(question):
-    """
-    ask a question (e.g 'Are you sure you want to reset tth0 (Y or N)? >')
-    return the answer
-    """
-    try:
-        print(question)
-        foo = input()
-        return foo
-    except KeyboardInterrupt as e:
-        raise e
-    except:
-        return
 
 
 def gain_dict(x):
@@ -4357,22 +4344,7 @@ def Get_SRS(n,short=True):
 
 
 
-def kth0_set(value):
-    foo=input_d('Are you sure you want to reset kth0 (Y or N)? >')
-    if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
-        foo=input_d('Are you aligning at theta 0 or 180 (0 or 180)? >')
-        if foo == '180':
-            new_value=round(value-180,3)-56.06
-            print(str(value)+' - 180 = '+str(new_value))
-        elif foo == '0':
-            new_value=value
-        else:
-            print('Not a valid answer')
-        caput('29idKappa:userCalcOut1.G',new_value)
-        print("\nkth0 position set to",new_value)
-        print('which now corresponds to theta=0 @ chi=90')
-    else:
-        print("That's ok, keep going, you are doing great!")
+
 
 
 
@@ -5760,6 +5732,16 @@ def Cam_FreeStrSeq(camNUM):
     caput(pvIOC+"userStringSeq1.DO6",0.015)
     caput(pvIOC+"userStringSeq1.WAIT1","Wait")
     caput(pvIOC+"userStringSeqEnable.VAL",1)
+
+
+
+def Cam_ScanClear(scanIOC,scanDIM):
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".T2PV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".DDLY",0.5)
+    #print "Scan Record cleared from Camera Settings"
+
 
 
 

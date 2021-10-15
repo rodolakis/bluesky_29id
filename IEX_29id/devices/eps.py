@@ -258,12 +258,3 @@ def BL_Valve2pv(Vname):
     }
     pv="29id:BLEPS:"+Valve[Vname]+":"
     return pv
-
-
-def Cam_ScanClear(scanIOC,scanDIM):
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".T2PV","")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".DDLY",0.5)
-    #print "Scan Record cleared from Camera Settings"
-

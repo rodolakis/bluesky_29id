@@ -1,5 +1,5 @@
-from time import sleep
-from epics import caget, caput
+from epics import caget
+from utils.misc import prompt
 
 def CheckFlux(hv=500,mode='RCP',stay=None):
     Switch_IDMode(mode)
@@ -152,7 +152,7 @@ def StartOfTheWeek(GRT,branch,wait,**kwargs):
     
     shutter=caget('PA:29ID:S'+branch.upper()+'S_BLOCKING_BEAM.VAL')
     if shutter == 'ON':
-        foo=input_d('Shutter '+branch.upper()+' is closed, do you want to open it (Y or N)? >')
+        foo=prompt('Shutter '+branch.upper()+' is closed, do you want to open it (Y or N)? >')
         if foo == 'Y'.lower() or foo == 'y' or foo == 'yes'.lower():
             Open_BranchShutter()
         else:

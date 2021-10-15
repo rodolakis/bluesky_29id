@@ -2,6 +2,22 @@ from os import system
 from datetime import datetime
 from time import strftime, localtime, sleep
 
+def prompt(question):
+    """
+    ask a question (e.g 'Are you sure you want to do this (Y or N)? >')
+    return the answer
+    """
+    try:
+        print(question)
+        foo = input()
+        return foo
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        return
+
+
+
 def read_dict(FileName,FilePath="/home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/"):
     with open(join(FilePath, FileName)) as f:
         for c,line in enumerate(f.readlines()):

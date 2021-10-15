@@ -3,7 +3,7 @@ from IEX_29id.devices.diagnostics import DiodeC, DiodeD, AllDiagIn
 from IEX_29id.scans.setup import Scan_FillIn, Scan_Go
 from IEX_29id.devices.mono import Switch_Grating
 from epics import caget, caput
-from IEX_29id.devices.kappa import input_d
+from IEX_29id.utils.misc import prompt
 from time import sleep
 from IEX_29id.devices.eps import Open_DShutter, Open_BranchShutter
 from IEX_29id.scans.beamline import WireScan
@@ -44,7 +44,7 @@ def align_m3r(p=118,debug=False):
     camera=caget('29id_ps6:cam1:Acquire',as_string=True)
     hv=caget('29idmono:ENERGY_SP')
     if shutter == 'ON':
-        foo=input_d('Shutter D is closed, do you want to open it (Y or N)? >')
+        foo=prompt('Shutter D is closed, do you want to open it (Y or N)? >')
         if foo == 'Y'.lower() or foo == 'y' or foo == 'yes'.lower():
             Open_DShutter()
         else:
