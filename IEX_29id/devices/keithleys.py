@@ -18,7 +18,7 @@ def reset_keithley(keithley_ioc,keithley_num,rate="Slow"):
 
 
 
-def CA_Live_StrSeq(scanIOC):              # do we need to add 29idb:ca5 ???
+def keithley_live_strseq(scanIOC):              # do we need to add 29idb:ca5 ???
     n=7
     pvstr="29id"+scanIOC+":userStringSeq"+str(n)
     ClearStringSeq(scanIOC,n)
@@ -52,11 +52,11 @@ def CA_Live_StrSeq(scanIOC):              # do we need to add 29idb:ca5 ???
 def Detector_List(scanIOC):
     """
     Define the detector used for:
-        CA_Live_StrSeq()
+        keithley_live_strseq()
         Detector_Triggers_StrSeq()
         BeforeScan_StrSeq() => puts everybody in passive
         CA_Average()
-    WARNING: can't have more than 5 otherwise CA_Live_StrSeq gets angry.
+    WARNING: can't have more than 5 otherwise keithley_live_strseq gets angry.
     """
 
     BL_mode=BL_Mode_Read()[0]
@@ -106,7 +106,7 @@ def CA_Filter(ca_ioc,ca_num,avg_pts,rate,quiet=None,scanDIM=1):
         t=0.1/60.0
     settling=round(max(0.15,avg_pts*t+0.1),2)
     if avg_pts  <= 1:
-        Reset_CA(ca_ioc,ca_num,rate)    # change for Reset_CA(ca_ioc,ca_num) if we want to
+        reset_keithley(ca_ioc,ca_num,rate)    # change for Reset_CA(ca_ioc,ca_num) if we want to
         caput(pvscan+".DDLY",0.15)    # reset to default reset speed ie slow
         if not quiet:
             print("Average disabled: "+name+" - "+pv)

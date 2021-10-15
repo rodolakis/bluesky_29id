@@ -6,6 +6,7 @@ from IEX_29id.utils.misc import dateandtime
 from IEX_29id.devices.detectors import Detector_List
 from IEX_29id.utils.strings import ClearStringSeq
 from IEX_29id.devices.motors import Kappa_PVmotor
+from IEX_29id.devices.keithleys import keithley_live_strseq
 from math import *
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -79,7 +80,11 @@ def Reset_Scan_Settings(scanIOC,scanDIM=1):
     """
     Reset scan settings to default: ABSOLUTE, STAY, 0.05/0.1 positioner/detector settling time
     """
-    Cam_ScanClear(scanIOC,scanDIM)
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".T2PV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".DDLY",0.5)
+
     pv="29id"+scanIOC+":scan"+str(scanDIM)
     innerScan="29id"+scanIOC+":scan"+str(scanDIM-1)+".EXSC"
     caput(pv+".CMND",3)        # Clear all Positionners
@@ -434,7 +439,7 @@ def AfterScan_StrSeq(scanIOC,scanDIM=1,Snake=None):
     ClearStringSeq(scanIOC,n)
     caput(pvstr+".DESC","AfterScan_"+scanIOC)
     ## Put All relevant CA back in live mode29idARPES:userStringSeq10.LNK8
-    caput(pvstr+".LNK1",CA_Live_StrSeq(scanIOC)+" PP NMS")
+    caput(pvstr+".LNK1",keithley_live_strseq(scanIOC)+" PP NMS")
     caput(pvstr+".DO1",1)
     ## Put scan record back in absolute mode
     caput(pvstr+".LNK2",pvscan+".P1AR")
