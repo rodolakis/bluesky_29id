@@ -1,6 +1,6 @@
 
-from time import sleep
-from epics import caget, caput
+
+from epics import caput
 
 
 def Move_ARPES_Sample(ListPosition):

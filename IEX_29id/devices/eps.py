@@ -1,7 +1,14 @@
 from time import sleep
 from epics import caget, caput
-
-
+from IEX_29id.utils.exp import CheckBranch, CheckBranch_Name
+from IEX_29id.utils.misc import dateandtime
+from IEX_29id.devices.mirror import M3R_Table, Move_M3R
+from IEX_29id.scans.setup import Reset_Scan
+from IEX_29id.devices.diagnostics import all_diag_out
+from epics import PV,  EA
+from IEX_29id.devices.detectors import MPA_HV_OFF
+from IEX_29id.utils.misc import WaitForPermission
+from IEX_29id.devices.undulator import ID_Start
 def Open_MainShutter():
     caput("PC:29ID:FES_OPEN_REQUEST.VAL",1, wait=True,timeout=180000)
     print("Opening Main Shutter...")
@@ -252,4 +259,11 @@ def BL_Valve2pv(Vname):
     pv="29id:BLEPS:"+Valve[Vname]+":"
     return pv
 
+
+def Cam_ScanClear(scanIOC,scanDIM):
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".BSPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".ASPV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".T2PV","")
+    caput("29id"+scanIOC+":scan"+str(scanDIM)+".DDLY",0.5)
+    #print "Scan Record cleared from Camera Settings"
 

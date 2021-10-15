@@ -1,7 +1,7 @@
 from epics import caget, caput
 from IEX_29id.utils.exp import CheckBranch
-
-
+from IEX_29id.devices.arpes import Move_ARPES_Motor, ARPES_PVmotor
+from IEX_29id.devices.kappa import Kappa_PVmotor
 
 def Sync_Encoder_RBV(ioc):
     D={}
@@ -31,6 +31,13 @@ def Move_Motor_vs_Branch(name,val):
     #    Move_RSoXS_Motor(name,val)
     #    RBV=round(caget(RSoXS_PVmotor(name)[0]),3)
     print(name+" = "+ str(RBV))
+
+
+
+def Move_Kappa_Motor(name,val):
+    m_RBV=Kappa_PVmotor(name)[0]
+    m_VAL=Kappa_PVmotor(name)[1]
+    caput(m_VAL,val,wait=True,timeout=18000)
 
 
 

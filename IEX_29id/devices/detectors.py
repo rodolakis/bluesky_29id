@@ -1,8 +1,7 @@
-from IEX_29id.utils.strings import ClearCalcOut,  ClearStringSeq
+from IEX_29id.utils.strings import ClearCalcOut
 from time import sleep
 from epics import caget, caput
 from IEX_29id.scans.setup import Scan_FillIn,  Scan_Go
-from IEX_29id.utils.exp import BL_Mode_Read
 from math import *
 
 import numpy as np

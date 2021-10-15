@@ -2,7 +2,7 @@ from epics import caget, caput
 from time import sleep
 from IEX_29id.devices.energy import SetSlit_BL
 from IEX_29id.utils.misc import dateandtime, SetMono, Open_MainShutter
-
+from IEX_29id.devices.eps import Close_MainShutter
 
 
 def Reset_Mono_Limits():
