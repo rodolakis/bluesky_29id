@@ -1,6 +1,5 @@
-from IEX_29id.utils.exp import CheckBranch, BL_ioc, Switch_Branch, CheckFlux
+from IEX_29id.utils.exp import Switch_Branch, CheckFlux
 from IEX_29id.devices.diagnostics import DiodeC, DiodeD, AllDiagIn
-from IEX_29id.scans.setup import Scan_FillIn, Scan_Go
 from IEX_29id.devices.mono import Switch_Grating
 from epics import caget, caput
 from IEX_29id.devices.kappa import input_d

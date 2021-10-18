@@ -74,18 +74,6 @@ def Folder_ARPES(UserName,**kwargs):
             print(EA.PHV+" is not running")
 
 
-def Reset_CA_all(rate="Slow"):
-    for i in [1,2,3,4,5,9,10,12,13,14,15]:
-        Reset_CA("b",i,rate)
-    for i in [1,2]:
-        Reset_CA("c",i,rate)
-    #for i in [1,2,3,4,5]:
-    for i in [2,3,4]:
-        Reset_CA("d",i,rate)
-    caput("29idb:ca5:read.SCAN","Passive")    # CA5 in passive
-    print("\nAll the current amplifiers have been reset; ca5 set to passive.")
-
-
 
 def Folder_RSoXS(run,UserName,scanIOC="RSoXS",ftp=None):        # FR: scanIOC argument added for new Kappa soft IOC  - 9/27/2018
     """ Sets (and creates if needed) all the folders a given run="201X_Y" and RSoXS user """
@@ -904,27 +892,6 @@ def Scan_FillIn_Pos4(VAL,RBV,scanIOC,scanDIM,start,stop):
 
 
 
-def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
-    """
-    On_Off= 'On' => Turns On the Autoscale; gain is irrelevant.
-    On_Off= 'Off' => Turns Off the Autoscale with gain below:
-            0 = 2nA
-            1 = 20nA
-            2 = 200nA
-            3 = 2uA
-            4 = 20uA
-            5 = 200uA
-            6 = 2mA
-            7 = 20mA
-    """
-    pv="29id"+ca_ioc+":ca"+str(ca_num)
-    caput(pv+":rangeAutoSet",On_Off)
-    sleep(0.5)
-    caput(pv+":rangeSet",gain)
-    print(pv,"Autoscale",On_Off)
-    if On_Off == 'Off':
-            sleep(1)
-            print("Gain set to:",caget(pv+":range",as_string=True))
 
 
 
@@ -1010,24 +977,7 @@ def Scan_ID(scanDIM,start,stop,step):
     RBV="ID29:EnergySetRBV"
     Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step)
 
-def Scan_Mono(scanDIM,start,stop,step,settling_time=0.2):
-    """Sets (but does NOT starts) a mono scan for a given scan dimension"""
-    scanIOC=BL_ioc()
-    VAL="29idmono:ENERGY_SP"
-    RBV="29idmono:ENERGY_MON"
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PASM","STAY")
-    caput("29id"+scanIOC+":scan"+str(scanDIM)+".PDLY",settling_time)
-    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step)
 
-def Scan_Mono_Go(scanDIM,start,stop,step,settling_time=0.2,**kwargs):
-    """Starts a mono scan for a given scan dimension
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details       
-    """
-    scanIOC=BL_ioc()
-    current_energy=caget('29idmono:ENERGY_SP')
-    Scan_Mono(scanDIM,start,stop,step,settling_time)  
-    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)    
-    SetMono(current_energy)
 
 
 def Scan_BL(scanDIM,start,stop,step,settling_time=1):
@@ -1912,19 +1862,7 @@ def SyncAllSlits():
 
 # SetSlits:
     
-def SetSlit(n,Hsize=None,Vsize=None,Hcenter=0,Vcenter=0,q=None):
-    
-    if n == 1:
-        if Hsize in [inf,nan,None]: Hsize=4.5
-        if Vsize in [inf,nan,None]: Vsize=4.5
-        SetSlit1A(Hsize,Vsize,Hcenter,Vcenter,q=None)
-    elif n == 2:
-        if Hsize in [inf,nan,None]: Hsize=6
-        if Vsize in [inf,nan,None]: Vsize=8
-        SetSlit2B(Hsize,Vsize,Hcenter,Vcenter,q=None)
-    else:
-        print('Not a valid slit number')
-    
+
 
 
 def SetSlit2B_Small(Hsize,Vsize,Hcenter,Vcenter,coef):
@@ -2225,25 +2163,6 @@ def Procedure_Reset_Slit1A():
     print("# Then SetSlit1A(1Hsize,1Vsize,0,0); where 1Hsize and 1Vsize are the size where CA4 = 0")
     print("    for m in [9,10,11,12]: Reset_Motor_User(m,'b',0);SyncAllSlits()")
     
-
-def Scan_SlitCenter(slit,start,stop,step,setslit=None,scanIOC=None,scanDIM=1,**kwargs):
-    """
-    Scans the slit center: 
-    slit='1H','1V','2H' or '2V'
-    Slit 1A is set to (0.25,0.25,0,0) unless setslit= not None
-    Logging is automatic: use **kwargs or the optional logging arguments see scanlog() for details
-    default: scanDIM=1  
-    """
-    if setslit is None:
-        SetSlit1A(0.25,0.25,0,0)
-        #SetSlit1A(4.5,4.5,0,0,'q')
-        #SetSlit2B(6.0,8.0,0,0,'q')
-    if scanIOC is None:
-        scanIOC = BL_ioc()
-    VAL='29idb:Slit'+slit+'center.VAL'
-    RBV='29idb:Slit'+slit+'t2.D'   
-    Scan_FillIn(VAL,RBV,scanIOC,scanDIM,start,stop,step) 
-    Scan_Go(scanIOC,scanDIM=scanDIM,**kwargs)
 
 
 def Scan_SlitSize(slit,start,stop,step,setslit=None,scanIOC=None,scanDIM=1,**kwargs):
@@ -2552,31 +2471,7 @@ def Scan_NarrowSlit_Go(which='2V',slit_parameters=[0.25,-2,2,0.5],scanDIM=1,scan
     Scan_Go(scanIOC,scanDIM=scanDIM)
 
 
-def Scan_MonoVsSlit(which='2V',slit_parameters=[0.25,-2,2,0.5],energy_parameters=[470,530,2],**kwargs):
-    """
-    This can be used to find the center of the resonant beam i.e. the slit value for the most blue shifted curve: 
-        which='1V','1H','2V','2H'
-        slit_parameters = [SlitSize,start,stop,step]
-        energy_parameters = [eVstart,eVstop,eVstep]= [470,530,2]
-        
-    Typical slit sizes/start/stop/step are (for full range): 
-        1H/1V : [0.50, -4.5, 4.5, 0.2]
-        2H    : [0.25, -3.0, 3.0, 0.2]
-        2V-MEG: [0.25, -4.0, 4.0, 0.2]    
-        2V-HEG: [0.50, -8.0, 8.0, 0.2] 
-        
-    """
-    scanIOC=BL_ioc()
-    eVstart,eVstop,eVstep=energy_parameters  
-    # Filling Scans:
-    Scan_Mono(1,eVstart,eVstop,eVstep) 
-    caput("29id"+scanIOC+":scan1.PASM","STAY")
-    Scan_NarrowSlit(which,slit_parameters,2)  
-    Scan_Go(scanIOC,2,**kwargs)
-    # Resetting everybody to normal:
-    caput("29id"+scanIOC+":scan1.PASM","PRIOR POS")
-    SetMono((eVstart+eVstop)/2.0)
-    SetSlit_BL()
+
 
 ##############################################################################################################
 #######################                     Mono Calibration                    #######################
@@ -5434,16 +5329,6 @@ def scanE(start,stop,step,average=None,ID_offset=0,ID_parked=None,coef=1,mesh='s
         CA_Average(0)
 
 
-def scanhv(start,stop,step,average=None,settling_time=0.2,**kwargs):
-    """
-    scans the mono at the current ID value
-    """
-    scanDIM=1
-    if average:
-        CA_Average(average)
-    Scan_Mono_Go(scanDIM,start,stop,step,settling_time,**kwargs)
-    if average:
-        CA_Average(0)
 
 
 def Tables_BLenergy(StartStopStepLists,**kwargs):

@@ -1,5 +1,4 @@
 
-
 from epics import caput
 
 
@@ -16,8 +15,6 @@ def Move_ARPES_Sample(ListPosition):
     Move_ARPES_Motor("chi",chi)
     Move_ARPES_Motor("phi",phi)
     #print "Sample now @:",name
-
-
 
 
 def ARPES_PVmotor(name):
