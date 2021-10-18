@@ -7,6 +7,27 @@ from IEX_29id.scans.setup import Scan_Kappa_Motor_Go, Scan_FillIn_Pos2, Clear_Sc
 from IEX_29id.devices.kappa_motors import Kappa_PVmotor
 from IEX_29id.devices.detectors import cts
 
+# from bluesky import plan_stubs as bps
+# import logging
+# from ophyd import EpicsMotor
+# from ophyd import Component, Device
+
+# logger = logging.getLogger(__name__)
+
+
+
+# class KappaMotors(Device):
+#     m1  = Component(EpicsMotor, "1")    ## kphi
+#     m2  = Component(EpicsMotor, "2")    ## x
+#     m3  = Component(EpicsMotor, "3")    ## y 
+#     m4  = Component(EpicsMotor, "4")    ## z
+#     m5  = Component(EpicsMotor, "5")    ## 
+#     m6  = Component(EpicsMotor, "6")    ##
+#     m7  = Component(EpicsMotor, "7")    ##
+
+
+
+
 
 def scanz(start,stop,step,mode="absolute",scanIOC=None,scanDIM=1,**kwargs):
     mybranch=CheckBranch()

@@ -12,9 +12,49 @@ from IEX_29id.devices.arpes_motors import Move_ARPES_Sample
 
 
 
+from bluesky import plan_stubs as bps
+import logging
+from ophyd import EpicsMotor, EpicsSignal
+from ophyd import Component, Device
+from apstools.devices import EpicsDescriptionMixin
 
 
 
+logger = logging.getLogger(__name__)
+
+
+
+#class MyEpicsMotor(EpicsMotor):
+#    description = Component(EpicsSignal, ".DESC", kind="config")
+
+class MyEpicsMotor(EpicsDescriptionMixin, EpicsMotor): 
+    pass
+
+
+class _KappaMotors(Device):
+    m1  = Component(MyEpicsMotor, "1")    ## kphi
+    m2  = Component(MyEpicsMotor, "2")    ## x
+    m3  = Component(MyEpicsMotor, "3")    ## y 
+    m4  = Component(MyEpicsMotor, "4")    ## z
+#   m5  = Component(MyEpicsMotor, "5")    ## not allocated
+#   m6  = Component(MyEpicsMotor, "6")    ## not allocated
+    m7  = Component(MyEpicsMotor, "7")    ## kap
+    m8  = Component(MyEpicsMotor, "8")    ## kth
+    m9  = Component(MyEpicsMotor, "9")    ## tth
+
+
+kappa_motors = _KappaMotors("29idKappa:m", name="motors")
+
+
+def _pick_motor(number):
+    return getattr(kappa_motors, f"m{number}")
+
+
+def _quickmove_plan(value,motor_number):
+    motor = _pick_motor(motor_number)
+    desc  = motor.desc.get()
+    yield from bps.mv(motor,value)
+    logger.info("%s: %d", desc, value)
 
 
 
