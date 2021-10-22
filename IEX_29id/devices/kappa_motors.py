@@ -14,9 +14,10 @@ from IEX_29id.devices.arpes_motors import Move_ARPES_Sample
 
 from bluesky import plan_stubs as bps
 import logging
-from ophyd import EpicsMotor, EpicsSignal
+from ophyd import EpicsMotor, EpicsSignal, PVPositionerPC, EpicsSignalRO
 from ophyd import Component, Device
 from apstools.devices import EpicsDescriptionMixin
+#from hkl.geometries import E4CV
 
 
 
@@ -32,7 +33,7 @@ class MyEpicsMotor(EpicsDescriptionMixin, EpicsMotor):
 
 
 class _KappaMotors(Device):
-    m1  = Component(MyEpicsMotor, "1")    ## kphi
+    m1  = Component(MyEpicsMotor, "1")    ## kphi    29idKappa:m1.VAL   29idKappa:m1.RBV
     m2  = Component(MyEpicsMotor, "2")    ## x
     m3  = Component(MyEpicsMotor, "3")    ## y 
     m4  = Component(MyEpicsMotor, "4")    ## z
@@ -45,6 +46,20 @@ class _KappaMotors(Device):
 
 kappa_motors = _KappaMotors("29idKappa:m", name="motors")
 
+class SoftRealMotor(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "")
+    readback = Component(EpicsSignalRO, "RBV")
+
+class _KappaPseudoMotors(Device):
+    omega = Component(SoftRealMotor, "29idKappa:Euler_Theta")  # 29idKappa:Euler_Theta     => caput
+    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
+    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
+    _real = ["omega", "chi", "phi", "tth"]
+
+
+
+
+
 
 def _pick_motor(number):
     return getattr(kappa_motors, f"m{number}")
@@ -54,14 +69,57 @@ def _quickmove_plan(value,motor_number):
     motor = _pick_motor(motor_number)
     desc  = motor.desc.get()
     yield from bps.mv(motor,value)
-    logger.info("%s: %d", desc, value)
+    logger.info("%s = %d", desc, value)
 
 
 
+def mvkphi(value):
+    """
+    moves kphi to value 
+    """
+    yield from _quickmove_plan(value,1)
 
 
+def mvx(value):
+    """
+    moves x to value 
+    """
+    yield from _quickmove_plan(value,2)
 
 
+def mvy(value):
+    """
+    moves y to value 
+    """
+    yield from _quickmove_plan(value,3)
+
+
+def mvz(value):
+    """
+    moves z to value 
+    """
+    yield from _quickmove_plan(value,4)
+
+
+def mvkap(value):
+    """
+    moves kap to value 
+    """
+    yield from _quickmove_plan(value,7)
+
+
+def mvkth(value):
+    """
+    moves kth to value 
+    """
+    yield from _quickmove_plan(value,8)
+
+
+def mvtth(value):
+    """
+    moves tth to value 
+    """
+    yield from _quickmove_plan(value,9)
 
 
 
