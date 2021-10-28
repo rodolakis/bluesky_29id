@@ -9,17 +9,19 @@ __all__ = """
     mvth
     mvchi
     mvphi
+    mvrx
+    mvry
+    mvrz
+    mvrkphi
+    mvrkth
+    mvrkap
+    mvrtth
+    mvrth
+    mvrchi
+    mvrphi
 """.split()
 
 
-
-# from epics import caget, caput
-# from time import sleep
-# from IEX_29id.utils.exp import CheckBranch
-# from IEX_29id.utils.misc import prompt
-# from IEX_29id.devices.motors import Move_Motor_vs_Branch
-# from IEX_29id.devices.motors import UMove_Motor_vs_Branch
-# from IEX_29id.devices.arpes_motors import Move_ARPES_Sample
 
 ### all the function that moves the diffractometer:
 ### tth, th, phi, chi, x, y, z, sample
@@ -30,9 +32,9 @@ __all__ = """
 
 
 ## TODO: 
-# mvrx/y/z/tth/kth/kphi/kap
-# mvth/phi/chi
-# mvrth/chi/phi
+# mvrx/y/z/tth/kth/kphi/kap X
+# mvth/phi/chi X
+# mvrth/chi/phi X
 # uan, tth0_set 
 # sample
 # Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
@@ -49,6 +51,9 @@ from apstools.devices import EpicsDescriptionMixin
 logger = logging.getLogger(__name__)
 
 
+
+##### Create class to describe real motors (x,y,z,kphi,kth,kap,tth)
+
 class MyEpicsMotor(EpicsDescriptionMixin, EpicsMotor):   # adds the .DESC field to EpicsMotor
     pass
 
@@ -64,41 +69,11 @@ class _KappaMotors(Device):
     m8  = Component(MyEpicsMotor, "8")    ## kth
     m9  = Component(MyEpicsMotor, "9")    ## tth
 
-
-kappa_motors = _KappaMotors("29idKtest:m", name="motors")  
-
-
-
-class _Status(Device):
-    st1  = Component(EpicsSignal, "1")    ## kphi    29idKappa:m1.VAL   29idKappa:m1.RBV
-    st2  = Component(EpicsSignal, "2")    ## x
-    st3  = Component(EpicsSignal, "3")    ## y 
-    st4  = Component(EpicsSignal, "4")    ## z
+## Instantiate real motors
+kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
 
 
-status  = _Status("29idKtest:gp:text",name="status")
-
-
-
-def _pick_motor(number):
-    return getattr(kappa_motors, f"m{number}")
-
-
-def _quickmove_plan(value,motor_number):
-    motor = _pick_motor(motor_number)
-    desc  = motor.desc.get()
-    yield from bps.mv(motor,value)
-    yield from bps.mv(status.st1, desc+" = "+str(motor.position))
-    motor.log.logger.info("%s = %d", desc, motor.position)
-
-def _quickmove_rel_plan(value,motor_number):
-    motor = _pick_motor(motor_number)
-    desc  = motor.desc.get()
-    yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
-    yield from bps.mvr(motor,value)
-    yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
-    motor.log.logger.info("%s = %d", desc, motor.position)
-
+##### Create class to describe pseudo motors (th,chi,phi)
 
 
 class SoftRealMotor(PVPositionerPC):
@@ -106,166 +81,354 @@ class SoftRealMotor(PVPositionerPC):
     readback = Component(EpicsSignalRO, ".RBV")
     desc = Component(EpicsSignalRO,".DESC")
 
-class _KappaPseudoMotors(Device):
+class _FourcMotors(Device):
     th  = Component(SoftRealMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => caput
     chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
     phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
 
-pseudo_motors = _KappaPseudoMotors("",name="motors")
+## Instantiate pseudo motors
+fourc_motors = _FourcMotors("",name="motors")
 
 
-def _quickmove_soft_plan(value,motor):
-    #desc  = motor.desc.get()  # .DESC field does not get autosaved
+
+##### Create class to write to str PVs for troubleshooting
+
+class _Status(Device):
+    st1  = Component(EpicsSignal, "1")        
+    st2  = Component(EpicsSignal, "2")    
+    st3  = Component(EpicsSignal, "3")     
+    st4  = Component(EpicsSignal, "4")    
+
+## Instantiate status
+status  = _Status("29idKtest:gp:text",name="status")  # =>  status.st1/2/3/4
+
+
+
+def _quickmove_plan(value,motor):
     desc = motor.name.split('_')[-1]
     yield from bps.mv(motor,value)
     yield from bps.mv(status.st1, f"{desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
 
-def _quickmove_soft_rel_plan(value,motor):
+def _quickmove_rel_plan(value,motor):
     desc = motor.name.split('_')[-1]
     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
     yield from bps.mvr(motor,value)
     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
-
 def mvth(value):
     """
     moves th to value 
     """
-    yield from _quickmove_soft_plan(value,pseudo_motors.th)
+    yield from _quickmove_plan(value,fourc_motors.th)
 
 def mvchi(value):
     """
     moves th to value 
     """
-    yield from _quickmove_soft_plan(value,pseudo_motors.chi)
+    yield from _quickmove_plan(value,fourc_motors.chi)
 
 
 def mvphi(value):
     """
     moves th to value 
     """
-    yield from _quickmove_soft_plan(value,pseudo_motors.phi)
-
-def mvrth(value):
-    """
-    moves th to value 
-    """
-    yield from _quickmove_soft_rel_plan(value,pseudo_motors.th)
-
-def mvrchi(value):
-    """
-    moves th to value 
-    """
-    yield from _quickmove_soft_rel_plan(value,pseudo_motors.chi)
-
-
-def mvrphi(value):
-    """
-    moves th to value 
-    """
-    yield from _quickmove_soft_rel_plan(value,pseudo_motors.phi)
-
-
-def mvkphi(value):
-    """
-    moves kphi to value 
-    """
-    yield from _quickmove_plan(value,1)
+    yield from _quickmove_plan(value,fourc_motors.phi)
 
 
 def mvx(value):
     """
     moves x to value 
     """
-    yield from _quickmove_plan(value,2)
+    yield from _quickmove_plan(value,kappa_motors.x)
 
 
 def mvy(value):
     """
     moves y to value 
     """
-    yield from _quickmove_plan(value,3)
+    yield from _quickmove_plan(value,kappa_motors.y)
 
 
 def mvz(value):
     """
     moves z to value 
     """
-    yield from _quickmove_plan(value,4)
+    yield from _quickmove_plan(value,kappa_motors.z)
+
+
+def mvkphi(value):
+    """
+    moves kphi to value 
+    """
+    yield from _quickmove_plan(value,kappa_motors.phi)
 
 
 def mvkap(value):
     """
     moves kap to value 
     """
-    yield from _quickmove_plan(value,7)
+    yield from _quickmove_plan(value,kappa_motors.kap)
 
 
 def mvkth(value):
     """
     moves kth to value 
     """
-    yield from _quickmove_plan(value,8)
+    yield from _quickmove_plan(value,kappa_motors.kth)
 
 
 def mvtth(value):
     """
     moves tth to value 
     """
-    yield from _quickmove_plan(value,9)
+    yield from _quickmove_plan(value,kappa_motors.tth)
 
-
-
-def mvrkphi(value):
+def mvrth(value):
     """
-    relative move kphi by value 
+    moves th to value 
     """
-    yield from _quickmove_rel_plan(value,1)
+    yield from _quickmove_rel_plan(value,fourc_motors.th)
+
+def mvrchi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_rel_plan(value,fourc_motors.chi)
+
+
+def mvrphi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_rel_plan(value,fourc_motors.phi)
 
 
 def mvrx(value):
     """
     moves x to value 
     """
-    yield from _quickmove_rel_plan(value,2)
+    yield from _quickmove_rel_plan(value,kappa_motors.x)
 
 
 def mvry(value):
     """
     moves y to value 
     """
-    yield from _quickmove_rel_plan(value,3)
+    yield from _quickmove_rel_plan(value,kappa_motors.y)
 
 
 def mvrz(value):
     """
     moves z to value 
     """
-    yield from _quickmove_rel_plan(value,4)
+    yield from _quickmove_rel_plan(value,kappa_motors.z)
+
+
+def mvrkphi(value):
+    """
+    relative move kphi by value 
+    """
+    yield from _quickmove_rel_plan(value,kappa_motors.kphi)
 
 
 def mvrkap(value):
     """
     moves kap to value 
     """
-    yield from _quickmove_rel_plan(value,7)
+    yield from _quickmove_rel_plan(value,kappa_motors.kap)
 
 
 def mvrkth(value):
     """
     moves kth to value 
     """
-    yield from _quickmove_rel_plan(value,8)
+    yield from _quickmove_rel_plan(value,kappa_motors.kth)
 
 
 def mvrtth(value):
     """
     moves tth to value 
     """
-    yield from _quickmove_rel_plan(value,9)
+    yield from _quickmove_rel_plan(value,kappa_motors.tth)
+
+
+
+# def _pick_motor(number):
+#     return getattr(kappa_motors, f"m{number}")
+
+
+# def _quickmove_plan(value,motor_number):
+#     motor = _pick_motor(motor_number)
+#     desc  = motor.desc.get()
+#     yield from bps.mv(motor,value)
+#     yield from bps.mv(status.st1, desc+" = "+str(motor.position))
+#     motor.log.logger.info("%s = %d", desc, motor.position)
+
+# def _quickmove_rel_plan(value,motor_number):
+#     motor = _pick_motor(motor_number)
+#     desc  = motor.desc.get()
+#     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
+#     yield from bps.mvr(motor,value)
+#     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
+#     motor.log.logger.info("%s = %d", desc, motor.position)
+
+
+
+# def _quickmove_soft_plan(value,motor):
+#     #desc  = motor.desc.get()  # .DESC field does not get autosaved
+#     desc = motor.name.split('_')[-1]
+#     yield from bps.mv(motor,value)
+#     yield from bps.mv(status.st1, f"{desc} = {motor.position}")
+#     motor.log.logger.info("%s = %d", desc, motor.position)
+
+
+# def _quickmove_soft_rel_plan(value,motor):
+#     desc = motor.name.split('_')[-1]
+#     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
+#     yield from bps.mvr(motor,value)
+#     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
+#     motor.log.logger.info("%s = %d", desc, motor.position)
+
+
+# def mvth(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_plan(value,fourc_motors.th)
+
+# def mvchi(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_plan(value,fourc_motors.chi)
+
+
+# def mvphi(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_plan(value,fourc_motors.phi)
+
+# def mvrth(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_rel_plan(value,fourc_motors.th)
+
+# def mvrchi(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_rel_plan(value,fourc_motors.chi)
+
+
+# def mvrphi(value):
+#     """
+#     moves th to value 
+#     """
+#     yield from _quickmove_soft_rel_plan(value,fourc_motors.phi)
+
+
+# def mvkphi(value):
+#     """
+#     moves kphi to value 
+#     """
+#     yield from _quickmove_plan(value,1)
+
+
+# def mvx(value):
+#     """
+#     moves x to value 
+#     """
+#     yield from _quickmove_plan(value,2)
+
+
+# def mvy(value):
+#     """
+#     moves y to value 
+#     """
+#     yield from _quickmove_plan(value,3)
+
+
+# def mvz(value):
+#     """
+#     moves z to value 
+#     """
+#     yield from _quickmove_plan(value,4)
+
+
+# def mvkap(value):
+#     """
+#     moves kap to value 
+#     """
+#     yield from _quickmove_plan(value,7)
+
+
+# def mvkth(value):
+#     """
+#     moves kth to value 
+#     """
+#     yield from _quickmove_plan(value,8)
+
+
+# def mvtth(value):
+#     """
+#     moves tth to value 
+#     """
+#     yield from _quickmove_plan(value,9)
+
+
+
+# def mvrkphi(value):
+#     """
+#     relative move kphi by value 
+#     """
+#     yield from _quickmove_rel_plan(value,1)
+
+
+# def mvrx(value):
+#     """
+#     moves x to value 
+#     """
+#     yield from _quickmove_rel_plan(value,2)
+
+
+# def mvry(value):
+#     """
+#     moves y to value 
+#     """
+#     yield from _quickmove_rel_plan(value,3)
+
+
+# def mvrz(value):
+#     """
+#     moves z to value 
+#     """
+#     yield from _quickmove_rel_plan(value,4)
+
+
+# def mvrkap(value):
+#     """
+#     moves kap to value 
+#     """
+#     yield from _quickmove_rel_plan(value,7)
+
+
+# def mvrkth(value):
+#     """
+#     moves kth to value 
+#     """
+#     yield from _quickmove_rel_plan(value,8)
+
+
+# def mvrtth(value):
+#     """
+#     moves tth to value 
+#     """
+#     yield from _quickmove_rel_plan(value,9)
 
 
 
