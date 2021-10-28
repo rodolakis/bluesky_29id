@@ -1,3 +1,18 @@
+__all__ = """
+    mvx
+    mvy
+    mvz
+    mvkphi
+    mvkth
+    mvkap
+    mvtth
+    mvth
+    mvchi
+    mvphi
+""".split()
+
+
+
 # from epics import caget, caput
 # from time import sleep
 # from IEX_29id.utils.exp import CheckBranch
@@ -11,6 +26,17 @@
 
   
 # RE = bluesky.RunEngine({​​​​​​​​​}​​​​​​​​​)
+
+
+
+## TODO: 
+# mvrx/y/z/tth/kth/kphi/kap
+# mvth/phi/chi
+# mvrth/chi/phi
+# uan, tth0_set 
+# sample
+# Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
+
 
 from bluesky import plan_stubs as bps
 import logging
@@ -41,7 +67,16 @@ class _KappaMotors(Device):
 
 kappa_motors = _KappaMotors("29idKtest:m", name="motors")  
 
-status = EpicsSignal("29idKtest:gp:text1",name="status")
+
+
+class _Status(Device):
+    st1  = Component(EpicsSignal, "1")    ## kphi    29idKappa:m1.VAL   29idKappa:m1.RBV
+    st2  = Component(EpicsSignal, "2")    ## x
+    st3  = Component(EpicsSignal, "3")    ## y 
+    st4  = Component(EpicsSignal, "4")    ## z
+
+
+status  = _Status("29idKtest:gp:text",name="status")
 
 
 
@@ -53,8 +88,53 @@ def _quickmove_plan(value,motor_number):
     motor = _pick_motor(motor_number)
     desc  = motor.desc.get()
     yield from bps.mv(motor,value)
-    yield from bps.mv(status, desc+" = "+str(motor.position))
+    yield from bps.mv(status.st1, desc+" = "+str(motor.position))
     motor.log.logger.info("%s = %d", desc, motor.position)
+
+
+
+class SoftRealMotor(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "")
+    readback = Component(EpicsSignalRO, ".RBV")
+    desc = Component(EpicsSignalRO,".DESC")
+
+class _KappaPseudoMotors(Device):
+    th  = Component(SoftRealMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => caput
+    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
+    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
+
+pseudo_motors = _KappaPseudoMotors("",name="motors")
+
+
+def _quickmove_soft_plan(value,motor):
+    #desc  = motor.desc.get()
+    desc = motor.name.split('_')[-1]
+    yield from bps.mv(motor,value)
+    yield from bps.mv(status.st1, f"{desc} = {motor.position}")
+    motor.log.logger.info("%s = %d", desc, motor.position)
+
+
+
+def mvth(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_plan(value,pseudo_motors.th)
+
+def mvchi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_plan(value,pseudo_motors.chi)
+
+
+def mvphi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_plan(value,pseudo_motors.phi)
+
+
 
 
 def mvkphi(value):
@@ -115,46 +195,12 @@ def mvtth(value):
 
 
 
-## TODO: 
-# mvrx/y/z/tth/kth/kphi/kap
-# mvth/phi/chi
-# mvrth/chi/phi
-# uan, tth0_set 
-# sample
-# Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
 
 
 
 
 
 
-class SoftRealMotor(PVPositionerPC):
-    setpoint = Component(EpicsSignal, "")
-    readback = Component(EpicsSignalRO, "RBV")
-
-class _KappaPseudoMotors(Device):
-    th  = Component(SoftRealMotor, "29idKappa:Euler_Theta")     # 29idKappa:Euler_Theta     => caput
-    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
-    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
-
-pseudo_motors = _KappaPseudoMotors("",name="motors")
-
-
-
-
-
-def _quickmove_soft_plan(value,motor_name):
-    motor = getattr(pseudo_motors, motor_name)
-    desc  = motor.desc.get()
-    yield from bps.mv(motor,value)
-    logger.info("%s = %d", desc, value)
-
-
-def mvth(value):
-    """
-    moves th to value 
-    """
-    yield from _quickmove_soft_plan(value,"th")
 
 
 
