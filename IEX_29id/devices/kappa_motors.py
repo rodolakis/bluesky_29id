@@ -105,14 +105,18 @@ status  = _Status("29idKtest:gp:text",name="status")  # =>  status.st1/2/3/4
 
 
 def _quickmove_plan(value,motor):
-    desc = motor.name.split('_')[-1]
+    desc  = motor.desc.get()
+    if desc == '':
+        desc = motor.name.split('_')[-1]
     yield from bps.mv(motor,value)
     yield from bps.mv(status.st1, f"{desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
 
 def _quickmove_rel_plan(value,motor):
-    desc = motor.name.split('_')[-1]
+    desc  = motor.desc.get()
+    if desc == '':
+        desc = motor.name.split('_')[-1]
     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
     yield from bps.mvr(motor,value)
     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
