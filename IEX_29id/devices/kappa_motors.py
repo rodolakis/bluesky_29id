@@ -17,7 +17,7 @@ from ophyd import Component, Device
 from apstools.devices import EpicsDescriptionMixin
 #from hkl.geometries import E4CV
 
-
+#logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -39,32 +39,7 @@ class _KappaMotors(Device):
 
 kappa_motors = _KappaMotors("29idKtest:m", name="motors")  
 
-class SoftRealMotor(PVPositionerPC):
-    setpoint = Component(EpicsSignal, "")
-    readback = Component(EpicsSignalRO, "RBV")
-
-class _KappaPseudoMotors(Device):
-    th = Component(SoftRealMotor, "29idKappa:Euler_Theta")  # 29idKappa:Euler_Theta     => caput
-    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
-    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
-    _real = ["th", "chi", "phi"]
-
-
-def _quickmove_soft_plan(value,motor_number):
-    motor = _KappaPseudoMotors(motor_number)
-    desc  = motor.desc.get()
-    yield from bps.mv(motor,value)
-    logger.info("%s = %d", desc, value)
-
-
-
-## TODO: 
-# mvrx/y/z/tth/kth/kphi/kap
-# mvth/phi/chi
-# mvrth/chi/phi
-# uan, tth0_set 
-# sample
-# Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
+status = EpicsSignal("29idKtest:gp:text1",name="status")
 
 
 
@@ -75,10 +50,9 @@ def _pick_motor(number):
 def _quickmove_plan(value,motor_number):
     motor = _pick_motor(motor_number)
     desc  = motor.desc.get()
+    yield from bps.mv(status, desc+" = "+str(motor.position))
     yield from bps.mv(motor,value)
-    logger.info("%s = %d", desc, value)
-
-
+    motor.log.logger.info("%s = %d", desc, motor.position)
 
 
 def mvkphi(value):
@@ -139,12 +113,63 @@ def mvtth(value):
 
 
 
+## TODO: 
+# mvrx/y/z/tth/kth/kphi/kap
+# mvth/phi/chi
+# mvrth/chi/phi
+# uan, tth0_set 
+# sample
+# Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
 
 
 
 
 
 
+class SoftRealMotor(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "")
+    readback = Component(EpicsSignalRO, "RBV")
+
+class _KappaPseudoMotors(Device):
+    th  = Component(SoftRealMotor, "29idKappa:Euler_Theta")     # 29idKappa:Euler_Theta     => caput
+    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
+    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
+
+pseudo_motors = _KappaPseudoMotors("",name="motors")
+
+
+
+
+
+def _quickmove_soft_plan(value,motor_name):
+    motor = getattr(pseudo_motors, motor_name)
+    desc  = motor.desc.get()
+    yield from bps.mv(motor,value)
+    logger.info("%s = %d", desc, value)
+
+
+def mvth(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_plan(value,"th")
+
+
+
+# [4:31 PM] Jemian, Pete R.
+    
+# In [18]: from ophyd import EpicsSignal
+# In [19]: f = EpicsSignal("gp:gp:int1", name="f")
+# In [20]: f.get()
+# Out[20]: 0
+# In [21]: RE(bps.mv(f, 2))
+# Out[21]: ()
+# In [22]: f.get()
+# Out[22]: 2
+# In [23]: RE(bps.mvr(f, 1))
+# Out[23]: ()
+# In [24]: f.get()
+# Out[24]: 3
 
 
 
