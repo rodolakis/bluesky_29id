@@ -9,6 +9,8 @@
 ### all the function that moves the diffractometer:
 ### tth, th, phi, chi, x, y, z, sample
 
+  
+# RE = bluesky.RunEngine({​​​​​​​​​}​​​​​​​​​)
 
 from bluesky import plan_stubs as bps
 import logging
@@ -50,8 +52,8 @@ def _pick_motor(number):
 def _quickmove_plan(value,motor_number):
     motor = _pick_motor(motor_number)
     desc  = motor.desc.get()
-    yield from bps.mv(status, desc+" = "+str(motor.position))
     yield from bps.mv(motor,value)
+    yield from bps.mv(status, desc+" = "+str(motor.position))
     motor.log.logger.info("%s = %d", desc, motor.position)
 
 
