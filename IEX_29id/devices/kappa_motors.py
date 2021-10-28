@@ -122,6 +122,23 @@ def _quickmove_rel_plan(value,motor):
     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
+
+def uan(tth_value,th_value):
+    tth_motor = kappa_motors.m9
+    th_motor  = fourc_motors.th
+    yield from bps.mv(tth_motor,tth_value,th_motor,th_value)
+    yield from bps.mv(status.st1, f"tth = {tth_motor.position}; th = {th_motor.position}")
+    # Add the log info
+
+
+def mprint():
+    """
+    print all motors position
+    """
+    yield from bps.mv(status.st4, f"{kappa_motors.m2.position},{kappa_motors.m3.position},{kappa_motors.m4.position},{kappa_motors.m1.position},{kappa_motors.m7.position},{kappa_motors.m8.position},{kappa_motors.m9.position}")
+    
+
+
 def mvth(value):
     """
     moves th to value 
