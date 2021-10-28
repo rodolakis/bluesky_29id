@@ -142,49 +142,49 @@ def mvx(value):
     """
     moves x to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.x)
+    yield from _quickmove_plan(value,kappa_motors.m2)
 
 
 def mvy(value):
     """
     moves y to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.y)
+    yield from _quickmove_plan(value,kappa_motors.m3)
 
 
 def mvz(value):
     """
     moves z to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.z)
+    yield from _quickmove_plan(value,kappa_motors.m4)
 
 
 def mvkphi(value):
     """
     moves kphi to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.phi)
+    yield from _quickmove_plan(value,kappa_motors.m1)
 
 
 def mvkap(value):
     """
     moves kap to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.kap)
+    yield from _quickmove_plan(value,kappa_motors.m7)
 
 
 def mvkth(value):
     """
     moves kth to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.kth)
+    yield from _quickmove_plan(value,kappa_motors.m8)
 
 
 def mvtth(value):
     """
     moves tth to value 
     """
-    yield from _quickmove_plan(value,kappa_motors.tth)
+    yield from _quickmove_plan(value,kappa_motors.m9)
 
 def mvrth(value):
     """
@@ -210,49 +210,49 @@ def mvrx(value):
     """
     moves x to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.x)
+    yield from _quickmove_rel_plan(value,kappa_motors.m2)
 
 
 def mvry(value):
     """
     moves y to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.y)
+    yield from _quickmove_rel_plan(value,kappa_motors.m3)
 
 
 def mvrz(value):
     """
     moves z to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.z)
+    yield from _quickmove_rel_plan(value,kappa_motors.m4)
 
 
 def mvrkphi(value):
     """
     relative move kphi by value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.kphi)
+    yield from _quickmove_rel_plan(value,kappa_motors.m1)
 
 
 def mvrkap(value):
     """
     moves kap to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.kap)
+    yield from _quickmove_rel_plan(value,kappa_motors.m7)
 
 
 def mvrkth(value):
     """
     moves kth to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.kth)
+    yield from _quickmove_rel_plan(value,kappa_motors.m8)
 
 
 def mvrtth(value):
     """
     moves tth to value 
     """
-    yield from _quickmove_rel_plan(value,kappa_motors.tth)
+    yield from _quickmove_rel_plan(value,kappa_motors.m9)
 
 
 
