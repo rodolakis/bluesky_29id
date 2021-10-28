@@ -99,11 +99,6 @@ def _quickmove_rel_plan(value,motor_number):
     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
-def mvrkphi(value):
-    """
-    relative move kphi by value 
-    """
-    yield from _quickmove_rel_plan(value,1)
 
 
 class SoftRealMotor(PVPositionerPC):
@@ -120,12 +115,19 @@ pseudo_motors = _KappaPseudoMotors("",name="motors")
 
 
 def _quickmove_soft_plan(value,motor):
-    #desc  = motor.desc.get()
+    #desc  = motor.desc.get()  # .DESC field does not get autosaved
     desc = motor.name.split('_')[-1]
     yield from bps.mv(motor,value)
     yield from bps.mv(status.st1, f"{desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
+
+def _quickmove_soft_rel_plan(value,motor):
+    desc = motor.name.split('_')[-1]
+    yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
+    yield from bps.mvr(motor,value)
+    yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
+    motor.log.logger.info("%s = %d", desc, motor.position)
 
 
 def mvth(value):
@@ -147,7 +149,24 @@ def mvphi(value):
     """
     yield from _quickmove_soft_plan(value,pseudo_motors.phi)
 
+def mvrth(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_rel_plan(value,pseudo_motors.th)
 
+def mvrchi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_rel_plan(value,pseudo_motors.chi)
+
+
+def mvrphi(value):
+    """
+    moves th to value 
+    """
+    yield from _quickmove_soft_rel_plan(value,pseudo_motors.phi)
 
 
 def mvkphi(value):
@@ -200,7 +219,53 @@ def mvtth(value):
 
 
 
+def mvrkphi(value):
+    """
+    relative move kphi by value 
+    """
+    yield from _quickmove_rel_plan(value,1)
 
+
+def mvrx(value):
+    """
+    moves x to value 
+    """
+    yield from _quickmove_rel_plan(value,2)
+
+
+def mvry(value):
+    """
+    moves y to value 
+    """
+    yield from _quickmove_rel_plan(value,3)
+
+
+def mvrz(value):
+    """
+    moves z to value 
+    """
+    yield from _quickmove_rel_plan(value,4)
+
+
+def mvrkap(value):
+    """
+    moves kap to value 
+    """
+    yield from _quickmove_rel_plan(value,7)
+
+
+def mvrkth(value):
+    """
+    moves kth to value 
+    """
+    yield from _quickmove_rel_plan(value,8)
+
+
+def mvrtth(value):
+    """
+    moves tth to value 
+    """
+    yield from _quickmove_rel_plan(value,9)
 
 
 
