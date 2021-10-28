@@ -91,6 +91,19 @@ def _quickmove_plan(value,motor_number):
     yield from bps.mv(status.st1, desc+" = "+str(motor.position))
     motor.log.logger.info("%s = %d", desc, motor.position)
 
+def _quickmove_rel_plan(value,motor_number):
+    motor = _pick_motor(motor_number)
+    desc  = motor.desc.get()
+    yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
+    yield from bps.mvr(motor,value)
+    yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
+    motor.log.logger.info("%s = %d", desc, motor.position)
+
+def mvrkphi(value):
+    """
+    relative move kphi by value 
+    """
+    yield from _quickmove_rel_plan(value,1)
 
 
 class SoftRealMotor(PVPositionerPC):
