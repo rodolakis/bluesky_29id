@@ -38,8 +38,9 @@ __all__ = """
 # mvrx/y/z/tth/kth/kphi/kap X
 # mvth/phi/chi X
 # mvrth/chi/phi X
-# uan, tth0_set 
-# sample
+# uan X
+# tth0_set 
+# sample X
 # Sync_PI_Motor, Sync_Euler_Motor, Home_SmarAct_Motor
 
 
@@ -57,8 +58,13 @@ logger = logging.getLogger(__name__)
 
 ##### Create class to describe real motors (x,y,z,kphi,kth,kap,tth)
 
-class MyEpicsMotor(EpicsDescriptionMixin, EpicsMotor):   # adds the .DESC field to EpicsMotor
-    pass
+# class EpicsDescriptionMixin(EpicsDescriptionMixin, EpicsMotor):   # adds the .DESC field to EpicsMotor
+#     pass
+
+class MyEpicsMotor(EpicsMotor):
+    sync = Component(EpicsSignal, ".SYNC")
+    desc = Component(EpicsSignalRO,".DESC")
+
 
 
 class _KappaMotors(Device):
@@ -106,6 +112,16 @@ class _Status(Device):
 status  = _Status("29idKtest:gp:text",name="status")  # =>  status.st1/2/3/4
 
 
+##### Create class to write to str PVs for troubleshooting
+
+# class _SyncMotors(Device):
+#     sync7  = Component(EpicsSignal, "7")        
+#     sync8  = Component(EpicsSignal, "8")    
+#     sync9  = Component(EpicsSignal, "9")     
+
+# ## Instantiate status
+# sync  = _SyncMotors("29idKtest:m",name="sync") 
+
 
 def _quickmove_plan(value,motor):
     desc  = motor.desc.get()
@@ -144,7 +160,8 @@ def mprint():
 
 def mvsample(positions=None):
     """
-    move diffractometer to a specific position listed as x,y,z,kphi,kap,kth,tth in st4
+    move diffractometer to a specific position listed as positions=[x,y,z,kphi,kap,kth,tth]
+    default positions is st4
     does not move tth
     """
     if not positions:
@@ -293,180 +310,14 @@ def mvrtth(value):
     yield from _quickmove_rel_plan(value,kappa_motors.m9)
 
 
-
-# def _pick_motor(number):
-#     return getattr(kappa_motors, f"m{number}")
-
-
-# def _quickmove_plan(value,motor_number):
-#     motor = _pick_motor(motor_number)
-#     desc  = motor.desc.get()
-#     yield from bps.mv(motor,value)
-#     yield from bps.mv(status.st1, desc+" = "+str(motor.position))
-#     motor.log.logger.info("%s = %d", desc, motor.position)
-
-# def _quickmove_rel_plan(value,motor_number):
-#     motor = _pick_motor(motor_number)
-#     desc  = motor.desc.get()
-#     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
-#     yield from bps.mvr(motor,value)
-#     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
-#     motor.log.logger.info("%s = %d", desc, motor.position)
-
-
-
-# def _quickmove_soft_plan(value,motor):
-#     #desc  = motor.desc.get()  # .DESC field does not get autosaved
-#     desc = motor.name.split('_')[-1]
-#     yield from bps.mv(motor,value)
-#     yield from bps.mv(status.st1, f"{desc} = {motor.position}")
-#     motor.log.logger.info("%s = %d", desc, motor.position)
-
-
-# def _quickmove_soft_rel_plan(value,motor):
-#     desc = motor.name.split('_')[-1]
-#     yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
-#     yield from bps.mvr(motor,value)
-#     yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
-#     motor.log.logger.info("%s = %d", desc, motor.position)
-
-
-# def mvth(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_plan(value,fourc_motors.th)
-
-# def mvchi(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_plan(value,fourc_motors.chi)
-
-
-# def mvphi(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_plan(value,fourc_motors.phi)
-
-# def mvrth(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_rel_plan(value,fourc_motors.th)
-
-# def mvrchi(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_rel_plan(value,fourc_motors.chi)
-
-
-# def mvrphi(value):
-#     """
-#     moves th to value 
-#     """
-#     yield from _quickmove_soft_rel_plan(value,fourc_motors.phi)
-
-
-# def mvkphi(value):
-#     """
-#     moves kphi to value 
-#     """
-#     yield from _quickmove_plan(value,1)
-
-
-# def mvx(value):
-#     """
-#     moves x to value 
-#     """
-#     yield from _quickmove_plan(value,2)
-
-
-# def mvy(value):
-#     """
-#     moves y to value 
-#     """
-#     yield from _quickmove_plan(value,3)
-
-
-# def mvz(value):
-#     """
-#     moves z to value 
-#     """
-#     yield from _quickmove_plan(value,4)
-
-
-# def mvkap(value):
-#     """
-#     moves kap to value 
-#     """
-#     yield from _quickmove_plan(value,7)
-
-
-# def mvkth(value):
-#     """
-#     moves kth to value 
-#     """
-#     yield from _quickmove_plan(value,8)
-
-
-# def mvtth(value):
-#     """
-#     moves tth to value 
-#     """
-#     yield from _quickmove_plan(value,9)
-
-
-
-# def mvrkphi(value):
-#     """
-#     relative move kphi by value 
-#     """
-#     yield from _quickmove_rel_plan(value,1)
-
-
-# def mvrx(value):
-#     """
-#     moves x to value 
-#     """
-#     yield from _quickmove_rel_plan(value,2)
-
-
-# def mvry(value):
-#     """
-#     moves y to value 
-#     """
-#     yield from _quickmove_rel_plan(value,3)
-
-
-# def mvrz(value):
-#     """
-#     moves z to value 
-#     """
-#     yield from _quickmove_rel_plan(value,4)
-
-
-# def mvrkap(value):
-#     """
-#     moves kap to value 
-#     """
-#     yield from _quickmove_rel_plan(value,7)
-
-
-# def mvrkth(value):
-#     """
-#     moves kth to value 
-#     """
-#     yield from _quickmove_rel_plan(value,8)
-
-
-# def mvrtth(value):
-#     """
-#     moves tth to value 
-#     """
-#     yield from _quickmove_rel_plan(value,9)
+def sync_PI_motors():
+    """
+    Synchronize VAL with RBV for tth,kth,kap
+    """
+    kap_motor = kappa_motors.m7
+    kth_motor = kappa_motors.m8
+    tth_motor = kappa_motors.m9
+    yield from bps.mv(kap_motor.sync, 1,kth_motor.sync, 1,kap_motor.sync, 1)
 
 
 
@@ -481,22 +332,6 @@ def mvrtth(value):
 
 
 
-
-
-# [4:31 PM] Jemian, Pete R.
-    
-# In [18]: from ophyd import EpicsSignal
-# In [19]: f = EpicsSignal("gp:gp:int1", name="f")
-# In [20]: f.get()
-# Out[20]: 0
-# In [21]: RE(bps.mv(f, 2))
-# Out[21]: ()
-# In [22]: f.get()
-# Out[22]: 2
-# In [23]: RE(bps.mvr(f, 1))
-# Out[23]: ()
-# In [24]: f.get()
-# Out[24]: 3
 
 
 
@@ -552,60 +387,6 @@ def mvrtth(value):
 #             print("tth position reset to 0")
 #         else:
 #             print("That's ok, everybody can get cold feet in tough situation...")
-
-
-
-# def uan(tth,th):
-#     """ Moves tth and th motors simultaneously in the in the Kappa chamber
-#     """
-#     caput(Kappa_PVmotor("tth")[1],tth)
-#     caput(Kappa_PVmotor("th")[1],th)
-#     while True:
-#         MotorBusy=caget("29idKappa:alldone.VAL",as_string=True)
-#         if MotorBusy!='done':
-#     #        print "No beam current, please wait..."+dateandtime()
-#             sleep(0.1)
-#         else:
-#             print('tth='+str(tth)+' th='+str(th))
-#             break
-
-
-
-
-# def sample(ListPosition):
-#     """
-#     ARPES: ListPosition = ["Sample Name", x, y, z, th, chi, phi]
-#     Kappa: ListPosition = ["Sample Name", x, y, z, tth, kth, kap, kphi]; tth does not move
-#     RSoXS: ListPosition=["Sample Name",x,y,z,chi,phi,th,tth]
-#     """
-#     mybranch=CheckBranch()
-#     if mybranch == "c":
-#         Move_ARPES_Sample(ListPosition)
-#     elif mybranch == "d":
-#         Move_Kappa_Sample(ListPosition)
-#         print("tth is kept fixed.")
-
-
-# def Move_Kappa_Sample(ListPosition):
-#     """ListPosition = ["Sample Name", x, y, z, tth, kth, kap, kphi]
-#     keeps tth fixes
-#      """
-#     if not isinstance(ListPosition[0],str):
-#         ListPosition.insert(0,"")
-#     #tth=round(caget("29idHydra:m1.RBV"),2)
-#     name,x,y,z,tth,kth,kap,kphi=ListPosition
-#     print("\nx="+str(x), " y="+str(y)," z="+str(z), " tth="+str(tth), " kth="+str(kth), " kap="+str(kap), " kphi="+str(kphi),"\n")
-#     caput("29idKappa:m2.VAL",x,wait=True,timeout=18000)
-#     caput("29idKappa:m3.VAL",y,wait=True,timeout=18000)
-#     caput("29idKappa:m4.VAL",z,wait=True,timeout=18000)
-#     caput("29idKappa:m8.VAL",kth,wait=True,timeout=18000)
-#     caput("29idKappa:m7.VAL",kap,wait=True,timeout=18000)
-#     caput("29idKappa:m1.VAL",kphi,wait=True,timeout=18000)
-#     print("Sample now @:",name)
-
-
-
-
 
 
 
