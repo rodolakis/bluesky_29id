@@ -142,13 +142,14 @@ def mprint():
     # Add the log info
 
 
-def mvsample():
+def mvsample(positions=None):
     """
     move diffractometer to a specific position listed as x,y,z,kphi,kap,kth,tth in st4
     does not move tth
     """
-    positions = status.st4.get()
-    positions=[float(s) for s in positions.split(',')]
+    if not positions:
+        positions = status.st4.get()
+        positions=[float(s) for s in positions.split(',')]
     x,y,z,kphi,kap,kth,tth=positions
     yield from bps.mv(kappa_motors.m2,x,kappa_motors.m3,y,kappa_motors.m4,z,
             kappa_motors.m1,kphi,kappa_motors.m7,kap,kappa_motors.m8,kth)
