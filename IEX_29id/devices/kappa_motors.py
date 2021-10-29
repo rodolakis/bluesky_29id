@@ -317,7 +317,7 @@ def sync_PI_motors():
     kap_motor = kappa_motors.m7
     kth_motor = kappa_motors.m8
     tth_motor = kappa_motors.m9
-    yield from bps.mv(kap_motor.sync, 1,kth_motor.sync, 1,kap_motor.sync, 1)
+    yield from bps.mv(kap_motor.sync, 1,kth_motor.sync, 1,tth_motor.sync, 1)
 
 
 
