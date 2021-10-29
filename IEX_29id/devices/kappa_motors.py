@@ -142,9 +142,9 @@ def mprint():
     # Add the log info
 
 
-def mvsample(positions):
+def mvsample():
     """
-    move diffractometer to a specific position listed as x,y,z,kphi,kap,kth,tth
+    move diffractometer to a specific position listed as x,y,z,kphi,kap,kth,tth in st4
     does not move tth
     """
     positions = status.st4.get()
