@@ -20,6 +20,8 @@ __all__ = """
     mvrchi
     mvrphi
     mprint
+    mvsample
+    uan
 """.split()
 
 
@@ -137,7 +139,20 @@ def mprint():
     print all motors position
     """
     yield from bps.mv(status.st4, f"{kappa_motors.m2.position},{kappa_motors.m3.position},{kappa_motors.m4.position},{kappa_motors.m1.position},{kappa_motors.m7.position},{kappa_motors.m8.position},{kappa_motors.m9.position}")
-    
+    # Add the log info
+
+
+def mvsample(positions):
+    """
+    move diffractometer to a specific position listed as x,y,z,kphi,kap,kth,tth
+    does not move tth
+    """
+    positions = status.st4.get()
+    positions=[float(s) for s in positions.split(',')]
+    x,y,z,kphi,kap,kth,tth=positions
+    yield from bps.mv(kappa_motors.m2,x,kappa_motors.m3,y,kappa_motors.m4,z,
+            kappa_motors.m1,kphi,kappa_motors.m7,kap,kappa_motors.m8,kth)
+    # Add the log info
 
 
 def mvth(value):
