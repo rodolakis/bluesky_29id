@@ -1,7 +1,4 @@
-from epics import caget, caput
-from IEX_29id.utils.exp import CheckBranch
-from IEX_29id.devices.arpes_motors import Move_ARPES_Motor, ARPES_PVmotor
-from IEX_29id.devices.kappa_motors import Kappa_PVmotor, Move_Kappa_Motor
+from epics import caput
 
 def Sync_Encoder_RBV(ioc):
     D={}
@@ -13,40 +10,4 @@ def Sync_Encoder_RBV(ioc):
         print(pv)
 
 
-
-
-
-def Move_Motor_vs_Branch(name,val):
-    mybranch=CheckBranch()
-    if mybranch == "c":
-        Move_ARPES_Motor(name,val)
-        RBV=round(caget(ARPES_PVmotor(name)[0]),3)
-    elif mybranch == "d":
-        Move_Kappa_Motor(name,val)
-        RBV=round(caget(Kappa_PVmotor(name)[0]),3)
-    print(name+" = "+ str(RBV))
-
-
-
-
-def UMove_Motor_vs_Branch(name,val):
-    mybranch=CheckBranch()
-    #if branch == "c":
-    if mybranch == "c":
-        RBV=round(caget(ARPES_PVmotor(name)[0]),3)
-        print("Old: "+name+" = "+ str(RBV))
-        Move_ARPES_Motor(name,val+RBV)
-        RBV=round(caget(ARPES_PVmotor(name)[0]),3)
-    #elif branch == "d":
-    elif mybranch == "d":
-        RBV=round(caget(Kappa_PVmotor(name)[0]),3)
-        print("Old: "+name+" = "+ str(RBV))
-        Move_Kappa_Motor(name,val+RBV)
-        RBV=round(caget(Kappa_PVmotor(name)[0]),3)
-    #elif mybranch == "e":
-    #    RBV=round(caget(RSoXS_PVmotor(name)[0]),3)
-    #    print("Old: "+name+" = "+ str(RBV))
-    #    Move_RSoXS_Motor(name,val+RBV)
-    #    RBV=round(caget(RSoXS_PVmotor(name)[0]),3)
-    print("New: "+name+" = "+ str(RBV))
 
