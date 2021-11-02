@@ -1,4 +1,26 @@
 
+# devices
+
+## arpes_motors:
+DONE
+
+## beamline_energy:
+- move ID, mono and slit 
+- define accessible range of energy vs grating and polarization
+
+## detectors:
+- set detector i.e. redefine tth = 0 for the selected detector 
+- set gain for SRSs 1 to 4
+- set counting time for the scalers; include all of the following
+    - TEY  
+    - small diode (d4)
+    - big diode (d3)
+    - MCP
+    - mesh
+
+
+
+
 
 
 
