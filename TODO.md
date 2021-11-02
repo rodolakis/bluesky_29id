@@ -4,28 +4,9 @@
 
 # kappa:
 - tth0_set()
+- sync kappa / fourc
+- homf piezo
 
-
-- mvz(1967)
-- mvx(0)
-- mvy(0)
-- mvkap
-- mvkth
-- mvkphi
-- mvchi
-- mvphi
-- mvth
-
-- mvrz(1967)
-- mvrx(0)
-- mvry(0)
-- mvrkap
-- mvrkth
-- mvrkphi
-- mvrchi
-- mvrphi
-- mvrth
-- uan(10,5)
 
 - dscanz(-750,750,50)
 - dscanx(-0.5,0.5,0.05)  
@@ -50,7 +31,6 @@
 
 - align_m3r
 
-- sample
 
 
 
