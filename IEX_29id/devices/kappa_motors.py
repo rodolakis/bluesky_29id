@@ -80,15 +80,15 @@ kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
 ##### Create class to describe pseudo motors (th,chi,phi)
 
 
-class SoftRealMotor(PVPositionerPC):
+class _SoftMotor(PVPositionerPC):
     setpoint = Component(EpicsSignal, "")
     readback = Component(EpicsSignalRO, ".RBV")
     desc = Component(EpicsSignalRO,".DESC")
 
 class _FourcMotors(Device):
-    th  = Component(SoftRealMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => caput
-    chi = Component(SoftRealMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
-    phi = Component(SoftRealMotor, "29idKappa:Euler_Phi")
+    th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => caput
+    chi = Component(_SoftMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
+    phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
 
 ## Instantiate pseudo motors
 fourc_motors = _FourcMotors("",name="motors")
