@@ -59,6 +59,8 @@ logger = logging.getLogger(__name__)
 class MyEpicsMotor(EpicsMotor):
     sync = Component(EpicsSignal, ".SYNC")
     desc = Component(EpicsSignalRO,".DESC")
+    homf = Component(EpicsSignal,".HOMF")
+    dvaL = Component(EpicsSignal,".DVAL")
 
 
 
@@ -154,6 +156,7 @@ def mprint():
 
 
 def mvsample(positions=None):
+    # TODO: add name?
     """
     move diffractometer to a specific position listed as positions=[x,y,z,kphi,kap,kth,tth]
     default positions is st4
@@ -165,7 +168,7 @@ def mvsample(positions=None):
     x,y,z,kphi,kap,kth,tth=positions
     yield from bps.mv(kappa_motors.m2,x,kappa_motors.m3,y,kappa_motors.m4,z,
             kappa_motors.m1,kphi,kappa_motors.m7,kap,kappa_motors.m8,kth)
-    # Add the log info
+    # TODO: Add the log info
 
 
 def mvth(value):
@@ -312,30 +315,60 @@ def sync_PI_motors():
     kap_motor = kappa_motors.m7
     kth_motor = kappa_motors.m8
     tth_motor = kappa_motors.m9
-    #yield from bps.mv(kap_motor.sync, 1,kth_motor.sync, 1,tth_motor.sync, 1)
     yield from bps.abs_set(kap_motor.sync,1)
     yield from bps.abs_set(kth_motor.sync,1)
     yield from bps.abs_set(tth_motor.sync,1)
 
+sync_4C = EpicsSignal("29idKappa:Kappa_sync.PROC", name="sync_4C")
 
 
+def sync_4C_motors():
+    """
+    Sychronize 4C pseudo motors (VAL) to real motors' positions
+    """
+    # TODO: test; original script was: proc / sleep(1) / proc
+    yield from bps.abs_set(sync_4C,1)
 
 
+def home_smaract_motors():
+    """
+    Home the piezo (x,y,z). Home position is middle of travel.
+    """
+    # TODO: test; is there a callback? or do I need to bos.sleep? original script sleep(10)
+    x_motor = kappa_motors.m2
+    y_motor = kappa_motors.m3
+    z_motor = kappa_motors.m4
+    yield from bps.abs_set(x_motor.homf,1)
+    yield from bps.abs_set(y_motor.homf,1)
+    yield from bps.abs_set(z_motor.homf,1)
+
+current_detector = EpicsSignal("29idKappa:det:set", name="current_detector")
 
 
-
-
-
-
-
-
-
-
+def tth0_set():
+    pass
 
 
 # ----------------------------------------------------------------------------------------------------------------
 
 
+
+# def tth0_set():
+#     current_det=caget('29idKappa:det:set',as_string=True)
+#     if current_det != 'd4':
+#         print('tth0 can only be redefined with d4')
+#     else:
+#         foo=input_d('Are you sure you want to reset tth0 (Y or N)? >')
+#         if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
+#             caput('29idKappa:m9.SET','Set')
+#             sleep(0.5)
+#             caput('29idKappa:m9.VAL',0)
+#             caput('29idKappa:m9.DVAL',0)
+#             sleep(0.5)
+#             caput('29idKappa:m9.SET','Use')
+#             print("tth position reset to 0")
+#         else:
+#             print("That's ok, everybody can get cold feet in tough situation...")
 
 
 
@@ -367,22 +400,6 @@ def sync_PI_motors():
 #         sleep(10)
 #     print('SamrAct motors VAL homed')
 
-
-# def tth0_set():
-#     current_det=caget('29idKappa:userStringSeq6.STR1',as_string=True)
-#     if current_det != 'd4':
-#         print('tth0 can only be redefined with d4')
-#     else:
-#         foo=prompt('Are you sure you want to reset tth0 (Y or N)? >')
-#         if foo == 'Y' or foo == 'y' or foo == 'yes'or foo == 'YES':
-#             caput('29idKappa:m9.SET','Set')
-#             sleep(0.5)
-#             caput('29idKappa:m9.VAL',0)
-#             sleep(0.5)
-#             caput('29idKappa:m9.SET','Use')
-#             print("tth position reset to 0")
-#         else:
-#             print("That's ok, everybody can get cold feet in tough situation...")
 
 
 
