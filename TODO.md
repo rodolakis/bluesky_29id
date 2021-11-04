@@ -9,20 +9,42 @@ DONE
 - define accessible range of energy vs grating and polarization
 
 ## detectors:
-- set detector i.e. redefine tth = 0 for the selected detector 
-- set gain for SRSs 1 to 4
+- set detector i.e. redefine tth = 0 (DIAL/USER offset) for the selected detector 
+- set gain for SRSs (1 to 4)
 - set counting time for the scalers; include all of the following
-    - TEY  
-    - small diode (d4)
-    - big diode (d3)
-    - MCP
-    - mesh
+    - S2: TEY  
+    - S3: big diode (d3)
+    - S4: small diode (d4)
+    - S5: MCP
+    - S14: mesh
 
+## diagnostic:
+DONE
 
+## eps:
+- get main shutter status
+- open / close shutters (main, C and D)
+- open / close chamber valves (C and D)
+- check branch shutter (C or D) status and opens it if closed (depend on mirror position)
+- check main shutter status and opens it if closed
+- switch branch: move mirror, close/open shutters, turn off camera
+- close branch (valve + shutter + MCP HV)
+- close all valves
+- close all shutters
+- turn of all HV power supply
 
+## kappa_motors
+90% DONE; TODO:
+- tth0_set()
+- sync kappa / fourc
+- homf piezo
 
+## keithleys
+- reset settings to default
+- current to flux
+- 
 
-
+homf = Component(EpicsSignal,".HOMF")
 
 # kappa:
 - tth0_set()
