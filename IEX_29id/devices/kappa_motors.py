@@ -60,7 +60,7 @@ class MyEpicsMotor(EpicsMotor):
     sync = Component(EpicsSignal, ".SYNC")
     desc = Component(EpicsSignalRO,".DESC")
     homf = Component(EpicsSignal,".HOMF")
-    dvaL = Component(EpicsSignal,".DVAL")
+    dval = Component(EpicsSignal,".DVAL")
 
 
 
@@ -342,12 +342,26 @@ def home_smaract_motors():
     yield from bps.abs_set(y_motor.homf,1)
     yield from bps.abs_set(z_motor.homf,1)
 
-current_detector = EpicsSignal("29idKappa:det:set", name="current_detector")
 
+_current_detector = EpicsSignal("29idKappa:det:set", name="current_detector")
 
 def tth0_set():
-    pass
-
+    """ reset tth = 0 for the current tth position
+        tth0 = 0 is defined as direct on small diode (d4)
+    """
+    # TODO: test, and find a way to handle the print statement
+    current_detector = _current_detector.get()
+    tth_motor = kappa_motors.m9 
+    if current_detector == 0:
+        yield from bps.mv(tth_motor.offset_freeze_switch,1) # frozen offset
+        yield from bps.mv(tth_motor.user_offset,0)          # we want the user and dial set to 0 when direct beam is on the small diode (d4)
+        yield from bps.mv(tth_motor.set_use_switch,1)       # switch from Use to Set
+        yield from bps.mv(tth_motor.user_setpoint,0)        # set user to 0    
+        yield from bps.mv(tth_motor.dval,0)                 # set dial to 0
+        yield from bps.mv(tth_motor.set_use_switch,0)       # switch back from Set to Use
+    else:
+        print('tth0 is defined as direct beam on d4 only')
+    
 
 # ----------------------------------------------------------------------------------------------------------------
 
@@ -368,8 +382,7 @@ def tth0_set():
 #             caput('29idKappa:m9.SET','Use')
 #             print("tth position reset to 0")
 #         else:
-#             print("That's ok, everybody can get cold feet in tough situation...")
-
+#             pzss
 
 
 # def Sync_PI_Motor():
