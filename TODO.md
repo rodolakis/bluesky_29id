@@ -41,7 +41,9 @@ DONE
 - current to flux
 - 
 
-homf = Component(EpicsSignal,".HOMF")
+
+
+
 
 # kappa:
 - tth0_set()
