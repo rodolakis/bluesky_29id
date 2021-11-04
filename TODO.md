@@ -34,10 +34,7 @@ DONE
 - turn of all HV power supply
 
 ## kappa_motors
-90% DONE; TODO:
-- tth0_set()
-- sync kappa / fourc
-- homf piezo
+DONE
 
 ## keithleys
 - reset settings to default
