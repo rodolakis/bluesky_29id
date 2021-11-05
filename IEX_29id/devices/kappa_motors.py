@@ -65,8 +65,8 @@ class MyEpicsMotor(EpicsMotor):
 
 
 class _KappaMotors(Device):
-    m1  = Component(MyEpicsMotor, "1")    ## kphi    29idKappa:m1.VAL   29idKappa:m1.RBV
-    m2  = Component(MyEpicsMotor, "2")    ## x
+    m1  = Component(MyEpicsMotor, "1")    ## kphi    29idKappa:m1.VAL => setpoint
+    m2  = Component(MyEpicsMotor, "2")    ## x       29idKappa:m1.RBV => readback
     m3  = Component(MyEpicsMotor, "3")    ## y 
     m4  = Component(MyEpicsMotor, "4")    ## z
 #   m5  = Component(MyEpicsMotor, "5")    ## not allocated
@@ -84,12 +84,12 @@ kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
 
 class _SoftMotor(PVPositionerPC):
     setpoint = Component(EpicsSignal, "")
-    readback = Component(EpicsSignalRO, ".RBV")
+    readback = Component(EpicsSignalRO, ".RBV")   # RO means ReadOnly, those are PV that we cannot write to 
     desc = Component(EpicsSignalRO,".DESC")
 
 class _FourcMotors(Device):
-    th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => caput
-    chi = Component(_SoftMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => caget
+    th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => setpoint
+    chi = Component(_SoftMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => readback
     phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
 
 ## Instantiate pseudo motors
@@ -109,15 +109,58 @@ class _Status(Device):
 status  = _Status("29idKtest:gp:text",name="status")  # =>  status.st1/2/3/4
 
 
-##### Create class to write to str PVs for troubleshooting
+def sync_PI_motors():
+    """
+    Synchronize VAL with RBV for tth,kth,kap
+    """
+    kap_motor = kappa_motors.m7
+    kth_motor = kappa_motors.m8
+    tth_motor = kappa_motors.m9
+    yield from bps.abs_set(kap_motor.sync,1)
+    yield from bps.abs_set(kth_motor.sync,1)
+    yield from bps.abs_set(tth_motor.sync,1)
 
-# class _SyncMotors(Device):
-#     sync7  = Component(EpicsSignal, "7")        
-#     sync8  = Component(EpicsSignal, "8")    
-#     sync9  = Component(EpicsSignal, "9")     
+def sync_4C_motors():
+    """
+    Sychronize 4C pseudo motors (VAL) to real motors' positions
+    """
+    # TODO: test; original script was: proc / sleep(1) / proc
+    sync_4C = EpicsSignal("29idKappa:Kappa_sync.PROC", name="sync_4C")
+    yield from bps.abs_set(sync_4C,1)
 
-# ## Instantiate status
-# sync  = _SyncMotors("29idKtest:m",name="sync") 
+
+def home_smaract_motors():
+    """
+    Home the piezo (x,y,z). Home position is middle of travel.
+    """
+    # TODO: test; is there a callback? or do I need to bos.sleep? original script sleep(10)
+    x_motor = kappa_motors.m2
+    y_motor = kappa_motors.m3
+    z_motor = kappa_motors.m4
+    yield from bps.abs_set(x_motor.homf,1)
+    yield from bps.abs_set(y_motor.homf,1)
+    yield from bps.abs_set(z_motor.homf,1)
+
+
+def tth0_set():
+    """ reset tth = 0 for the current tth position
+        tth0 = 0 is defined as direct on small diode (d4)
+    """
+    # TODO: test, and find a way to handle the print statement
+    current_detector = EpicsSignal("29idKappa:det:set", name="current_detector")
+    mydetector = current_detector.get()
+    tth_motor = kappa_motors.m9 
+    if mydetector == 0:
+        yield from bps.mv(tth_motor.offset_freeze_switch,1) # frozen offset
+        yield from bps.mv(tth_motor.user_offset,0)          # we want the user and dial set to 0 when direct beam is on the small diode (d4)
+        yield from bps.mv(tth_motor.set_use_switch,1)       # switch from Use to Set
+        yield from bps.mv(tth_motor.user_setpoint,0)        # set user to 0    
+        yield from bps.mv(tth_motor.dval,0)                 # set dial to 0
+        yield from bps.mv(tth_motor.set_use_switch,0)       # switch back from Set to Use
+    else:
+        print('tth0 is defined as direct beam on d4 only')
+    
+
 
 
 def _quickmove_plan(value,motor):
@@ -307,61 +350,6 @@ def mvrtth(value):
     """
     yield from _quickmove_rel_plan(value,kappa_motors.m9)
 
-
-def sync_PI_motors():
-    """
-    Synchronize VAL with RBV for tth,kth,kap
-    """
-    kap_motor = kappa_motors.m7
-    kth_motor = kappa_motors.m8
-    tth_motor = kappa_motors.m9
-    yield from bps.abs_set(kap_motor.sync,1)
-    yield from bps.abs_set(kth_motor.sync,1)
-    yield from bps.abs_set(tth_motor.sync,1)
-
-sync_4C = EpicsSignal("29idKappa:Kappa_sync.PROC", name="sync_4C")
-
-
-def sync_4C_motors():
-    """
-    Sychronize 4C pseudo motors (VAL) to real motors' positions
-    """
-    # TODO: test; original script was: proc / sleep(1) / proc
-    yield from bps.abs_set(sync_4C,1)
-
-
-def home_smaract_motors():
-    """
-    Home the piezo (x,y,z). Home position is middle of travel.
-    """
-    # TODO: test; is there a callback? or do I need to bos.sleep? original script sleep(10)
-    x_motor = kappa_motors.m2
-    y_motor = kappa_motors.m3
-    z_motor = kappa_motors.m4
-    yield from bps.abs_set(x_motor.homf,1)
-    yield from bps.abs_set(y_motor.homf,1)
-    yield from bps.abs_set(z_motor.homf,1)
-
-
-_current_detector = EpicsSignal("29idKappa:det:set", name="current_detector")
-
-def tth0_set():
-    """ reset tth = 0 for the current tth position
-        tth0 = 0 is defined as direct on small diode (d4)
-    """
-    # TODO: test, and find a way to handle the print statement
-    current_detector = _current_detector.get()
-    tth_motor = kappa_motors.m9 
-    if current_detector == 0:
-        yield from bps.mv(tth_motor.offset_freeze_switch,1) # frozen offset
-        yield from bps.mv(tth_motor.user_offset,0)          # we want the user and dial set to 0 when direct beam is on the small diode (d4)
-        yield from bps.mv(tth_motor.set_use_switch,1)       # switch from Use to Set
-        yield from bps.mv(tth_motor.user_setpoint,0)        # set user to 0    
-        yield from bps.mv(tth_motor.dval,0)                 # set dial to 0
-        yield from bps.mv(tth_motor.set_use_switch,0)       # switch back from Set to Use
-    else:
-        print('tth0 is defined as direct beam on d4 only')
-    
 
 # ----------------------------------------------------------------------------------------------------------------
 
