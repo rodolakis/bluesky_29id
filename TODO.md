@@ -48,7 +48,7 @@ done
 
 ## slits.py
 
-- a set of slits is composed of 4 individuals blades that can be move 2 by 2 (2 vertical blades and 2 horizontal blades) using pseudo/soft motors in order to provide a given slit size (opening between 2 blades that only let a portion of the beam go through) and slit center.
+- a set of slits is composed of 4 individuals blades that can be moved 2 by 2 (2 vertical blades and 2 horizontal blades) using pseudo/soft motors in order to provide a given slit size (opening between 2 blades that only let a portion of the beam go through) and slit center.
 
 - instead of moving the real motors (4 individual blades) as EpicsMotors, which assumes prefix:m#.VAL for setpoint and prefix:m#.RBV for readback, you will need to create soft motors class and objects for the 4 pseudo motors using the logic we used for th/chi/phi in kappa_motors.py : 
 
@@ -59,8 +59,8 @@ done
 | 29idb:Slit1H | center.VAL  | t2.D | sync.PROC |
 | 29idb:Slit1V | center.VAL  | t2.D | sync.PROC |
 
-- create plan to move horizontal/vertical center & size to a given value
-- the plan needs to first PROC the sync PV to make sure that the pseudo motors are sync with the real motors; the .PROC PV is similar to the .SYNC PV. You will have to copy the logic from the sync_PI_motors() plan (weird complicated wok around Pete cam up with using the abs_set method)
+- create plan to move horizontal/vertical center & size to a given value (i.e. bluesky equivalent of the old SetSlit1A(Hsize,Vsize,Hcenter,Vcenter) function)
+- the very first step of this plan is to trigger the sync PV (here ...sync.PROC) by writing a 1 to it. This makes sure that the pseudo motors are sync with the real motors; the sync.PROC PV works exactly like the .SYNC PV in kappa_motors. You will have to copy the logic from the sync_PI_motors() plan (using the abs_set method)
 - Use the _status class to print the final size/center of the slits after moving (like we do in _quickmove_plan)
 - ingnore the logger for now
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
