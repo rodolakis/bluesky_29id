@@ -33,7 +33,7 @@ done
 - close all shutters
 - turn of all HV power supply
 
-## kappa_motors.py:
+## kappa_motors.py
 done
 
 ## keithleys.py
@@ -46,7 +46,7 @@ done
 
 
 
-## slits.py:
+## slits.py
 
 - a set of slits is composed of 4 individuals blades that can be move 2 by 2 (2 vertical blades and 2 horizontal blades) using pseudo/soft motors in order to provide a given slit size (opening between 2 blades that only let a portion of the beam go through) and slit center.
 
@@ -66,4 +66,4 @@ done
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
 
 
-![image](./Figures/4blades_slits.jpg)
+![image](./figures/4blades_slits.jpg)
