@@ -66,4 +66,4 @@ done
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
 
 
-![image](./figures/4blades_slits.jpg)
+![image](./Figures/4blades_slits.jpg)
