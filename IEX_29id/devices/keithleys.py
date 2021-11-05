@@ -113,53 +113,6 @@ def Detector_List(scanIOC):
 
 
 
-def CA_Average(avg_pts,quiet='q',rate="Slow",scanDIM=1):
-    """
-    Average reading of the relevant current amplifiers for the current scanIOC/branch.
-    By default it is chatty (i.e. quiet argument not specified).
-    To make it quiet, specify quiet=''.
-    """
-    print("\nAverage set to:   "+str(max(avg_pts,1)))
-    CA_list=Detector_List(BL_ioc())
-    n=len(CA_list)-1
-    for i in RangeUp(0,n,1):
-        ca_ioc=CA_list[i][0]
-        ca_num=CA_list[i][1]
-        CA_Filter (ca_ioc,ca_num,avg_pts,rate,quiet,scanDIM)
-
-
-
-def CA_Filter(ca_ioc,ca_num,avg_pts,rate,quiet=None,scanDIM=1):
-    scanIOC=BL_ioc()
-    pv="29id"+ca_ioc+":ca"+str(ca_num)
-    pvscan="29id"+scanIOC+":scan"+str(scanDIM)
-    name=CA_Name(ca_ioc,ca_num)
-    t=0.1
-    if rate == "Slow":
-        t=6/60.0
-    elif rate == "Medium":
-        t=1/60.0
-    elif rate == "Fast":
-        t=0.1/60.0
-    settling=round(max(0.15,avg_pts*t+0.1),2)
-    if avg_pts  <= 1:
-        reset_keithley(ca_ioc,ca_num,rate)    # change for Reset_CA(ca_ioc,ca_num) if we want to
-        caput(pvscan+".DDLY",0.15)    # reset to default reset speed ie slow
-        if not quiet:
-            print("Average disabled: "+name+" - "+pv)
-            print("Detector settling time ("+pvscan+") set to: 0.15s")
-    else:
-        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
-        caput(pv+":rateSet",rate)
-        sleep(1)
-        caput(pv+":digitalFilterCountSet",avg_pts,wait=True,timeout=500)
-        caput(pv+":digitalFilterControlSet","Repeat",wait=True,timeout=500)
-        caput(pv+":digitalFilterSet","On",wait=True,timeout=500)
-        caput(pvscan+".DDLY",settling)
-        caput(pv+":read.SCAN","Passive",wait=True,timeout=500)
-        if not quiet:
-            print("Average enabled: "+name+" - "+pv)
-            print("Detector settling time ("+pvscan+") set to: "+str(settling)+"s")
 
 
 def CA_Name(ca_ioc,ca_num):    #{motor,position}
@@ -197,15 +150,3 @@ def CA_Autoscale(ca_ioc,ca_num,On_Off='On',gain=7):
             print("Gain set to:",caget(pv+":range",as_string=True))
 
 
-
-def CA_Passive():        # Put All commonly used (triggered) CA in passive mode - legacy
-    caput("29idc:ca1:read.SCAN","Passive")
-    caput("29idd:ca2:read.SCAN","Passive")
-    caput("29idd:ca3:read.SCAN","Passive")
-    caput("29idd:ca4:read.SCAN","Passive")
-    #caput("29idd:ca5:read.SCAN","Passive")
-    caput("29idb:ca14:read.SCAN","Passive")
-    caput("29idb:ca15:read.SCAN","Passive")
-    caput("29idd:ca4:read.SCAN","Passive")
-    caput("29idb:ca5:read.SCAN","Passive")
-    caput("29idc:ca2:read.SCAN","Passive")
