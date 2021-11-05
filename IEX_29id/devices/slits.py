@@ -12,13 +12,14 @@ def slit(val):
     SetExitSlit(val)
 
 
-def SetSlit1A(Hsize,Vsize,Hcenter,Vcenter,q=None):
-    caput("29idb:Slit1Hsync.PROC",1)
+def SetSlit1A(Hsize,Vsize,Hcenter,Vcenter,q=None):   
+    """move slits 1A: Hsize x Vsize centered at (Hcenter,Vcenter)"""
+    caput("29idb:Slit1Hsync.PROC",1)    # make sure slits are in sink with real motors
     caput("29idb:Slit1Vsync.PROC",1)
     caput("29idb:Slit1Hsize.VAL", Hsize)
-    caput("29idb:Slit1Vsize.VAL", Vsize, wait=True,timeout=18000)
+    caput("29idb:Slit1Vsize.VAL", Vsize)
     caput("29idb:Slit1Hcenter.VAL",Hcenter)
-    caput("29idb:Slit1Vcenter.VAL",Vcenter, wait=True,timeout=18000)
+    caput("29idb:Slit1Vcenter.VAL",Vcenter)
     if not q:
         print("Slit-1A = ("+str(round(Hsize,3))+"x"+str(round(Vsize,3))+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
 
@@ -26,20 +27,23 @@ def SetSlit2B(Hsize,Vsize,Hcenter,Vcenter,q=None):
     caput("29idb:Slit2Hsync.PROC",1)
     caput("29idb:Slit2Vsync.PROC",1)
     caput("29idb:Slit2Hsize.VAL", Hsize)
-    caput("29idb:Slit2Vsize.VAL", Vsize, wait=True,timeout=18000)
+    caput("29idb:Slit2Vsize.VAL", Vsize)
     caput("29idb:Slit2Hcenter.VAL",Hcenter)
-    caput("29idb:Slit2Vcenter.VAL",Vcenter, wait=True,timeout=18000)
+    caput("29idb:Slit2Vcenter.VAL",Vcenter)
     if not q:
         print("Slit-2B = ("+str(Hsize)+"x"+str(Vsize)+") @ ("+str(Hcenter)+","+str(Vcenter)+")")
 
 
 
+def SetSlit3C(size):
+    caput("29idb:Slit3CFit.A",size)
+    print("Slit-3C =",size,"um")
 
 
 def SetSlit3D(size,position=None):
     if position == None:
         position=round(caget('29idb:Slit4Vt2.D'),2)
-    caput("29idb:Slit4Vcenter.VAL",position,wait=True,timeout=18000)
+    caput("29idb:Slit4Vcenter.VAL")
     caput("29idb:Slit4Vsize.VAL",size,wait=True,timeout=18000)
     print("Slit-3D =",size,"um")
 
@@ -83,10 +87,6 @@ def SetExitSlit(size):
     elif branch == "d":
         SetSlit3D(size)
 
-def SetSlit3C(size):
-    position=round(Slit3C_Fit(size),1)
-    caput("29idb:Slit3CFit.A",size,wait=True,timeout=18000)
-    print("Slit-3C =",size,"um  -  ( m24 =",position,")")
 
 def Slit3C_Fit(size):
     K0=-36.383
