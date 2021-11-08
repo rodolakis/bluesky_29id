@@ -2,8 +2,10 @@
 
 ## Environment setup
 
-
-    $conda env create --force -f mac_2022_1.yml
+    $ cd src/macros_29id/
+    $ activate_conda
+    $ conda env create --force -f mac_2022_1.yml
+    $ conda env create --force -f linux_2022_1.yml
 
     $ conda create -n bluesky python=3.9 jupyter numpy
     $ conda activate bluesky
@@ -13,14 +15,15 @@
     $ conda install -c conda-forge bluesky
 
 
+## Start ipython from wow:
 
     $ ssh -l rodolakis —Y -L 4044:bashful.xray.aps.anl.gov:4000 xgate.xray.aps.anl.gov
     $ password = crypto
     $ ssh -Y wow.xray.aps.anl.gov
     $ become_bluesky
-    $ ipython_bluesky
 
-
-## New environment for Mac
-
-    $conda env create --force -f mac_2022_1.yml
+    $ import bluesky
+    $ RE = bluesky.RunEngine({})
+    $ from IEX_29id.devices.kappa_motors import *
+    $ from IEX_29id.devices.kappa_motors import kappa_motors
+    
