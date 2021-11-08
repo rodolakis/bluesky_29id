@@ -21,6 +21,6 @@
     $ ipython_bluesky
 
 
-# New environment for Mac
+## New environment for Mac
 
     $conda env create --force -f mac_2022_1.yml
