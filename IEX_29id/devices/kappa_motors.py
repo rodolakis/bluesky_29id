@@ -22,6 +22,10 @@ __all__ = """
     mprint
     mvsample
     uan
+    tth0_set
+    sync_PI_motors
+    sync_4C_motors
+    home_smaract_motors
 """.split()
 
 
