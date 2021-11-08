@@ -12,12 +12,6 @@ from ophyd import PVPositionerPC
 import time
 
 
-# class SoftMotor(PVPositionerPC):
-#     readback = Component(EpicsSignal, "gp:float2")
-#     setpoint = Component(EpicsSignal, "gp:float1")
-
-# motor = SoftMotor("29idKtest:", name="motor")
-# motor.wait_for_connection()
 
 motor = PVPositionerSoftDone("29idKtest:", readback_pv="gp:float2", setpoint_pv="gp:float1", tolerance=0.001, name="motor")
 motor.wait_for_connection()
@@ -39,4 +33,4 @@ sim_calcs_enable = EpicsSignal("gp:userCalcEnable", name="sim_calcs_enable")
 sim_calcs_enable.wait_for_connection()
 sim_calcs_enable.put("Enable")
 
-
+print(f"{sim_calcs_enable.get()=}")
