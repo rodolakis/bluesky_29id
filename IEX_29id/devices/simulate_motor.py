@@ -29,7 +29,7 @@ sim_calc.calculation.put("MIN(ABS(A-B),C)*(A>B?1:-1)+B")
 sim_calc.output_link_pv.put(motor.readback.pvname)
 sim_calc.description.put(f"{motor.name} (simulated)")
 
-sim_calcs_enable = EpicsSignal("gp:userCalcEnable", name="sim_calcs_enable")
+sim_calcs_enable = EpicsSignal("29idKtest:userCalcEnable", name="sim_calcs_enable")
 sim_calcs_enable.wait_for_connection()
 sim_calcs_enable.put("Enable")
 
