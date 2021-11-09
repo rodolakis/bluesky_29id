@@ -45,7 +45,7 @@ __all__ = """
 
 from bluesky import plan_stubs as bps
 import logging
-from ophyd import EpicsMotor, EpicsSignal, PVPositionerPC, EpicsSignalRO
+from ophyd import EpicsMotor, EpicsSignal, PVPositionerPC, EpicsSignalRO, Signal    
 from ophyd import Component, Device
 from apstools.devices import EpicsDescriptionMixin
 #from hkl.geometries import E4CV
@@ -90,17 +90,27 @@ class _SoftMotor(PVPositionerPC):
     setpoint = Component(EpicsSignal, "")
     readback = Component(EpicsSignalRO, ".RBV")   # RO means ReadOnly, those are PV that we cannot write to 
     desc = Component(EpicsSignalRO,".DESC")
-    # TODO: done = Component(EpicsSignalRO,".SOMETHING")
-    # TODO: done_value = 1 or 0 or True or False?
+ #   done = Component(Signal,kind='omitted',value = 0)   # fourc done = 29idKappa:Kappa_busy
+ #   done_value = 0                                      # done_value = 0 (Done) or 1 (Busy)
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.parent.busy.subscribe(self.done_callback)
+       
+    # def done_callback(self,*args,**kwargs):
+    #     self.done.put(self.parent.ready)
+
+
+
 
 class _FourcMotors(Device):
     th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => setpoint
     chi = Component(_SoftMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => readback
     phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
+#    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
 
 ## Instantiate pseudo motors
 fourc_motors = _FourcMotors("",name="motors")
-
 
 
 ##### Create class to write to str PVs for troubleshooting
