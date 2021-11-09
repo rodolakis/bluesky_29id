@@ -1,9 +1,30 @@
 
 
-
-
-
-
+import apstools.devices
+from bluesky import plan_stubs as bps  # steps for use inside a plan
+from bluesky import plans as bp  # standard scan plans
+from bluesky.callbacks.best_effort import BestEffortCallback
+from bluesky.magics import BlueskyMagics
+from bluesky.utils import PersistentDict
+from bluesky.utils import ProgressBarManager
+from IPython import get_ipython
+from ophyd import Component
+from ophyd import Device
+from ophyd import EpicsMotor
+from ophyd import EpicsSignal
+from ophyd import EpicsSignalRO
+from ophyd import PseudoSingle
+from ophyd import PVPositioner
+from ophyd import PVPositionerPC
+from ophyd import Signal
+from ophyd.scaler import ScalerCH
+from ophyd.signal import AttributeSignal
+from ophyd.signal import EpicsSignalBase
+import bluesky
+import databroker
+import logging
+import os
+import pint
 
 
 
@@ -22,6 +43,9 @@ def keV2eV(value):
 
 #--------------------------------------------------------
 # define the structures to be used
+
+
+#===================  Undulator: 
 
 class UndulatorEnergy(PVPositioner):  # in keV
     setpoint = Component(EpicsSignal, "EnergyScanSet")
