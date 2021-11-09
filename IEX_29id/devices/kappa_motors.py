@@ -90,6 +90,8 @@ class _SoftMotor(PVPositionerPC):
     setpoint = Component(EpicsSignal, "")
     readback = Component(EpicsSignalRO, ".RBV")   # RO means ReadOnly, those are PV that we cannot write to 
     desc = Component(EpicsSignalRO,".DESC")
+    # TODO: done = Component(EpicsSignalRO,".SOMETHING")
+    # TODO: done_value = 1 or 0 or True or False?
 
 class _FourcMotors(Device):
     th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => setpoint
