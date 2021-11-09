@@ -34,7 +34,11 @@ done
 - turn of all HV power supply
 
 ## kappa_motors.py
-done
+- (fourc) done = Component(EpicsSignalRO,".SOMETHING"): => 29idKappa:Kappa_busy
+- done_value = 0 (Done) or 1 (Busy)
+
+        $ fourc_done = EpicsSignalRO("29idKappa:Kappa_busy",name="fourc_done") 
+
 
 ## keithleys.py
 - reset settings to default
