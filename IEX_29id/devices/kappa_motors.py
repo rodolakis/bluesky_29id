@@ -87,9 +87,9 @@ kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
 
 
 class _SoftMotor(PVPositionerPC):
-    setpoint = Component(EpicsSignal, "")
-    readback = Component(EpicsSignalRO, ".RBV")   # RO means ReadOnly, those are PV that we cannot write to 
-    desc = Component(EpicsSignalRO,".DESC")
+    setpoint = Component(EpicsSignal, "")           # 29idKappa:Euler_Theta     => setpoint
+    readback = Component(EpicsSignalRO, ".RBV")     # 29idKappa:Euler_Theta.RBV => readback  
+    desc = Component(EpicsSignalRO,".DESC")         # RO means ReadOnly, those are PV that we cannot write to 
  #   done = Component(Signal,kind='omitted',value = 0)   # fourc done = 29idKappa:Kappa_busy
  #   done_value = 0                                      # done_value = 0 (Done) or 1 (Busy)
 
@@ -102,15 +102,29 @@ class _SoftMotor(PVPositionerPC):
 
 
 
+#------- Version 1:
+
+# class _FourcMotors(Device):
+#     th  = Component(_SoftMotor, "29idKappa:Euler_Theta")
+#     chi = Component(_SoftMotor, "29idKappa:Euler_Chi")     
+#     phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
+# #    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
+
+# ## Instantiate pseudo motors
+# fourc_motors = _FourcMotors("",name="motors")
+
+
+
+#------- Version 2:
 
 class _FourcMotors(Device):
-    th  = Component(_SoftMotor, "29idKappa:Euler_Theta")    # 29idKappa:Euler_Theta     => setpoint
-    chi = Component(_SoftMotor, "29idKappa:Euler_Chi")      # 29idKappa:Euler_Theta.RBV => readback
-    phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
+    th  = Component(_SoftMotor, "Theta")    
+    chi = Component(_SoftMotor, "Chi")      
+    phi = Component(_SoftMotor, "Phi")
 #    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
 
 ## Instantiate pseudo motors
-fourc_motors = _FourcMotors("",name="motors")
+fourc_motors = _FourcMotors("29idKappa:Euler_",name="motors")
 
 
 ##### Create class to write to str PVs for troubleshooting
