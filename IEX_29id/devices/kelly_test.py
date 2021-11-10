@@ -8,20 +8,47 @@ from ophyd import Component, Device
 #logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+class MyEpicsMotor(EpicsMotor):
+    sync = Component(EpicsSignal, "sync.PROC")
 
+class _SlitsMotors(Device):
+    m1  = Component(MyEpicsMotor, "1")    ## 1H  
+    m2  = Component(MyEpicsMotor, "2")    ## 1V
+    m3  = Component(MyEpicsMotor, "3")    ## 2H
+    m4  = Component(MyEpicsMotor, "4")    ## 2V
 
+slits_motors = _SlitsMotors("29idb:m", name="motors")
 
+class _SoftMotor(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "")
+    readback = Component(EpicsSignalRO, ".RBV")   
+    desc = Component(EpicsSignalRO,".DESC")
 
+class _FourMotors(Device):
+    Slit1H = Component(_SoftMotor, "29idb:Slit1H")   
+    Slit1V = Component(_SoftMotor, "29idb:Slit1V")    
+    Slit2H = Component(_SoftMotor, "29idb:Slit2H")      
+    Slit2V = Component(_SoftMotor, "29idb:Slit2V")
 
-
-
-
-
-
-
+four_motors = _FourMotors("",name="motors")
+ 
+def sync_PI_motors():
+    """
+    Synchronize VAL with RBV for 1H, 1V, 2H, 2V
+    """
+    Slit1H_motor = slits_motors.m1
+    Slit1V_motor = slits_motors.m2
+    Slit2H_motor = slits_motors.m3
+    Slit2V_motor = slits_motors.m4
+    yield from bps.abs_set(Slit1H_motor.sync,1)
+    yield from bps.abs_set(Slit1V_motor.sync,1)
+    yield from bps.abs_set(Slit2H_motor.sync,1)
+    yield from bps.abs_set(Slit2V_motor.sync,1)
 
 
 # Functions to convert:
+
+
 
 def SetSlit1A(Hsize,Vsize,Hcenter,Vcenter):   
     """move slits 1A: Hsize x Vsize centered at (Hcenter,Vcenter)"""
