@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 class MyEpicsMotor(EpicsMotor):
     sync = Component(EpicsSignal, "sync.PROC")
+    desc = Component(EpicsSignalRO,".DESC")
+    homf = Component(EpicsSignal,".HOMF")
+    dval = Component(EpicsSignal,".DVAL")
 
 class _SlitsMotors(Device):
     m1  = Component(MyEpicsMotor, "1")    ## 1H  
@@ -45,8 +48,14 @@ def sync_PI_motors():
     yield from bps.abs_set(Slit2H_motor.sync,1)
     yield from bps.abs_set(Slit2V_motor.sync,1)
 
+class _Status(Device):
+    st1  = Component(EpicsSignal, "1")        
+    st2  = Component(EpicsSignal, "2")    
+    st3  = Component(EpicsSignal, "3")     
+    st4  = Component(EpicsSignal, "4")    
 
-# Functions to convert:
+## Instantiate status
+status  = _Status("29idb:gp:text",name="status")  
 
 
 
