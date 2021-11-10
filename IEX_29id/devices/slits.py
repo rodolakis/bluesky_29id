@@ -3,6 +3,41 @@ from math import inf, nan
 from IEX_29id.utils.exp import CheckBranch
 from IEX_29id.utils.misc import read_dict
 
+
+
+from bluesky import plan_stubs as bps
+import logging
+from ophyd import EpicsMotor, EpicsSignal, PVPositionerPC, EpicsSignalRO, Signal    
+from ophyd import Component, Device
+from apstools.devices import EpicsDescriptionMixin
+
+
+
+class _SoftMotor(PVPositionerPC):
+    size_setpoint = Component(EpicsSignal, "size.VAL")           # 29idb:Slit1Hsize.VAL   => setpoint
+    size_readback = Component(EpicsSignalRO, "t2.C")             # 29idb:Slit1t2.C        => readback  
+    center_setpoint = Component(EpicsSignal,"center.VAL")         
+    center_readback = Component(EpicsSignalRO,"t2.D")         # RO means ReadOnly, those are PV that we cannot write to 
+    sync = Component(EpicsSignal,"sync.PROC")         # RO means ReadOnly, those are PV that we cannot write to 
+
+
+
+class _PseudoMotors(Device):
+    h1 = Component(_SoftMotor, "1H")    
+    v1 = Component(_SoftMotor, "1V")      
+    h2 = Component(_SoftMotor, "2H")
+    v2 = Component(_SoftMotor, "2V")
+#    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
+
+## Instantiate pseudo motors
+slits = _PseudoMotors("29idb:Slit",name="motors")
+
+
+
+
+#--------------------------- Old Functions ----------------------------#
+
+
 def slit(val):
     """
     Sets the exit slits:
