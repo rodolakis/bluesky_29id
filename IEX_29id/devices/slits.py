@@ -1,39 +1,45 @@
-from epics import caput, caget
-from math import inf, nan
-from IEX_29id.utils.exp import CheckBranch
-from IEX_29id.utils.misc import read_dict
+# from epics import caput, caget
+# from math import inf, nan
+# from IEX_29id.utils.exp import CheckBranch
+# from IEX_29id.utils.misc import read_dict
 
 
 
 from bluesky import plan_stubs as bps
 import logging
-from ophyd import EpicsMotor, EpicsSignal, PVPositionerPC, EpicsSignalRO, Signal    
+from ophyd import EpicsSignal, PVPositionerPC, EpicsSignalRO    
 from ophyd import Component, Device
 from apstools.devices import EpicsDescriptionMixin
 
 
 
-class _SoftSlitH(PVPositionerPC):
-    setpoint = Component(EpicsSignal, "Hsize.VAL")           # 29idb:Slit1Hsize.VAL   => setpoint
-    readback = Component(EpicsSignalRO, "Ht2.C")             # 29idb:Slit1t2.C        => readback  
-    sync = Component(EpicsSignal,"Hsync.PROC")                # RO means ReadOnly, those are PV that we cannot write to 
+class _SoftSlitSize(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "size.VAL")           # 29idb:Slit1Hsize.VAL   => setpoint
+    readback = Component(EpicsSignalRO, "t2.C")             # 29idb:Slit1t2.C        => readback  
+    sync = Component(EpicsSignal,"sync.PROC")               # RO means ReadOnly, those are PV that we cannot write to 
 
-class _SoftSlitV(PVPositionerPC):
-    setpoint = Component(EpicsSignal, "Vsize.VAL")           # 29idb:SlitVsize.VAL   => setpoint
-    readback = Component(EpicsSignalRO, "Vt2.D")             # 29idb:Slit1t2.D        => readback  
-    sync = Component(EpicsSignal,"Vsync.PROC")               # RO means ReadOnly, those are PV that we cannot write to 
+
+class _SoftSlitCenter(PVPositionerPC):
+    setpoint = Component(EpicsSignal, "center.VAL")         # 29idb:Slit1Hsize.VAL   => setpoint
+    readback = Component(EpicsSignalRO, "t2.D")             # 29idb:Slit1t2.C        => readback  
+    sync = Component(EpicsSignal,"sync.PROC")               # RO means ReadOnly, those are PV that we cannot write to 
 
 
 
 class _My4Slits(Device):
-    h1 = Component(_SoftSlitH, "1")    
-    v1 = Component(_SoftSlitV, "1")      
-    h2 = Component(_SoftSlitH, "2")
-    v2 = Component(_SoftSlitV, "2")
-#    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
+    H1size = Component(_SoftSlitSize, "1H")    
+    V1size = Component(_SoftSlitSize, "1V")  
+    H1center = Component(_SoftSlitCenter, "1H")    
+    V1center = Component(_SoftSlitCenter, "1V")  
+    H2size = Component(_SoftSlitSize, "2H")    
+    V2size = Component(_SoftSlitSize, "2V")  
+    H2center = Component(_SoftSlitCenter, "2H")    
+    V2center = Component(_SoftSlitCenter, "2V")  
 
 ## Instantiate pseudo motors
 slits = _My4Slits("29idb:Slit",name="motors")
+
+# TODO: do I need to worry about a busy record?
 
 
 
