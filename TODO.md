@@ -1,4 +1,10 @@
 
+
+
+![image](./Figures/beamline_sketch.jpg)
+
+
+
 # devices
 
 ## arpes_motors.py
