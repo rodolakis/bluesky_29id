@@ -80,7 +80,7 @@ class _KappaMotors(Device):
     m9  = Component(MyEpicsMotor, "9")    ## tth
 
 ## Instantiate real motors
-kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
+kappa_motors = _KappaMotors("29idKtest:m", name="kappa_motors")  # kappa_motors.m1
 
 
 ##### Create class to describe pseudo motors (th,chi,phi)
@@ -89,42 +89,50 @@ kappa_motors = _KappaMotors("29idKtest:m", name="motors")  # kappa_motors.m1
 class _SoftMotor(PVPositionerPC):
     setpoint = Component(EpicsSignal, "")           # 29idKappa:Euler_Theta     => setpoint
     readback = Component(EpicsSignalRO, ".RBV")     # 29idKappa:Euler_Theta.RBV => readback  
-    desc = Component(EpicsSignalRO,".DESC")         # RO means ReadOnly, those are PV that we cannot write to 
- #   done = Component(Signal,kind='omitted',value = 0)   # fourc done = 29idKappa:Kappa_busy
- #   done_value = 0                                      # done_value = 0 (Done) or 1 (Busy)
+     
+    done_value = 0                                        # done_value = 0 (Done) or 1 (Busy)
+    done = Component(Signal,kind='omitted',value = done_value)     # fourc done = 29idKappa:Kappa_busy
+    
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.parent.busy.subscribe(self.done_callback)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parent.done.subscribe(self.done_callback)
        
-    # def done_callback(self,*args,**kwargs):
-    #     self.done.put(self.parent.ready)
+    def done_callback(self,*args,**kwargs):
+        self.done.put(self.parent.ready)
 
 
 
 #------- Version 1:
 
-# class _FourcMotors(Device):
-#     th  = Component(_SoftMotor, "29idKappa:Euler_Theta")
-#     chi = Component(_SoftMotor, "29idKappa:Euler_Chi")     
-#     phi = Component(_SoftMotor, "29idKappa:Euler_Phi")
-# #    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
-
-# ## Instantiate pseudo motors
-# fourc_motors = _FourcMotors("",name="motors")
-
-
-
-#------- Version 2:
-
 class _FourcMotors(Device):
-    th  = Component(_SoftMotor, "Theta")    
-    chi = Component(_SoftMotor, "Chi")      
-    phi = Component(_SoftMotor, "Phi")
-#    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
+    th  = Component(_SoftMotor, "Euler_Theta")
+    chi = Component(_SoftMotor, "Euler_Chi")     
+    phi = Component(_SoftMotor, "Euler_Phi")
+    done= Component(EpicsSignalRO, "Kappa_busy", done_value=0, kind='omitted')
+    done_value = 0      
+
+    @property
+    def ready(self):
+        status=self.done.get() == self.done_value
+        return status
+
 
 ## Instantiate pseudo motors
-fourc_motors = _FourcMotors("29idKappa:Euler_",name="motors")
+fourc_motors = _FourcMotors("29idKappa:",name="fourc_motors")
+
+
+
+# ------- Version 2:
+
+# class _FourcMotors(Device):
+#     th  = Component(_SoftMotor, "Theta")    
+#     chi = Component(_SoftMotor, "Chi")      
+#     phi = Component(_SoftMotor, "Phi")
+#    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
+
+# # Instantiate pseudo motors
+# fourc_motors = _FourcMotors("29idKappa:Euler_",name="motors")
 
 
 ##### Create class to write to str PVs for troubleshooting
