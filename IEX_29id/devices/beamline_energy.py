@@ -90,7 +90,7 @@ class MyUndulator(Device):   # in keV
 
         self.readback.name = self.name
 
-class MonoEnergy(PVPositioner):  # in keV
+class MonoEnergy(PVPositioner):  # in eV
     setpoint = Component(EpicsSignal, "ENERGY_SP")
     readback = Component(EpicsSignalRO, "ENERGY_MON")
     done = Component(EpicsSignalRO,'ERDY_STS',kind='omitted',string=True)
