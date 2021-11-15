@@ -1,7 +1,7 @@
 
 
 
-![image](./Figures/beamline_sketch.jpg)
+![image](./figures/beamline_sketch.jpg)
 
 
 
@@ -51,12 +51,13 @@ done
 ## keithleys.py
 - reset settings to default
 - convert current to flux
-- 
 
 
 
 
 
+<br>
+<br>
 
 ## slits.py
 
@@ -78,4 +79,38 @@ done
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
 
 
-![image](./Figures/4blades_slits.jpg)
+![image](./figures/4blades_slits.jpg)
+
+<br>
+<br>
+
+## detectors.py
+
+There are several types of detectors that generate different types of signal: a current (photodiodes), a voltage (mcp), or an image (2D detector).
+To read out the detector signal we can use different controllers:
+- current amplifier (a fancy multimeter): the model/brand we use is Keithley6485
+- pre-amplifier: the model/brand we use is SRS570 (in this case the current coming out of a detector is converted to pulses via voltage to frequency conversion); 
+those are read using <b>scalers</b>. 
+- area (=2D) detector support: we will work on that last, this is one of the most complicated EPICS object
+
+
+We need to be able to do 2 things on those devices:
+- read the current value of the detector so it can be used in scans: there is an example [here](https://nbviewer.org/github/BCDA-APS/use_bluesky/blob/main/lessons/lesson1.ipynb) in the case of scalers
+- adjust the settings of the detector controller: SRS570 has been already defined [here](https://github.com/BCDA-APS/apstools/blob/main/apstools/_devices/srs570_preamplifier.py)
+
+
+In kelly_test.py, create the following ophyd objects:
+
+- scaler channels 1,2,3,4,5,14:  prefix = 29idMZ0:scaler1 ⇨ see [scaler](https://nbviewer.org/github/BCDA-APS/use_bluesky/blob/main/lessons/lesson1.ipynb) doc 
+- pre-amplifier SRS570 29idd:A1 to 4:  prefix = 29idd:A  ⇨   see [SRS570](https://github.com/BCDA-APS/apstools/blob/main/apstools/_devices/srs570_preamplifier.py) class 
+- question for Pete: what is the purpose of [PreamplifierBaseDevice](https://github.com/BCDA-APS/apstools/blob/166a5e5bec46adc54f3f6242656ce87b56664c9b/apstools/_devices/preamp_base.py#L24) class?
+
+ ![image](./figures/scaler+srs.jpg)
+
+- create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example:  prefix = 29idb:ca
+ - create keithley objects 29idb:ca1 to 15
+ ![image](./figures/keithley.jpg)
+
+<br>
+<br>
+ REMEMBER: the <b>ophyd</b> part concists in creting the object using the appropriated ophyd classes to connect to the hardware; the <b>bluesky</b> part are the "plans". At some point we will separate those (ophyd object will be defined in "devices", plans in "scans")
