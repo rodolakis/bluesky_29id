@@ -105,7 +105,14 @@ In kelly_test.py, create the following ophyd objects:
 
  ![image](./figures/scaler+srs.jpg)
 
-- create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example:  prefix = 29idb:ca, rate = Component(EpicsSignal, "rate", write_pv="rateSet")
+- create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example; <br> - prefix = 29idb:ca
+<br> - in this case PV settings use the syntaxes: 
+       <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rate set point: &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;29idb:ca5:rateSet
+       <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rate read back:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;29idb:ca5:rate
+
+        class Keithley6485(Device):
+            rate = Component(EpicsSignal, "rate", write_pv="rateSet")
+            ...
  - create keithley objects 29idb:ca1 to 15
 
  ![image](./figures/keithley.jpg)
