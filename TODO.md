@@ -1,13 +1,12 @@
 
 
-
-![image](./figures/beamline_sketch.jpg)
+![image](./figures/beamline.jpg)
 
 
 </br>
 </br>
 
-# devices
+# ophyd devices
 
 ## arpes_motors.py
 done
@@ -107,7 +106,7 @@ In kelly_test.py, create the following ophyd objects:
 
  ![image](./figures/scaler+srs.jpg)
 
-- create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example:  prefix = 29idb:ca
+- create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example:  prefix = 29idb:ca, rate = Component(EpicsSignal, "rate", write_pv="rateSet")
  - create keithley objects 29idb:ca1 to 15
 
  ![image](./figures/keithley.jpg)
