@@ -89,6 +89,9 @@ class MyUndulator(Device):   # in keV
             yield from bps.sleep(0.1)   # bps = bluesky plan stub
 
 
+
+#===================  Mono : 
+
 class MonoEnergy(PVPositioner):  # in eV
     setpoint = Component(EpicsSignal, "ENERGY_SP")
     readback = Component(EpicsSignalRO, "ENERGY_MON")
@@ -113,14 +116,13 @@ class Monochromator(Device):
         return self.mirror_status.get(as_string=True) in  ("Moving", "Positioned") and self.grating_status.get(as_string=True) in  ("Moving", "Positioned")
         
 
+#--------------------------------------------------------
+# define the beamline instruments
+
+
 aps = apstools.devices.ApsMachineParametersDevice(name="aps")
 undulator = MyUndulator("ID29:", name="undulator") #, egu="keV"?
-
-
 mono = Monochromator("", name="mono")
-
-
-
 
 if mono.grating_density.get() == 1200:
     GRT="MEG"
