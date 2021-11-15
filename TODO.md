@@ -4,7 +4,7 @@
 ![image](./figures/beamline_sketch.jpg)
 
 
-
+</br>
 </br>
 
 # devices
