@@ -77,8 +77,7 @@ done
 - ingnore the logger for now
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
 
-![image](./figures/4blades_slits.jpg)
- ![image](./figures/apertures.jpg)
+![image](./figures/allslits.jpg)
 <br>
 <br>
 
