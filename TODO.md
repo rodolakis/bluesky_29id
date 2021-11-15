@@ -78,9 +78,8 @@ done
 - ingnore the logger for now
 - repeat for Slit2B (same syntax for PVs, just replace 1 by 2: 29idb:Slit1H => 29idb:Slit2H)
 
-
 ![image](./figures/4blades_slits.jpg)
-
+ ![image](./figures/apertures.jpg)
 <br>
 <br>
 
@@ -105,10 +104,12 @@ In kelly_test.py, create the following ophyd objects:
 - pre-amplifier SRS570 29idd:A1 to 4:  prefix = 29idd:A  ⇨   see [SRS570](https://github.com/BCDA-APS/apstools/blob/main/apstools/_devices/srs570_preamplifier.py) class 
 - question for Pete: what is the purpose of [PreamplifierBaseDevice](https://github.com/BCDA-APS/apstools/blob/166a5e5bec46adc54f3f6242656ce87b56664c9b/apstools/_devices/preamp_base.py#L24) class?
 
+
  ![image](./figures/scaler+srs.jpg)
 
 - create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example:  prefix = 29idb:ca
  - create keithley objects 29idb:ca1 to 15
+
  ![image](./figures/keithley.jpg)
 
 <br>
