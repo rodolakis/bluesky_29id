@@ -113,6 +113,8 @@ In kelly_test.py, create the following ophyd objects:
         class Keithley6485(Device):
             rate = Component(EpicsSignal, "rate", write_pv="rateSet")
             ...
+<br> - you will need to describe all the different settings as attribute to your new class Keithley6485 (rate, range, auto range etc...)
+
  - create keithley objects 29idb:ca1 to 15
 
  ![image](./figures/keithley.jpg)
