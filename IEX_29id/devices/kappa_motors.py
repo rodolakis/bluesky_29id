@@ -96,7 +96,7 @@ class _SoftMotor(PVPositionerPC):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent.done.subscribe(self.done_callback)
+        self.parent.done.subscribe(self.done_callback)  # subscribe = camonitor                             
        
     def done_callback(self,*args,**kwargs):
         self.done.put(self.parent.ready)
@@ -275,7 +275,7 @@ def mvphi(value):
 def mvx(value):
     """
     moves x to value 
-    """
+    """ 
     yield from _quickmove_plan(value,kappa_motors.m2)
 
 

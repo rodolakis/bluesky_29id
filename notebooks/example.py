@@ -173,7 +173,6 @@ class MyUndulator(Device):   # in keV
         while not self.ready:
             yield from bps.sleep(0.1)   # bps = bluesky plan stub
 
-        self.readback.name = self.name
 
 class MonoEnergy(PVPositioner):  # in keV
     setpoint = Component(EpicsSignal, "ENERGY_SP")

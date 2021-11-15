@@ -88,7 +88,6 @@ class MyUndulator(Device):   # in keV
         while not self.ready:
             yield from bps.sleep(0.1)   # bps = bluesky plan stub
 
-        self.readback.name = self.name
 
 class MonoEnergy(PVPositioner):  # in eV
     setpoint = Component(EpicsSignal, "ENERGY_SP")
@@ -96,9 +95,9 @@ class MonoEnergy(PVPositioner):  # in eV
     done = Component(EpicsSignalRO,'ERDY_STS',kind='omitted',string=True)
     done_value = 'Ready'      
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):   
         super().__init__(*args, **kwargs)
-        self.readback.name = self.name
+        self.readback.name = self.name       # simplifies the name of readback energy: mono.energy.readback => mono.energy
 
 
 class Monochromator(Device):
