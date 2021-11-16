@@ -106,18 +106,22 @@ In kelly_test.py, create the following ophyd objects:
  ![image](./figures/scaler+srs.jpg)
 
 - create a custom ophyd class for <b>Keithley6485</b> by following the SRS570 example; <br> - prefix = 29idb:ca
-<br> - in this case PV settings use the syntaxes: 
+<br> - in this case looks like the PV settings use the following syntaxes: 
        <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rate set point: &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;29idb:ca5:rateSet
        <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rate read back:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;29idb:ca5:rate
+<br> according to my discussion with Pete on the CCI bluesky teams chat, you can handle that syntaxe like this:
 
         class Keithley6485(Device):
             rate = Component(EpicsSignal, "rate", write_pv="rateSet")
             ...
-<br> - you will need to describe all the different settings as attribute to your new class Keithley6485 (rate, range, auto range etc...)
+- you will need to describe all the different settings as attributes to your new class Keithley6485 (rate, range, auto range etc...)
+- you should have the screen open on your d316722 session on Nerdy (you don't need to use Firefox, you should be able to access it using the NoMachine client by launching the Beamline connection we created together)
+ ![image](./figures/getinfo_keithley.jpg)
 
- - create keithley objects 29idb:ca1 to 15
 
- ![image](./figures/keithley.jpg)
+ - once you have created the Keithley6485 class, create keithley objects 29idb:ca1 to 15
+
+
 
 <br>
 <br>
