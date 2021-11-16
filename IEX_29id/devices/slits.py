@@ -16,13 +16,17 @@ from apstools.devices import EpicsDescriptionMixin
 class _SoftSlitSize(PVPositionerPC):
     setpoint = Component(EpicsSignal, "size.VAL")           # 29idb:Slit1Hsize.VAL   => setpoint
     readback = Component(EpicsSignalRO, "t2.C")             # 29idb:Slit1t2.C        => readback  
-    sync = Component(EpicsSignal,"sync.PROC")               # RO means ReadOnly, those are PV that we cannot write to 
+    sync = Component(EpicsSignal,"sync.PROC",kind='omitted')# RO means ReadOnly, those are PV that we cannot write to 
+    done_value = 1                                          # done_value = 1 (Done) or 0 (moving)
+    done = Component(EpicsSignalRO,'DMOV',kind='omitted')   # slits done = 29idb:Slit1VDMOV
 
 
 class _SoftSlitCenter(PVPositionerPC):
     setpoint = Component(EpicsSignal, "center.VAL")         # 29idb:Slit1Hsize.VAL   => setpoint
     readback = Component(EpicsSignalRO, "t2.D")             # 29idb:Slit1t2.C        => readback  
-    sync = Component(EpicsSignal,"sync.PROC")               # RO means ReadOnly, those are PV that we cannot write to 
+    sync = Component(EpicsSignal,"sync.PROC",kind='omitted')               # RO means ReadOnly, those are PV that we cannot write to 
+    done_value = 1                                          # done_value = 1 (Done) or 0 (moving)
+    done = Component(EpicsSignalRO,'DMOV',kind='omitted')                 # slits done = 29idb:Slit1VDMOV
 
 
 
@@ -39,7 +43,6 @@ class _My4Slits(Device):
 ## Instantiate pseudo motors
 slits = _My4Slits("29idb:Slit",name="motors")
 
-# TODO: do I need to worry about a busy record?
 
 
 
