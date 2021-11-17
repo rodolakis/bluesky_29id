@@ -1,39 +1,67 @@
-from time import sleep
-from epics import caget, caput, PV
-from IEX_29id.utils.exp import CheckBranch, CheckBranch_Name
-from IEX_29id.utils.misc import dateandtime
-from IEX_29id.devices.mirror import M3R_Table, Move_M3R
-from IEX_29id.scans.setup import Reset_Scan
-from IEX_29id.devices.diagnostics import all_diag_out
-from IEX_29id.devices.detectors import MPA_HV_OFF
-from IEX_29id.utils.misc import WaitForPermission
-from IEX_29id.devices.undulator import ID_Start
+#
 
-##########################
-
-def Open_MainShutter():
-    caput("PC:29ID:FES_OPEN_REQUEST.VAL",1, wait=True,timeout=180000)
-    print("Opening Main Shutter...")
+from apstools.devices import ApsPssShutterWithStatus
+from ophyd import Component, Device
+from ophyd.signal import EpicsSignalRO,EpicsSignal
 
 
-def Close_MainShutter():
-    caput("PC:29ID:FES_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
-    print("Closing Main Shutter...")
+class MyFES(ApsPssShutterWithStatus):
+    pss_state = Component(EpicsSignalRO,'PA:29ID:A_BEAM_PRESENT.VAL',kind='normal')
+    open_signal = Component(EpicsSignal,'PC:29ID:FES_OPEN_REQUEST.VAL',kind='omitted')
+    close_signal  = Component(EpicsSignal,'PC:29ID:FES_CLOSE_REQUEST.VAL',kind='omitted')
+    pss_state_open_values = [1,'ON']
+    pss_state_closed_values = [0,'OFF']
 
-def Open_DShutter():
-    branch="D"
-    caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
-    print("Opening "+branch+"-Shutter...")   
+    def __init__(self, prefix, *args, **kwargs):
+        super().__init__(prefix, *args, **kwargs)
 
-def Close_DShutter():
-    branch="D"
-    caput("PC:29ID:S"+branch+"S_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
-    print("Closing "+branch+"-Shutter...")
 
-def Close_CShutter():
-    branch="C"
-    caput("PC:29ID:S"+branch+"S_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
-    print("Closing "+branch+"-Shutter...")
+
+
+
+
+
+
+
+
+
+
+# from time import sleep
+# from epics import caget, caput, PV
+# from IEX_29id.utils.exp import CheckBranch, CheckBranch_Name
+# from IEX_29id.utils.misc import dateandtime
+# from IEX_29id.devices.mirror import M3R_Table, Move_M3R
+# from IEX_29id.scans.setup import Reset_Scan
+# from IEX_29id.devices.diagnostics import all_diag_out
+# from IEX_29id.devices.detectors import MPA_HV_OFF
+# from IEX_29id.utils.misc import WaitForPermission
+# from IEX_29id.devices.undulator import ID_Start
+
+# ##########################
+
+# def Open_MainShutter():
+#     caput("PC:29ID:FES_OPEN_REQUEST.VAL",1, wait=True,timeout=180000)
+#     print("Opening Main Shutter...")
+
+
+# def Close_MainShutter():
+#     caput("PC:29ID:FES_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
+#     print("Closing Main Shutter...")
+
+# def Open_DShutter():
+#     branch="D"
+#     caput("PC:29ID:S"+branch+"S_OPEN_REQUEST.VAL",1,wait=True,timeout=18000)
+#     print("Opening "+branch+"-Shutter...")   
+
+# def Close_DShutter():
+#     branch="D"
+#     caput("PC:29ID:S"+branch+"S_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
+#     print("Closing "+branch+"-Shutter...")
+
+# def Close_CShutter():
+#     branch="C"
+#     caput("PC:29ID:S"+branch+"S_CLOSE_REQUEST.VAL",1,wait=True,timeout=18000)
+#     print("Closing "+branch+"-Shutter...")
 
 
 
