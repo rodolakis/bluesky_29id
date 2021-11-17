@@ -34,7 +34,7 @@ done
 - open / close chamber valves (C and D)
 - check branch shutter (C or D) status and opens it if closed (depend on mirror position)
 - check main shutter status and opens it if closed
-- switch branch: move mirror, close/open shutters, turn off camera
+- (switch branch: move mirror, close/open shutters, turn off camera)
 - close branch (valve + shutter + MCP HV)
 - close all valves
 - close all shutters
