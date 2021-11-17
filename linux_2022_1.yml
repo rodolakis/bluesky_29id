@@ -1,7 +1,8 @@
 name: bluesky_2022_1
 
 # use:
-#   date; conda env create --force -f ./environment_2022_1.yml; date
+# deactivate bluesky env, activate (base)
+#   date; conda env create --force -f ./linux_2022_1.yml; date
 
 channels:
   - defaults
@@ -11,7 +12,7 @@ channels:
 
 dependencies:
   # --- Python core packages
-  - python>=3.8
+  - python<3.9
   - ipython
   - jupyter
   - jupyterlab
