@@ -8,9 +8,10 @@
         mvtth(new_value)
         tth0_set()
    
-    note: &nbsp;- th can be 0 or 180<br>
+    note: &nbsp;- th can be 0 or 180 (no need to care about omega here)<br>
     &emsp;&emsp;&ensp; - at that point z0 is a rough estimate<br>
     &emsp;&emsp;&ensp; - **use d3 only to measure z** (d4 is too narros)
+
 3) align z at th=0::
 
         z0=align_z0(0)
@@ -31,13 +32,17 @@
 
 9) refine omega180/z180 and omega0/z0 for new tth0, keeping a close eye on the mirror to make sure it stays at the optimal position
 
+---------------------------------------
+
 ## Determine kth_offset:
 
 If th_0 and th_180 is the motor position at specular near th=15 and th=165, respectivaley (eg th_0=13.671 and th_180=163.65):
 
         Offset = 0.5*(180 - th_180 - th_0)
+
 With motor at 0, the actual value is Offset.
 
+---------------------------------------
 
 ##  Align M4R to center of rotation:
 1) move to th=90, chi=0, phi=90
@@ -45,4 +50,17 @@ With motor at 0, the actual value is Offset.
 2) find z:
 
         align_z0_chi0()
+
 3) adjust M4R pitch (v) to match z0=z180
+
+---------------------------------------
+
+##  Determined kap offset:
+
+1) move to th,chi,phi= (90,0,90)
+
+2) compare kap scans at (90,0,90) and (270,0,-90):
+
+        dscankap(-4,4,0.1)
+
+3) 
