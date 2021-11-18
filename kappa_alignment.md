@@ -53,6 +53,8 @@ With motor at 0, the actual value is Offset.
 
 3) adjust M4R pitch (v) to match z0=z180
 
+4) check if moving M4R did not change the in/out alignmnent (M3R optimal pixel)
+
 ---------------------------------------
 
 ##  Determined kap offset:
@@ -64,4 +66,4 @@ With motor at 0, the actual value is Offset.
 
 2) set the value of intersection (here 0.18) to 0:
 
-![image](./figures/kap0.png)
+![image](./figures/KapBeforeAfter.png)
