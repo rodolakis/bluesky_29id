@@ -57,10 +57,11 @@ With motor at 0, the actual value is Offset.
 
 ##  Determined kap offset:
 
-1) move to th,chi,phi= (90,0,90)
 
-2) compare kap scans at (90,0,90) and (270,0,-90):
+1) compare kap scans at (th,chi,phi) = (90,0,90) and (270,0,-90):
 
         dscankap(-4,4,0.1)
 
-3) 
+2) set the value of intersection (here 0.18) to 0:
+
+![image](./figures/kap0.png)
