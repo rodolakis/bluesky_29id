@@ -1,53 +1,55 @@
 from ophyd.scaler import ScalerCH
-from ophyd import Component
-from ophyd import EpicsSignal
-from .preamp_base import PreamplifierBaseDevice
-from apstools.device import SRS570_PreAmplifier
+from ophyd import Component, Device
+from ophyd import EpicsSignal, EpicsSignalRO
+from apstools.devices import SRS570_PreAmplifier
 import logging
-import pint
  
 logger = logging.getLogger(__name__)
  
+
+
+
 scaler = ScalerCH("29idMZ0:scaler1", name="scaler")
  
 class PreAmplifier(Device):
- A1 = Component(SRS570_PreAmplifier, "1")
- A2 = Component(SRS570_PreAmplifier, "2")
- A3 = Component(SRS570_PreAmplifier, "3")
- A4 = Component(SRS570_PreAmplifier, "4")
-SRS = PreAmplifier("29idd:A", name = "SRS")
+    A1 = Component(SRS570_PreAmplifier, "1")
+    A2 = Component(SRS570_PreAmplifier, "2")
+    A3 = Component(SRS570_PreAmplifier, "3")
+    A4 = Component(SRS570_PreAmplifier, "4")
+srs = PreAmplifier("29idd:A", name = "srs")
  
 class Keithley6485(Device):
- rate = Component(EpicsSignal, "rate", write_pv="rateSet")
- range= Component(EpicsSignalRO,'range')
- autorange = Component(EpicsSignal, "rangeAuto", write_pv="rangeAutoSet")
- autoulimit = Component(EpicsSignal, "rateAutoUlimit", write_pv="rateAutoUlimitSet")
- autollimit = Component(EpicsSignal, "rateAutoLlimit", write_pv="rateAutoLlimitSet")
- zerocheck = Component(EpicsSignal, "zeroCheck", write_pv= "zeroCheckSet")
- zerocorrect = Component(EpicsSignal, "zeroCorrect", write_pv= "zeroCorrectSet")
- medianfilter = Component(EpicsSignal, "medianFilter", write_pv= "medianFilterSet")
- medianfilterrank = Component(EpicsSignal, "medianFilterRank", write_pv= "medianFilterRankSet")
- digitalfilter = Component(EpicsSignal, "digitalFilter", write_pv= "digitalFilterSet")
- filtercount = Component(EpicsSignal, "digitalFilterCount", write_pv= "digitalFilterCountSet")
- filtercontrol = Component(EpicsSignal, "digitalFilterControl", write_pv= "digitalFilterControlSet")
+    read = Component(EpicsSignalRO, "read")
+    scan = Component(EpicsSignal, "read:SCAN", write_pv="read:SCAN")
+    rate = Component(EpicsSignal, "rate", write_pv="rateSet")
+    range= Component(EpicsSignalRO,'range')
+    autorange = Component(EpicsSignal, "rangeAuto", write_pv="rangeAutoSet")
+    autoulimit = Component(EpicsSignal, "rateAutoUlimit", write_pv="rateAutoUlimitSet")
+    autollimit = Component(EpicsSignal, "rateAutoLlimit", write_pv="rateAutoLlimitSet")
+    zerocheck = Component(EpicsSignal, "zeroCheck", write_pv= "zeroCheckSet")
+    zerocorrect = Component(EpicsSignal, "zeroCorrect", write_pv= "zeroCorrectSet")
+    medianfilter = Component(EpicsSignal, "medianFilter", write_pv= "medianFilterSet")
+    medianfilterrank = Component(EpicsSignal, "medianFilterRank", write_pv= "medianFilterRankSet")
+    digitalfilter = Component(EpicsSignal, "digitalFilter", write_pv= "digitalFilterSet")
+    filtercount = Component(EpicsSignal, "digitalFilterCount", write_pv= "digitalFilterCountSet")
+    filtercontrol = Component(EpicsSignal, "digitalFilterControl", write_pv= "digitalFilterControlSet")
  
-class Keithley29id(Device):
- ca1 = Component(Keithley6485, "1") 
- ca2 = Component(Keithley6485, "2") 
- ca3 = Component(Keithley6485, "3") 
- ca4 = Component(Keithley6485, "4") 
- ca5 = Component(EpicsMotor, "5") 
- ca6 = Component(EpicsMotor, "6") 
- ca7 = Component(EpicsMotor, "7") 
- ca8 = Component(EpicsMotor, "8") 
- ca9 = Component(EpicsMotor, "9") 
- ca10 = Component(EpicsMotor, "10") 
- ca11 = Component(EpicsMotor, "11") 
- ca12 = Component(EpicsMotor, "12") 
- ca13 = Component(EpicsMotor, "13") 
- ca14 = Component(EpicsMotor, "14") 
- ca15 = Component(EpicsMotor, "15") 
-keithley_objects = Keithley6485("29idb:ca", name="rate")
+class MyKeithley(Device):
+    ca1 = Component(Keithley6485, "1") 
+    ca2 = Component(Keithley6485, "2") 
+    ca3 = Component(Keithley6485, "3") 
+    ca4 = Component(Keithley6485, "4") 
+    ca5 = Component(Keithley6485, "5") 
+    ca6 = Component(Keithley6485, "6") 
+    ca7 = Component(Keithley6485, "7") 
+    ca8 = Component(Keithley6485, "8") 
+    ca9 = Component(Keithley6485, "9") 
+    ca11 = Component(Keithley6485, "11") 
+    ca12 = Component(Keithley6485, "12") 
+    ca13 = Component(Keithley6485, "13") 
+    ca14 = Component(Keithley6485, "14") 
+    ca15 = Component(Keithley6485, "15") 
+keithley_objects = MyKeithley("29idb:ca", name="keithley_objects")
 
 
 
