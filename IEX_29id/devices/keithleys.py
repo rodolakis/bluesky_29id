@@ -19,20 +19,20 @@ class PreAmplifier(Device):
 srs = PreAmplifier("29idd:A", name = "srs")
  
 class Keithley6485(Device):
-    read = Component(EpicsSignalRO, "read")
-    scan = Component(EpicsSignal, "read:SCAN", write_pv="read:SCAN")
-    rate = Component(EpicsSignal, "rate", write_pv="rateSet")
-    range= Component(EpicsSignalRO,'range')
-    autorange = Component(EpicsSignal, "rangeAuto", write_pv="rangeAutoSet")
-    autoulimit = Component(EpicsSignal, "rateAutoUlimit", write_pv="rateAutoUlimitSet")
-    autollimit = Component(EpicsSignal, "rateAutoLlimit", write_pv="rateAutoLlimitSet")
-    zerocheck = Component(EpicsSignal, "zeroCheck", write_pv= "zeroCheckSet")
-    zerocorrect = Component(EpicsSignal, "zeroCorrect", write_pv= "zeroCorrectSet")
-    medianfilter = Component(EpicsSignal, "medianFilter", write_pv= "medianFilterSet")
-    medianfilterrank = Component(EpicsSignal, "medianFilterRank", write_pv= "medianFilterRankSet")
-    digitalfilter = Component(EpicsSignal, "digitalFilter", write_pv= "digitalFilterSet")
-    filtercount = Component(EpicsSignal, "digitalFilterCount", write_pv= "digitalFilterCountSet")
-    filtercontrol = Component(EpicsSignal, "digitalFilterControl", write_pv= "digitalFilterControlSet")
+    value = Component(EpicsSignalRO, ":read")
+#    refresh = Component(EpicsSignal, ":read.SCAN", write_pv=":read.SCAN")
+    rate = Component(EpicsSignal, ":rate", write_pv=":rateSet", kind="config", string=True)
+    range= Component(EpicsSignalRO,':range', kind="config", string=True)
+    autorange = Component(EpicsSignal, ":rangeAuto", write_pv=":rangeAutoSet", kind="config", string=True)
+    autoulimit = Component(EpicsSignal, ":rangeAutoUlimit", write_pv=":rangeAutoUlimitSet", kind="config", string=True)
+    autollimit = Component(EpicsSignal, ":rangeAutoLlimit", write_pv=":rangeAutoLlimitSet", kind="config", string=True)
+    zerocheck = Component(EpicsSignal, ":zeroCheck", write_pv= ":zeroCheckSet", kind="config", string=True)
+    zerocorrect = Component(EpicsSignal, ":zeroCorrect", write_pv= ":zeroCorrectSet", kind="config", string=True)
+    medianfilter = Component(EpicsSignal, ":medianFilter", write_pv= ":medianFilterSet", kind="config", string=True)
+    medianfilterrank = Component(EpicsSignal, ":medianFilterRank", write_pv= ":medianFilterRankSet", kind="config", string=True)
+    digitalfilter = Component(EpicsSignal, ":digitalFilter", write_pv= ":digitalFilterSet", kind="config", string=True)
+    filtercount = Component(EpicsSignal, ":digitalFilterCount", write_pv= ":digitalFilterCountSet", kind="config", string=True)
+    filtercontrol = Component(EpicsSignal, ":digitalFilterControl", write_pv= ":digitalFilterControlSet", kind="config", string=True)
  
 class MyKeithley(Device):
     ca1 = Component(Keithley6485, "1") 
@@ -50,7 +50,6 @@ class MyKeithley(Device):
     ca14 = Component(Keithley6485, "14") 
     ca15 = Component(Keithley6485, "15") 
 keithley_objects = MyKeithley("29idb:ca", name="keithley_objects")
-
 
 
 
