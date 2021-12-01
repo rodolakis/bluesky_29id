@@ -7,16 +7,6 @@ import logging
 logger = logging.getLogger(__name__)
  
 
-
-
-scaler = ScalerCH("29idMZ0:scaler1", name="scaler")
- 
-class PreAmplifier(Device):
-    A1 = Component(SRS570_PreAmplifier, "1")
-    A2 = Component(SRS570_PreAmplifier, "2")
-    A3 = Component(SRS570_PreAmplifier, "3")
-    A4 = Component(SRS570_PreAmplifier, "4")
-srs = PreAmplifier("29idd:A", name = "srs")
  
 class Keithley6485(Device):
     value = Component(EpicsSignalRO, ":read")
