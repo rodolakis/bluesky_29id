@@ -11,7 +11,7 @@ from ophyd import EpicsSignal, PVPositionerPC, EpicsSignalRO
 from ophyd import Component, Device
 from apstools.devices import EpicsDescriptionMixin
 
-
+# see 4ID-D: https://github.com/APS-4ID-POLAR/ipython-polar/blob/master/profile_bluesky/startup/instrument/devices/slits.py
 
 class _SoftSlitSize(PVPositionerPC):
     setpoint = Component(EpicsSignal, "size.VAL")           # 29idb:Slit1Hsize.VAL   => setpoint
