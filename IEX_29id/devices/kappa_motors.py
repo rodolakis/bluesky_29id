@@ -80,7 +80,7 @@ class _KappaMotors(Device):
     m9  = Component(MyEpicsMotor, "9")    ## tth
 
 ## Instantiate real motors
-kappa_motors = _KappaMotors("29idKtest:m", name="kappa_motors")  # kappa_motors.m1
+kappa_motors = _KappaMotors("29idKappa:m", name="kappa_motors")  # kappa_motors.m1
 
 
 ##### Create class to describe pseudo motors (th,chi,phi)
@@ -144,7 +144,7 @@ class _Status(Device):
     st4  = Component(EpicsSignal, "4")    
 
 ## Instantiate status
-status  = _Status("29idKtest:gp:text",name="status")  # =>  status.st1/2/3/4
+status  = _Status("29idKappa:gp:text",name="status")  # =>  status.st1/2/3/4
 
 
 def sync_PI_motors():
