@@ -1,13 +1,13 @@
 __all__ = """
-    aps
     mono
     undulator
-    GRT
     sts
     branch
+    centroid_m3r
+    align_m3r
 """.split()
 
-
+#TODO: put back aps in all, problem with dm
 
 import apstools.devices
 from bluesky import plan_stubs as bps  # steps for use inside a plan
@@ -64,7 +64,8 @@ class UndulatorEnergy(PVPositioner):  # in keV
 class MyUndulator(Device):   # in keV
     """29ID has a special undulator, not APS Undulator A."""
     energy = Component(UndulatorEnergy, "")
-    actual_mode = Component(EpicsSignal, "ActualMode", write_pv='DesiredMode', string=True, kind='config') 
+    actual_mode = Component(EpicsSignal, "ActualMode", write_pv='DesiredMode', kind='config') 
+    actual_mode_str = Component(EpicsSignal, "ActualMode", write_pv='DesiredMode', string=True, kind='config') 
     quasi_ratio_raw = Component(EpicsSignal, "QuasiRatio.RVAL", write_pv='QuasiRatioIn.C', kind='config')
     main_on_off = Component(EpicsSignal, 'Main_on_off', string=True, kind='config')
     feedback = Component(EpicsSignalRO, 'feedback', string=True, kind='omitted')
@@ -119,24 +120,22 @@ sts=EpicsSignal("29idmono:ERDY_STS",name="sts")
 #=================== Beamline instruments:
 
 
-aps = apstools.devices.ApsMachineParametersDevice(name="aps")
+#aps = apstools.devices.ApsMachineParametersDevice(name="aps")
 undulator = MyUndulator("ID29:", name="undulator") #, egu="keV"?
 mono = Monochromator("", name="mono")
 
-GRT=''
 
-if mono.grating_density.get() == 1200:
-    GRT="MEG"
-elif mono.grating_density.get() == 2400:
-    GRT="HEG"
+# # TODO: turn it into a disctionary with 2 keys: 1200 and 2400; needs to go somewhere else as it can change during the exp
+# if mono.grating_density.get() == 1200:
+#     GRT="MEG"
+# elif mono.grating_density.get() == 2400:
+#     GRT="HEG"
+# else:    
+#     GRT=''
 
 branch = EpicsSignal("29id:CurrentBranch", name="branch")
-
-
-
-
-
-
+centroid_m3r = EpicsSignal("29id_ps6:Stats1:CentroidX_RBV", name="centroidM3R")
+align_m3r=EpicsSignal('29id_dohn:align_m3r:startAlign',name='align_m3r')
 
 
 
