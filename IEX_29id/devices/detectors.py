@@ -14,7 +14,7 @@ __all__ = """
     D4calc
     MCPcalc
     HV
-    centroidM3R
+    select_detector
     """.split()
 
 from ophyd import EpicsSignal, EpicsSignalRO
@@ -54,8 +54,6 @@ def set_detector_plan(desired_detector):
     yield from bps.mv(select_detector,desired_detector)
 
 HV = EpicsSignal("29idKappa:userCalcOut10.OVAL", name="HV")
-centroidM3R = EpicsSignal("29id_ps6:Stats1:CentroidX_RBV", name="centroidM3R")
-
 
 #TODO: move HV and centroidM3R
 
