@@ -34,7 +34,7 @@ __all__ = """
 ### tth, th, phi, chi, x, y, z, sample
 
   
-# RE = bluesky.RunEngine({​​​​​​​​​}​​​​​​​​​)
+# RE = bluesky.RunEngine({})
 
 
 
@@ -105,21 +105,22 @@ class _SoftMotor(PVPositionerPC):
 
 #------- Version 1:
 
-class _FourcMotors(Device):
-    th  = Component(_SoftMotor, "Euler_Theta")
-    chi = Component(_SoftMotor, "Euler_Chi")     
-    phi = Component(_SoftMotor, "Euler_Phi")
-    done= Component(EpicsSignalRO, "Kappa_busy", done_value=0, kind='omitted')
-    done_value = 0      
+# class _FourcMotors(Device):
+#     th  = Component(_SoftMotor, "Euler_Theta")
+#     chi = Component(_SoftMotor, "Euler_Chi")     
+#     phi = Component(_SoftMotor, "Euler_Phi")
+#     done= Component(EpicsSignalRO, "Kappa_busy", done_value=0, kind='omitted')
+#     done_value = 0      
 
-    @property
-    def ready(self):
-        status=self.done.get() == self.done_value
-        return status
+#     @property
+#     def ready(self):
+#         status=self.done.get() == self.done_value
+#         return status
 
 
-## Instantiate pseudo motors
-fourc_motors = _FourcMotors("29idKappa:",name="fourc_motors")
+# ## Instantiate pseudo motors
+# fourc_motors = _FourcMotors("29idKappa:",name="fourc_motors")
+# #fourc_motors = _FourcMotors("29idKtest:",name="fourc_motors")
 
 
 
@@ -132,19 +133,19 @@ fourc_motors = _FourcMotors("29idKappa:",name="fourc_motors")
 #    busy_record = Component(EpicsSignalRO, "29idKappa:Kappa_busy", done_value=0,kind='omitted')
 
 # # Instantiate pseudo motors
-# fourc_motors = _FourcMotors("29idKappa:Euler_",name="motors")
+#fourc_motors = _FourcMotors("29idKappa:Euler_",name="fourc_motors")
 
 
 ##### Create class to write to str PVs for troubleshooting
 
-class _Status(Device):
-    st1  = Component(EpicsSignal, "1")        
-    st2  = Component(EpicsSignal, "2")    
-    st3  = Component(EpicsSignal, "3")     
-    st4  = Component(EpicsSignal, "4")    
+#class _Status(Device):
+#    st1  = Component(EpicsSignal, "1")        
+#    st2  = Component(EpicsSignal, "2")    
+#    st3  = Component(EpicsSignal, "3")     
+#    st4  = Component(EpicsSignal, "4")    
 
 ## Instantiate status
-status  = _Status("29idKappa:gp:text",name="status")  # =>  status.st1/2/3/4
+#status  = _Status("29idKappa:gp:text",name="status")  # =>  status.st1/2/3/4
 
 
 def sync_PI_motors():
@@ -196,7 +197,7 @@ def tth0_set():
         yield from bps.mv(tth_motor.dval,0)                 # set dial to 0
         yield from bps.mv(tth_motor.set_use_switch,0)       # switch back from Set to Use
     else:
-        print('tth0 is defined as direct beam on d4 only')
+        yield from (print('tth0 is defined as direct beam on d4 only'))
     
 
 
@@ -206,7 +207,7 @@ def _quickmove_plan(value,motor):
     if desc == '':
         desc = motor.name.split('_')[-1]
     yield from bps.mv(motor,value)
-    yield from bps.mv(status.st1, f"{desc} = {motor.position}")
+    #yield from bps.mv(status.st1, f"{desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
 
@@ -214,9 +215,9 @@ def _quickmove_rel_plan(value,motor):
     desc  = motor.desc.get()
     if desc == '':
         desc = motor.name.split('_')[-1]
-    yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
+    #yield from bps.mv(status.st2,f"Old {desc} = {motor.position}")
     yield from bps.mvr(motor,value)
-    yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
+    #yield from bps.mv(status.st3,f"New {desc} = {motor.position}")
     motor.log.logger.info("%s = %d", desc, motor.position)
 
 
@@ -224,7 +225,7 @@ def uan(tth_value,th_value):
     tth_motor = kappa_motors.m9
     th_motor  = fourc_motors.th
     yield from bps.mv(tth_motor,tth_value,th_motor,th_value)
-    yield from bps.mv(status.st1, f"tth = {tth_motor.position}; th = {th_motor.position}")
+    #yield from bps.mv(status.st1, f"tth = {tth_motor.position}; th = {th_motor.position}")
     # Add the log info
 
 
@@ -232,7 +233,9 @@ def mprint():
     """
     print all motors position
     """
-    yield from bps.mv(status.st4, f"{kappa_motors.m2.position},{kappa_motors.m3.position},{kappa_motors.m4.position},{kappa_motors.m1.position},{kappa_motors.m7.position},{kappa_motors.m8.position},{kappa_motors.m9.position}")
+    print(f"x,y,z,tth,th,chi,phi = [{round(kappa_motors.m2.position,0)},{round(kappa_motors.m3.position,0)},{round(kappa_motors.m4.position,0)},{round(kappa_motors.m9.position,2)},{round(kappa_motors.m8.position,2)},{kappa_motors.m7.position},{round(kappa_motors.m1.position,2)}]")
+    return [round(kappa_motors.m2.position,0),round(kappa_motors.m3.position,0),round(kappa_motors.m4.position,0),round(kappa_motors.m9.position,2),round(kappa_motors.m8.position,2),kappa_motors.m7.position,round(kappa_motors.m1.position,2)]
+    #yield from bps.mv(status.st4, f"{kappa_motors.m2.position},{kappa_motors.m3.position},{kappa_motors.m4.position},{kappa_motors.m1.position},{kappa_motors.m7.position},{kappa_motors.m8.position},{kappa_motors.m9.position}")
     # Add the log info
 
 
@@ -244,9 +247,9 @@ def mvsample(positions=None):
     does not move tth
     """
     if not positions:
-        positions = status.st4.get()
+        #positions = status.st4.get()
         positions=[float(s) for s in positions.split(',')]
-    x,y,z,kphi,kap,kth,tth=positions
+    x,y,z,tth,kth,kap,kphi=positions
     yield from bps.mv(kappa_motors.m2,x,kappa_motors.m3,y,kappa_motors.m4,z,
             kappa_motors.m1,kphi,kappa_motors.m7,kap,kappa_motors.m8,kth)
     # TODO: Add the log info
