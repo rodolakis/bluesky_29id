@@ -3,13 +3,12 @@ __all__ = """
     bp
     bps
     cat
-    mono
     peaks
     RE
     sd
 """.split()
 
- #https://github.com/BCDA-APS/bluesky_training/blob/main/bluesky/instrument/framework/initialize.py
+#https://github.com/BCDA-APS/bluesky_training/blob/main/bluesky/instrument/framework/initialize.py
  
 import apstools.devices
 from bluesky import plan_stubs as bps  # steps for use inside a plan
@@ -78,7 +77,7 @@ peaks = bec.peaks  # just as alias for less typing
 get_ipython().register_magics(BlueskyMagics)
 
 # Add a progress bar.
-RE.waiting_hook = ProgressBarManager()
+#RE.waiting_hook = ProgressBarManager()
 
 # MUST be called BEFORE any EpicsSignal objects are created.
 # Set default timeout for all EpicsSignal connections & communications.
