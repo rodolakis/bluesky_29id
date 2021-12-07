@@ -54,8 +54,25 @@ def set_detector_plan(desired_detector):
     yield from bps.mv(select_detector,desired_detector)
 
 HV = EpicsSignal("29idKappa:userCalcOut10.OVAL", name="HV")
+#TODO: move HV
 
-#TODO: move HV and centroidM3R
+
+#TODO: to be tested - compare with script from run_20211205.ipbn 
+def gain_set_plan(gain_value,gain_unit,n=4): 
+    v={1:0,2:1,5:2,10:3,20:4,50:5,100:6,200:7,500:8}[gain_value] 
+    u={'pA':0,'nA':1,'uA':2,'mA':4}[gain_unit] 
+    srsN = getattr(globals, f"srs{n}")
+    yield from bps.mv(
+        srsN.sensitivity_unit, u,
+        srsN.sensitivity_value, v,
+    )
+    yield from bps.sleep(1)
+    u = srsN.sensitivity_unit.get()
+    v = srsN.sensitivity_value.get()
+    logger.info('SRS%s : %s %s', n, v, u)
+
+
+
 
 
 
