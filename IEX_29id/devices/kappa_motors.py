@@ -197,7 +197,8 @@ def tth0_set():
         yield from bps.mv(tth_motor.dval,0)                 # set dial to 0
         yield from bps.mv(tth_motor.set_use_switch,0)       # switch back from Set to Use
     else:
-        yield from (print('tth0 is defined as direct beam on d4 only'))
+        print('tth0 is defined as direct beam on d4 only')
+        yield from bps.null()
     
 
 
