@@ -60,25 +60,28 @@ def slit1_set(Hsize,Vsize,Hcenter,Vcenter):
 
 def slitBL_set(c2B=1,c1A=1):
     H1size,V1size,H1center,V1center,H2size,V2size,H2center,V2center=slits_calc(c2B,c1A)
-#    yield from slit2_set(Hsize,Vsize,Hcenter,Vcenter)
-#    yield from slit1_set(Hsize,Vsize,Hcenter,Vcenter)
-    H1size_motor = slits.H1size.setpoint
-    V1size_motor = slits.V1size.setpoint
-    H1center_motor = slits.H1center.setpoint
-    V1center_motor = slits.V1center.setpoint
-    H2size_motor = slits.H2size.setpoint
-    V2size_motor = slits.V2size.setpoint
-    H2center_motor = slits.H2center.setpoint
-    V2center_motor = slits.V2center.setpoint
-    yield from bps.mv(H1size_motor, H1size, V1size_motor, V1size, H1center_motor, H1center, V1center_motor, V1center)
-    yield from bps.mv(H2size_motor, H2size, V2size_motor, V2size, H2center_motor, H2center, V2center_motor, V2center)
-        
+    yield from slit2_set(H2size,V2size,H2center,V2center)
+    yield from slit1_set(H1size,V1size,H1center,V1center)
+    # H1size_motor = slits.H1size.setpoint
+    # V1size_motor = slits.V1size.setpoint
+    # H1center_motor = slits.H1center.setpoint
+    # V1center_motor = slits.V1center.setpoint
+    # H2size_motor = slits.H2size.setpoint
+    # V2size_motor = slits.V2size.setpoint
+    # H2center_motor = slits.H2center.setpoint
+    # V2center_motor = slits.V2center.setpoint
+    # yield from bps.mv(H1size_motor, H1size, V1size_motor, V1size, H1center_motor, H1center, V1center_motor, V1center)
+    # yield from bps.mv(H2size_motor, H2size, V2size_motor, V2size, H2center_motor, H2center, V2center_motor, V2center)
+    
 
     
 def slits_calc(c2B=1,c1A=1):
 
-    RBV = mono.energy.readback.value
-    GRT = mono.grating_density.value
+    # RBV = mono.energy.readback.value
+    # GRT = mono.grating_density.value
+
+    RBV = mono.energy.readback.get()
+    GRT = mono.grating_density.get()
     
     hv=max(RBV,500)
     hv=min(RBV,2000)
