@@ -5,33 +5,16 @@ from datetime import datetime
 from epics import caget
 from time import strftime, localtime, sleep
 
-def prompt(question):
-    """
-    ask a question (e.g 'Are you sure you want to do this (Y or N)? >')
-    return the answer
-    """
-    try:
-        print(question)
-        foo = input()
-        return foo
-    except KeyboardInterrupt as e:
-        raise e
-    except:
-        return
+
+from apstools.utils import run_in_thread
+
+@run_in_thread
+def play_victory_song():
+    playsound()
 
 
-
-def read_dict(FileName,FilePath="/home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/"):
-    with open(join(FilePath, FileName)) as f:
-        for c,line in enumerate(f.readlines()):
-            if line[0] == '=':
-                lastdate=line[8:16]
-            lastline=line
-        mydict=literal_eval(lastline)
-    return mydict
-
-
-
+# playsound()  # waits until song is done
+# play_victory_song()  # command line comes back _while_ song is playing
 
 
 def playsound(sound='FF'):
@@ -48,6 +31,35 @@ def playsound(sound='FF'):
     elif sound == 'hallelujah':
         sounds = '/home/beams/29IDUSER/Documents/User_Macros/Macros_29id/Sound_Files/hallelujah.wav'
     system('aplay ' + sounds)
+
+
+
+def prompt(question):
+    """
+    ask a question (e.g 'Are you sure you want to do this (Y or N)? >')
+    return the answer
+    """
+    try:
+        print(question)
+        foo = input()
+        return foo
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        return
+
+
+
+# def read_dict(FileName,FilePath="/home/beams22/29IDUSER/Documents/User_Macros/Macros_29id/IEX_Dictionaries/"):
+#     with open(join(FilePath, FileName)) as f:
+#         for c,line in enumerate(f.readlines()):
+#             if line[0] == '=':
+#                 lastdate=line[8:16]
+#             lastline=line
+#         mydict=literal_eval(lastline)
+#     return mydict
+
+
 
 def RangeUp(start,end,step):
     while start <= end:
