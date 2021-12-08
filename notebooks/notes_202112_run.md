@@ -4,7 +4,15 @@
 
 
 # General questions:
-- how to set-up data broker? do I need to "change" it between users? how do I create a new catalog for a new experiment/users? how do I reset the scan id number?
+- how to set-up data broker? do I need to "change" it between users? No.
+- how do I create a new catalog for a new experiment/users? we keep the same catalog; we change the metadata RE.md (see setup new user below)
+- how do I reset the scan id number? 
+
+        RE.md["scan_id"]      # returns the last scan_id
+        RE.md["scan_id"] = 0  # set the next scan_id to 1
+        RE.md["scan_id"] = 202112080000
+
+- how to setup new user experiment: eg [USAXS setup_new_user.py](https://github.com/APS-USAXS/ipython-usaxs/blob/master/profile_bluesky/startup/instrument/utils/setup_new_user.py) 
 - how do I set my profile for Jupyter like I do for ipython ?(my alias pointing to profile-bluesky gets over-written by my profile-default)
 - how to delete a kernel?
 - BestEffortsCallback:
@@ -23,12 +31,14 @@
 - how to implement the busy/done for align_m3r pv?
 - how can I make an ERF fit (derivative?) 
 - how can I fit as part of a plan ? eg align_tth_plan = scan tth, find peak, return peak, playsound 
+    see [Max's plan](https://github.com/APS-29ID-IEX/alignSample)
 - how do I add the m3r centroid (EpicsSignal, not scaler) to my detectors? 
 - how to implement a detector/positioner settling time?
 - what's wrong with ps.reset()?
 
 
 # TODO:
+- check out apstools.plans.TuneAxis
 - separate plans from devices
 - create a custom_name.py in devices package (x_motor = kappa_motors.m2, srs4=srs.A4 ect...)
 - how to load my instrument? 
