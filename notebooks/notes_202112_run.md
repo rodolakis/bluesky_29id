@@ -4,14 +4,13 @@
 
 
 # General questions:
-- how to set-up data broker? when do I need to "change"? how do I create a new catalog for a new experiment?
-- how do I ser my profile for Jupyter like I do for ipython ?(my alias gets over-written by my profile-default)
+- how to set-up data broker? do I need to "change" it between users? how do I create a new catalog for a new experiment/users? how do I reset the scan id number?
+- how do I set my profile for Jupyter like I do for ipython ?(my alias pointing to profile-bluesky gets over-written by my profile-default)
 - how to delete a kernel?
 - BestEffortsCallback:
     - can I turn off the visualisation of the baseline and/or limit it to a subset of pvs?
     - can I customize the plot visualisation to display only a subset of scaler (not all)? add grey scale?
 - how does the logger work?
-- rename slits.py/slits object
 - can I call slit1_set in slitbl_set? Yes
 - scan time estimate and progress bar? => NIKEA (general or bluesky) 
 
@@ -37,6 +36,7 @@
     - copy PJ module structure and adapt exp setup to 29id
 - rename scaler channels (d3, d4, mcp, tey - no caps); rename select_detector detector_select
 - check code for energy calibration and slits (make sure there is no bad mix of ophyd and plans)
+- rename slits.py/slits object
 - move read dictionary to utils.misc (currently in both bp_slits and bp_energy)
 - troubleshot utils.plot (mono not defined?)
 - test LivePlot
@@ -52,7 +52,7 @@
 - caput/caget:
     - caput = somepv.put()
     - caget = somepv.get()
-    - DO NOT USE somepv.value
+    - <b>DO NOT USE somepv.<u>value</u></b>
 - test plan: _summarize_plan_ in bluesky.simulator
 - different streams:
     - primary stream: what gets triggered at every point
