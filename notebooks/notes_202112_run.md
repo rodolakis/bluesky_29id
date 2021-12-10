@@ -19,6 +19,9 @@
     - can I turn off the visualisation of the baseline and/or limit it to a subset of pvs?
     - can I customize the plot visualisation to display only a subset of scaler (not all)? add grey scale?
 - how does the logger work?
+- how to extract data for user? 
+    - Overview: [here](https://github.com/BCDA-APS/bluesky_training/blob/main/export-bluesky-data.md)
+    - Export to CSV: [here](https://nbviewer.org/github/BCDA-APS/bluesky_training/blob/main/export-to-csv.ipynb)
 - can I call slit1_set in slitbl_set? Yes
 - scan time estimate and progress bar? => NIKEA (general or bluesky) 
 
