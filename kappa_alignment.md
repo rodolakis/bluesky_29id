@@ -29,7 +29,7 @@
          align_m3r(new_pxl)
          align_z0() 
 
-
+note: you can do this a th=0 or th=180 (align_z0 or align_z180), depending on where you are.
 
 8) **realign tth0** for new mirror position (step 2)
 
