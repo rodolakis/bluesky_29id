@@ -24,9 +24,9 @@
 
 6) go to th=180 and repeat steps 3 to 5 to find z180 and omega180
 
-7) find mirror position to reach target z value $z_{opt}=0.5*(z0+z180)$ by changing the desired pixel position directly from the screen, then run:
+7) find mirror position to reach target z value $z_{opt}=0.5*(z0+z180)$ by changing the desired pixel position then run a z scan, and iterate:
        
-         align_m3r()
+         align_m3r(new_pxl)
          align_z0() 
 
 
