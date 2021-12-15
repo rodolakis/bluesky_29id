@@ -31,7 +31,10 @@
 # Questions for Pete:
 
 - troubleshot soft motors (4C) done value?
-- how to implement the busy/done for align_m3r pv?
+- how to implement the busy/done for align_m3r pv *29id_dohn:align_m3r:startAlign*
+<p align="center">
+<img src="../figures/align_m3r.jpg" alt="drawing" style="width:250px;"/>
+
 - how can I make an ERF fit (derivative?) 
 - how can I fit as part of a plan ? eg align_tth_plan = scan tth, find peak, return peak, playsound 
     see [Max's plan](https://github.com/APS-29ID-IEX/alignSample)
