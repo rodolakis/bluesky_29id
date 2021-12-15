@@ -4,26 +4,26 @@
 
 
 # General questions:
-- how to set-up data broker? do I need to "change" it between users? No.
-- how do I create a new catalog for a new experiment/users? we keep the same catalog; we change the metadata RE.md (see setup new user below)
-- how do I reset the scan id number? 
+- <b>Answered:</b> how to set-up data broker? do I need to "change" it between users? No.
+- <b>Answered:</b> how do I create a new catalog for a new experiment/users? we keep the same catalog; we change the metadata RE.md (see setup new user below)
+- <b>Answered:</b> how do I reset the scan id number? 
 
         RE.md["scan_id"]      # returns the last scan_id
         RE.md["scan_id"] = 0  # set the next scan_id to 1
         RE.md["scan_id"] = 202112080000
 
-- how to setup new user experiment: eg [USAXS setup_new_user.py](https://github.com/APS-USAXS/ipython-usaxs/blob/master/profile_bluesky/startup/instrument/utils/setup_new_user.py) 
+- <b>Answered:</b> how to setup new user experiment: eg [USAXS setup_new_user.py](https://github.com/APS-USAXS/ipython-usaxs/blob/master/profile_bluesky/startup/instrument/utils/setup_new_user.py) 
 - how do I set my profile for Jupyter like I do for ipython ?(my alias pointing to profile-bluesky gets over-written by my profile-default)
 - how to delete a kernel?
-- BestEffortsCallback:
+- <b>Answered (partially):</b> BestEffortsCallback: 
     - can I turn off the visualisation of the baseline and/or limit it to a subset of pvs?
-    - can I customize the plot visualisation to display only a subset of scaler (not all)? add grey scale?
+    - can I customize the plot visualisation to display only a subset of scaler (not all)? add grey scale? see [BestEffortsCallback doc](https://github.com/bluesky/bluesky/blob/1f277a044e5b23ae5f98c86d77c3871b4c9a1dc5/bluesky/callbacks/best_effort.py#L72-L78)
 - how does the logger work?
-- how to extract data for user? 
+- <b>Answered:</b> how to extract data for user? 
     - Overview: [here](https://github.com/BCDA-APS/bluesky_training/blob/main/export-bluesky-data.md)
     - Export to CSV: [here](https://nbviewer.org/github/BCDA-APS/bluesky_training/blob/main/export-to-csv.ipynb)
-- can I call slit1_set in slitbl_set? Yes
-- scan time estimate and progress bar? => NIKEA (general or bluesky) 
+- <b>Answered:</b> can I call slit1_set in slitbl_set? Yes
+- <b>To do:</b> scan time estimate and progress bar? => NIKEA (general or bluesky) 
 
 
 
