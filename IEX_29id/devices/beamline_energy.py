@@ -120,7 +120,7 @@ sts=EpicsSignal("29idmono:ERDY_STS",name="sts")
 #=================== Beamline instruments:
 
 
-#aps = apstools.devices.ApsMachineParametersDevice(name="aps")
+aps = apstools.devices.ApsMachineParametersDevice(name="aps")
 undulator = MyUndulator("ID29:", name="undulator") #, egu="keV"?
 mono = Monochromator("", name="mono")
 
@@ -135,9 +135,9 @@ mono = Monochromator("", name="mono")
 
 branch = EpicsSignal("29id:CurrentBranch", name="branch")
 centroid_m3r = EpicsSignal("29id_ps6:Stats1:CentroidX_RBV", name="centroidM3R")
-align_m3r=EpicsSignal('29id_dohn:align_m3r:startAlign',name='align_m3r')
+align_m3r=EpicsSignal('29id_dohn:align_m3r:startAlign',name='align_m3r',put_complete=True)
 
-
+              
 
 
 #===================  TODO:
