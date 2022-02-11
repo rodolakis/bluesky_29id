@@ -1,5 +1,37 @@
 # Kappa Alignment
+---------------------------------------
+## Coming out of shutdown:
+1) home motors using procedure in [elog](https://logbook.xray.aps.anl.gov/29id/RSXS+Endstation/44) 
+2) check tth minimum/maximum allowed position in extended panel (PI software): after homing tth PI/dial position will be set to either of those, which will prevent it to move it in that direction
+3) sync EPICS values:
 
+         Sync_PI_Motor()
+4) locate direct beam on d4, set to zero:
+    * user
+    * dial (will set PI value as well)
+    * offset (should be "frozen")
+5) check d3 position using a fine scan on either side and erf fit to locate center precisely
+6) if d3 vs d4 offset is off: update offset value in DB:
+
+       gedit /net/s29dserv/xorApps/epics/synApps_5_8/ioc/29idKappa/29idKappaApp/Db/tthOffsetSelector.db
+7) reboot 29idKappa (run on Junebug) and sync PI motor again.
+8) check mesh and slits:
+
+        Scan_D5D()
+        Scan_Slit3D_center()
+
+---------------------------------------
+## Energy calibration:
+Good to check after a shutdown:
+1) use C branch to check mirrors alignment (M0,M1,M2,GRT) and energy drift accross beamline energy range.
+2) Use STO/Si/LAO sample to measure XAS and change M3R roll (coarse) and/or slit (fine) center to refine energy calibration: 
+    * Ti: second peak (L3-eg) should be between 460 and 461
+    * Sr: 1940 eV
+    * Si: 1839 eV
+3) use slit center before roll if possible: 500um gives ~ 3eV shift at Sr edge, 0.5 at Ti)
+
+
+---------------------------------------
 ## Align M3R pitch to center of rotation:
 1) start from the last known value for M3R pitch ie desired pixel value (typically betwen 110-115)
 2) align direct beam on d4 and reset tth0:
