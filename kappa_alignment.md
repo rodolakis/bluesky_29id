@@ -132,3 +132,32 @@ With motor at 0, the actual value is Offset.
 3) set the value of intersection (here 0.18) to 0:
 
 ![image](./figures/KapBeforeAfter.png)
+
+
+---------------------------------------
+
+##  Determined kphi/phi 0:
+
+<ol>
+<li>
+<p>With the scope looking through the CF10, with th=55, align sample receiver edge to cross hair</p>
+<li>
+<p>Using 2 bragg peaks: 
+<ul>
+<li><i>eg.</i> (110) out of plane & (111) in plan </p>
+<li>scanphi while staying on a peak with an in plan component, here (111):</li>
+
+
+        dscanphi(-5,5,0.1)
+<li>[phi  =  0] &nbsp;&rlarr; &nbsp;[(111)    <font size="+1">&#8712;<font size="-1"> scattering plan]</li>
+<br>
+</ul>
+</li>
+
+
+
+<img src="./figures/scanphi.jpg" width="300" alt="">
+<img src="./figures/EwaldSphere.jpg" alt="">
+
+
+
