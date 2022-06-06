@@ -7,11 +7,11 @@
 - <b>Answered:</b> how to set-up data broker? do I need to "change" it between users? No.
 - <b>Answered:</b> how do I create a new catalog for a new experiment/users? we keep the same catalog; we change the metadata RE.md (see setup new user below)
 - <b>Answered:</b> how do I reset the scan id number? 
-
-        RE.md["scan_id"]      # returns the last scan_id
-        RE.md["scan_id"] = 0  # set the next scan_id to 1
-        RE.md["scan_id"] = 202112080000
-
+    ```python
+    RE.md["scan_id"]      # returns the last scan_id
+    RE.md["scan_id"] = 0  # set the next scan_id to 1
+    RE.md["scan_id"] = 202112080000
+    ```
 - <b>Answered:</b> how to setup new user experiment: eg [USAXS setup_new_user.py](https://github.com/APS-USAXS/ipython-usaxs/blob/master/profile_bluesky/startup/instrument/utils/setup_new_user.py) 
 - how do I set my profile for Jupyter like I do for ipython ?(my alias pointing to profile-bluesky gets over-written by my profile-default)
 - how to delete a kernel?
@@ -77,38 +77,41 @@
     - baseline: before and after snapshot
     - monitors: saved at the device own rate
 - md={'comment':'demo'}: dictionnary of metadata
-
-            def my_plan(detlist, count_time=1, md=None):
-                if md is None: md={}
-                yield from bp.count(det,md=md)
+    ```python
+    def my_plan(detlist, count_time=1, md=None):
+        if md is None: md={}
+        yield from bp.count(det,md=md)
+    ```
     - all standart plan have md=None arg
     - needs to be built in for custom plans like above
     - run = cat[-1]: run.metadata["start"] and run.metadata["stop"] (stop contains success message) 
 - to print in a plan:
-
-        print('tth0 is defined as direct beam on d4 only')
-        yield from bps.null()
+        
+    ```python
+    print('tth0 is defined as direct beam on d4 only')
+    yield from bps.null()
+    ```
 - staging = dictionary:
     - use m1.stage.sigs to see dictionary
     - m1.component_names to see keys
     - called by bp, not bps 
 - BestEffortsCallback: eg: bec.disable_table(), see [documentation](https://github.com/bluesky/bluesky/blob/1f277a044e5b23ae5f98c86d77c3871b4c9a1dc5/bluesky/callbacks/best_effort.py#L72-L78)
 - Extract dataset: 
-
-        ds["noisy"].to_numpy()
-        'to_cdms2',
-        'to_dataframe',
-        'to_dataset',
-        'to_dict',
-        'to_index',
-        'to_iris',
-        'to_masked_array',
-        'to_netcdf',
-        'to_numpy',
-        'to_pandas',
-        'to_series',
-        'to_unstacked_dataset'
-
+    ```python
+    ds["noisy"].to_numpy()
+    'to_cdms2',
+    'to_dataframe',
+    'to_dataset',
+    'to_dict',
+    'to_index',
+    'to_iris',
+    'to_masked_array',
+    'to_netcdf',
+    'to_numpy',
+    'to_pandas',
+    'to_series',
+    'to_unstacked_dataset'
+    ```
 # Notes from 2022-1 run:
 - How to set up the _instrument_ package (see [example](https://github.com/BCDA-APS/bluesky_training/tree/main/bluesky/instrument8)):
     - intrument / callback:
@@ -131,136 +134,138 @@
         aps = apstools.devices.ApsMachineParametersDevice(name="aps")
 - beamline scheduling info::
 
-        pip install --no-deps apsbss
+         pip install --no-deps apsbss
 
     in python: 
-
-        from apsbss import apsbss
-        apsbss.listESAFs("2022-1",29)   # listESAFs needs sector number
-        Pass.listProposals("2022-1","29-ID-C,D')  # listProposals needs BL name as defined by the system
+    ```python
+    from apsbss import apsbss
+    apsbss.listESAFs("2022-1",29)   # listESAFs needs sector number
+    Pass.listProposals("2022-1","29-ID-C,D')  # listProposals needs BL name as defined by the system
+    ```
     to print a readable dictionary:
+    ```python
+    import pprint 
+    pprint.pprint(apsbss.listESAFs("2022-1",29))
 
-        import pprint 
-        pprint.pprint(apsbss.listESAFs("2022-1",29))
+    # or:
 
-        # or:
-
-        from pprint import pprint
-        pprint(apsbss.listESAFs("2022-1",29))
+    from pprint import pprint
+    pprint(apsbss.listESAFs("2022-1",29))
+    ```    
     
 # How to deal with busy records:
 
 - Example with align_m3r:
+    ```python
+    In [2]: align_m3r=EpicsSignal('29id_dohn:align_m3r:startAlign',name='align_m3r',put_complete=True)
 
-        In [2]: align_m3r=EpicsSignal('29id_dohn:align_m3r:startAlign',name='align_m3r',put_complete=True)
+    In [3]: align_m3r.enum_strs
+    Out[3]: ('Done/Abort', 'Start')
 
-        In [3]: align_m3r.enum_strs
-        Out[3]: ('Done/Abort', 'Start')
+    In [4]: !cainfo 29id_dohn:align_m3r:startAlign
+    29id_dohn:align_m3r:startAlign
+        State:            connected
+        Host:             164.54.118.100:39338
+        Access:           read, write
+        Native data type: DBF_ENUM
+        Request type:     DBR_ENUM
+        Element count:    1
 
-        In [4]: !cainfo 29id_dohn:align_m3r:startAlign
-        29id_dohn:align_m3r:startAlign
-            State:            connected
-            Host:             164.54.118.100:39338
-            Access:           read, write
-            Native data type: DBF_ENUM
-            Request type:     DBR_ENUM
-            Element count:    1
+    In [5]: align_m3r.get()
+    Out[5]: 0
 
-        In [5]: align_m3r.get()
-        Out[5]: 0
+    In [7]: align_m3r.get(as_string=True)
+    Out[7]: 'Done/Abort'
 
-        In [7]: align_m3r.get(as_string=True)
-        Out[7]: 'Done/Abort'
+    In [8]: align_m3r.pvname
+    Out[8]: '29id_dohn:align_m3r:startAlign'
 
-        In [8]: align_m3r.pvname
-        Out[8]: '29id_dohn:align_m3r:startAlign'
+    In [9]: ! caget 29id_dohn:align_m3r:startAlign
+    29id_dohn:align_m3r:startAlign Done/Abort
 
-        In [9]: ! caget 29id_dohn:align_m3r:startAlign
-        29id_dohn:align_m3r:startAlign Done/Abort
+    In [10]: ! caget -n 29id_dohn:align_m3r:startAlign
+    29id_dohn:align_m3r:startAlign 0
 
-        In [10]: ! caget -n 29id_dohn:align_m3r:startAlign
-        29id_dohn:align_m3r:startAlign 0
-
-        In [11]: ! caget 29id_dohn:align_m3r:startAlign.RTYP
-        29id_dohn:align_m3r:startAlign.RTYP busy
-
+    In [11]: ! caget 29id_dohn:align_m3r:startAlign.RTYP
+    29id_dohn:align_m3r:startAlign.RTYP busy
+    ```
 
 
 - If __RTYP = busy__ :  means it is a busy record, which always has the following PVs, where __ZNAM = done__ and __ONAM = busy__:
+    ```python
+    In [12]: ! caget 29id_dohn:align_m3r:startAlign.ZNAM
+    29id_dohn:align_m3r:startAlign.ZNAM Done/Abort
 
-        In [12]: ! caget 29id_dohn:align_m3r:startAlign.ZNAM
-        29id_dohn:align_m3r:startAlign.ZNAM Done/Abort
-
-        In [13]: ! caget 29id_dohn:align_m3r:startAlign.ONAM
-        29id_dohn:align_m3r:startAlign.ONAM Start
-
+    In [13]: ! caget 29id_dohn:align_m3r:startAlign.ONAM
+    29id_dohn:align_m3r:startAlign.ONAM Start
+    ```
 
 # Example of aps output:
 - Return storage ring info:
+    ```python
+    In [14]: import apstools.devices
 
-        In [14]: import apstools.devices
+    In [15]: aps = apstools.devices.ApsMachineParametersDevice(name="aps")
 
-        In [15]: aps = apstools.devices.ApsMachineParametersDevice(name="aps")
+    In [16]: aps.current.get()
+    Out[16]: -0.00774811931800002
 
-        In [16]: aps.current.get()
-        Out[16]: -0.00774811931800002
+    In [17]: aps.summary()
+    data keys (* hints)
+    -------------------
+    aps_aps_cycle
+    aps_current
+    aps_fill_number
+    aps_global_feedback
+    aps_global_feedback_h
+    aps_global_feedback_v
+    aps_lifetime
+    aps_machine_status
+    aps_operating_mode
+    aps_operator_messages_fill_pattern
+    aps_operator_messages_floor_coordinator
+    aps_operator_messages_last_problem_message
+    aps_operator_messages_last_trip_message
+    aps_operator_messages_message6
+    aps_operator_messages_message7
+    aps_operator_messages_message8
+    aps_operator_messages_operators
+    aps_orbit_correction
+    aps_shutter_permit
 
-        In [17]: aps.summary()
-        data keys (* hints)
-        -------------------
-        aps_aps_cycle
-        aps_current
-        aps_fill_number
-        aps_global_feedback
-        aps_global_feedback_h
-        aps_global_feedback_v
-        aps_lifetime
-        aps_machine_status
-        aps_operating_mode
-        aps_operator_messages_fill_pattern
-        aps_operator_messages_floor_coordinator
-        aps_operator_messages_last_problem_message
-        aps_operator_messages_last_trip_message
-        aps_operator_messages_message6
-        aps_operator_messages_message7
-        aps_operator_messages_message8
-        aps_operator_messages_operators
-        aps_orbit_correction
-        aps_shutter_permit
+    read attrs
+    ----------
+    current              EpicsSignalRO       ('aps_current')
+    lifetime             EpicsSignalRO       ('aps_lifetime')
+    aps_cycle            ApsCycleDM          ('aps_aps_cycle')
+    machine_status       EpicsSignalRO       ('aps_machine_status')
+    operating_mode       EpicsSignalRO       ('aps_operating_mode')
+    shutter_permit       EpicsSignalRO       ('aps_shutter_permit')
+    fill_number          EpicsSignalRO       ('aps_fill_number')
+    orbit_correction     EpicsSignalRO       ('aps_orbit_correction')
+    global_feedback      EpicsSignalRO       ('aps_global_feedback')
+    global_feedback_h    EpicsSignalRO       ('aps_global_feedback_h')
+    global_feedback_v    EpicsSignalRO       ('aps_global_feedback_v')
+    operator_messages    ApsOperatorMessagesDevice('aps_operator_messages')
+    operator_messages.operators EpicsSignalRO       ('aps_operator_messages_operators')
+    operator_messages.floor_coordinator EpicsSignalRO       ('aps_operator_messages_floor_coordinator')
+    operator_messages.fill_pattern EpicsSignalRO       ('aps_operator_messages_fill_pattern')
+    operator_messages.last_problem_message EpicsSignalRO       ('aps_operator_messages_last_problem_message')
+    operator_messages.last_trip_message EpicsSignalRO       ('aps_operator_messages_last_trip_message')
+    operator_messages.message6 EpicsSignalRO       ('aps_operator_messages_message6')
+    operator_messages.message7 EpicsSignalRO       ('aps_operator_messages_message7')
+    operator_messages.message8 EpicsSignalRO       ('aps_operator_messages_message8')
 
-        read attrs
-        ----------
-        current              EpicsSignalRO       ('aps_current')
-        lifetime             EpicsSignalRO       ('aps_lifetime')
-        aps_cycle            ApsCycleDM          ('aps_aps_cycle')
-        machine_status       EpicsSignalRO       ('aps_machine_status')
-        operating_mode       EpicsSignalRO       ('aps_operating_mode')
-        shutter_permit       EpicsSignalRO       ('aps_shutter_permit')
-        fill_number          EpicsSignalRO       ('aps_fill_number')
-        orbit_correction     EpicsSignalRO       ('aps_orbit_correction')
-        global_feedback      EpicsSignalRO       ('aps_global_feedback')
-        global_feedback_h    EpicsSignalRO       ('aps_global_feedback_h')
-        global_feedback_v    EpicsSignalRO       ('aps_global_feedback_v')
-        operator_messages    ApsOperatorMessagesDevice('aps_operator_messages')
-        operator_messages.operators EpicsSignalRO       ('aps_operator_messages_operators')
-        operator_messages.floor_coordinator EpicsSignalRO       ('aps_operator_messages_floor_coordinator')
-        operator_messages.fill_pattern EpicsSignalRO       ('aps_operator_messages_fill_pattern')
-        operator_messages.last_problem_message EpicsSignalRO       ('aps_operator_messages_last_problem_message')
-        operator_messages.last_trip_message EpicsSignalRO       ('aps_operator_messages_last_trip_message')
-        operator_messages.message6 EpicsSignalRO       ('aps_operator_messages_message6')
-        operator_messages.message7 EpicsSignalRO       ('aps_operator_messages_message7')
-        operator_messages.message8 EpicsSignalRO       ('aps_operator_messages_message8')
+    config keys
+    -----------
 
-        config keys
-        -----------
+    configuration attrs
+    -------------------
+    operator_messages    ApsOperatorMessagesDevice('aps_operator_messages')
 
-        configuration attrs
-        -------------------
-        operator_messages    ApsOperatorMessagesDevice('aps_operator_messages')
-
-        unused attrs
-        ------------
-
+    unused attrs
+    ------------
+    ```
 
 
 # Example of apsbss output:
